@@ -19,9 +19,9 @@ package org.apache.commons.lang3;
 import org.apache.commons.lang3.math.NumberUtils;
 
 /**
- * <p>An enum representing all the versions of the Java specification.
+ * An enum representing all the versions of the Java specification.
  * This is intended to mirror available values from the
- * <em>java.specification.version</em> System property. </p>
+ * <em>java.specification.version</em> System property.
  *
  * @since 3.0
  */
@@ -144,73 +144,56 @@ public enum JavaVersion {
     JAVA_17(17.0f, "17"),
 
     /**
-     * The most recent java version. Mainly introduced to avoid to break when a new version of Java is used.
+     * Java 18.
+     *
+     * @since 3.13.0
+     */
+    JAVA_18(18.0f, "18"),
+
+    /**
+     * Java 19.
+     *
+     * @since 3.13.0
+     */
+    JAVA_19(19.0f, "19"),
+
+    /**
+     * Java 20.
+     *
+     * @since 3.13.0
+     */
+    JAVA_20(20, "20"),
+
+    /**
+     * Java 21.
+     *
+     * @since 3.13.0
+     */
+    JAVA_21(21, "21"),
+
+    /**
+     * Java 22.
+     *
+     * @since 3.15.0
+     */
+    JAVA_22(22, "22"),
+
+    /**
+     * Java 23.
+     *
+     * @since 3.18.0
+     */
+    JAVA_23(23, "23"),
+
+    /**
+     * The most recent Java version. Mainly introduced to avoid to break when a new version of Java is used.
      */
     JAVA_RECENT(maxVersion(), Float.toString(maxVersion()));
 
     /**
-     * The float value.
+     * The regex to split version strings.
      */
-    private final float value;
-
-    /**
-     * The standard name.
-     */
-    private final String name;
-
-    /**
-     * Constructor.
-     *
-     * @param value  the float value
-     * @param name  the standard name, not null
-     */
-    JavaVersion(final float value, final String name) {
-        this.value = value;
-        this.name = name;
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Whether this version of Java is at least the version of Java passed in.</p>
-     *
-     * <p>For example:<br>
-     *  {@code myVersion.atLeast(JavaVersion.JAVA_1_4)}<p>
-     *
-     * @param requiredVersion  the version to check against, not null
-     * @return true if this version is equal to or greater than the specified version
-     */
-    public boolean atLeast(final JavaVersion requiredVersion) {
-        return this.value >= requiredVersion.value;
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Whether this version of Java is at most the version of Java passed in.</p>
-     *
-     * <p>For example:<br>
-     *  {@code myVersion.atMost(JavaVersion.JAVA_1_4)}<p>
-     *
-     * @param requiredVersion  the version to check against, not null
-     * @return true if this version is equal to or greater than the specified version
-     * @since 3.9
-     */
-    public boolean atMost(final JavaVersion requiredVersion) {
-        return this.value <= requiredVersion.value;
-    }
-
-    /**
-     * Transforms the given string with a Java version number to the
-     * corresponding constant of this enumeration class. This method is used
-     * internally.
-     *
-     * @param nom the Java version as string
-     * @return the corresponding enumeration constant or <b>null</b> if the
-     * version is unknown
-     */
-    // helper for static importing
-    static JavaVersion getJavaVersion(final String nom) {
-        return get(nom);
-    }
+    private static final String VERSION_SPLIT_REGEX = "\\.";
 
     /**
      * Transforms the given string with a Java version number to the
@@ -218,7 +201,7 @@ public enum JavaVersion {
      * internally.
      *
      * @param versionStr the Java version as string
-     * @return the corresponding enumeration constant or <b>null</b> if the
+     * @return the corresponding enumeration constant or <strong>null</strong> if the
      * version is unknown
      */
     static JavaVersion get(final String versionStr) {
@@ -262,9 +245,21 @@ public enum JavaVersion {
             return JAVA_16;
         case "17":
             return JAVA_17;
+        case "18":
+            return JAVA_18;
+        case "19":
+            return JAVA_19;
+        case "20":
+            return JAVA_20;
+        case "21":
+            return JAVA_21;
+        case "22":
+            return JAVA_22;
+        case "23":
+            return JAVA_23;
         default:
             final float v = toFloatVersion(versionStr);
-            if ((v - 1.) < 1.) { // then we need to check decimals > .9
+            if (v - 1. < 1.) { // then we need to check decimals > .9
                 final int firstComma = Math.max(versionStr.indexOf('.'), versionStr.indexOf(','));
                 final int end = Math.max(versionStr.length(), versionStr.indexOf(',', firstComma));
                 if (Float.parseFloat(versionStr.substring(firstComma + 1, end)) > .9f) {
@@ -277,17 +272,17 @@ public enum JavaVersion {
         }
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>The string value is overridden to return the standard name.</p>
+     * Transforms the given string with a Java version number to the
+     * corresponding constant of this enumeration class. This method is used
+     * internally.
      *
-     * <p>For example, {@code "1.5"}.</p>
-     *
-     * @return the name, not null
+     * @param versionStr the Java version as string
+     * @return the corresponding enumeration constant or <strong>null</strong> if the
+     * version is unknown
      */
-    @Override
-    public String toString() {
-        return name;
+    static JavaVersion getJavaVersion(final String versionStr) {
+        return get(versionStr);
     }
 
     /**
@@ -296,28 +291,89 @@ public enum JavaVersion {
      * @return the value of {@code java.specification.version} system property or 99.0 if it is not set.
      */
     private static float maxVersion() {
-        final float v = toFloatVersion(System.getProperty("java.specification.version", "99.0"));
-        if (v > 0) {
-            return v;
-        }
-        return 99f;
+        final float v = toFloatVersion(SystemProperties.getJavaSpecificationVersion("99.0"));
+        return v > 0 ? v : 99f;
+    }
+
+    static String[] split(final String value) {
+        return value.split(VERSION_SPLIT_REGEX);
     }
 
     /**
      * Parses a float value from a String.
      *
      * @param value the String to parse.
-     * @return the float value represented by the string or -1 if the given String can not be parsed.
+     * @return the float value represented by the string or -1 if the given String cannot be parsed.
      */
     private static float toFloatVersion(final String value) {
         final int defaultReturnValue = -1;
         if (!value.contains(".")) {
             return NumberUtils.toFloat(value, defaultReturnValue);
         }
-        final String[] toParse = value.split("\\.");
+        final String[] toParse = split(value);
         if (toParse.length >= 2) {
             return NumberUtils.toFloat(toParse[0] + '.' + toParse[1], defaultReturnValue);
         }
         return defaultReturnValue;
+    }
+
+    /**
+     * The float value.
+     */
+    private final float value;
+
+    /**
+     * The standard name.
+     */
+    private final String name;
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param value  the float value
+     * @param name  the standard name, not null
+     */
+    JavaVersion(final float value, final String name) {
+        this.value = value;
+        this.name = name;
+    }
+
+    /**
+     * Tests whether this version of Java is at least the version of Java passed in.
+     *
+     * <p>For example:<br>
+     *  {@code myVersion.atLeast(JavaVersion.JAVA_1_4)}</p>
+     *
+     * @param requiredVersion  the version to check against, not null
+     * @return true if this version is equal to or greater than the specified version
+     */
+    public boolean atLeast(final JavaVersion requiredVersion) {
+        return this.value >= requiredVersion.value;
+    }
+
+    /**
+     * Tests whether this version of Java is at most the version of Java passed in.
+     *
+     * <p>For example:<br>
+     *  {@code myVersion.atMost(JavaVersion.JAVA_1_4)}</p>
+     *
+     * @param requiredVersion  the version to check against, not null
+     * @return true if this version is equal to or greater than the specified version
+     * @since 3.9
+     */
+    public boolean atMost(final JavaVersion requiredVersion) {
+        return this.value <= requiredVersion.value;
+    }
+
+    /**
+     * The string value is overridden to return the standard name.
+     *
+     * <p>For example, {@code "1.5"}.</p>
+     *
+     * @return the name, not null
+     */
+    @Override
+    public String toString() {
+        return name;
     }
 }

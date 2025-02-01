@@ -22,9 +22,8 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * <p>
  * A runtime exception that provides an easy and safe way to add contextual information.
- * </p><p>
+ * <p>
  * An exception trace itself is often insufficient to provide rapid diagnosis of the issue.
  * Frequently what is needed is a select few pieces of local contextual data.
  * Providing this data is tricky however, due to concerns over formatting and nulls.
@@ -113,18 +112,6 @@ public class ContextedRuntimeException extends RuntimeException implements Excep
     }
 
     /**
-     * Instantiates ContextedRuntimeException with cause, but without message.
-     * <p>
-     * The context information is stored using a default implementation.
-     *
-     * @param cause  the underlying cause of the exception, may be null
-     */
-    public ContextedRuntimeException(final Throwable cause) {
-        super(cause);
-        exceptionContext = new DefaultExceptionContext();
-    }
-
-    /**
      * Instantiates ContextedRuntimeException with cause and message.
      * <p>
      * The context information is stored using a default implementation.
@@ -152,7 +139,18 @@ public class ContextedRuntimeException extends RuntimeException implements Excep
         exceptionContext = context;
     }
 
-    //-----------------------------------------------------------------------
+    /**
+     * Instantiates ContextedRuntimeException with cause, but without message.
+     * <p>
+     * The context information is stored using a default implementation.
+     *
+     * @param cause  the underlying cause of the exception, may be null
+     */
+    public ContextedRuntimeException(final Throwable cause) {
+        super(cause);
+        exceptionContext = new DefaultExceptionContext();
+    }
+
     /**
      * Adds information helpful to a developer in diagnosing and correcting the problem.
      * For the information to be meaningful, the value passed should have a reasonable
@@ -173,22 +171,19 @@ public class ContextedRuntimeException extends RuntimeException implements Excep
     }
 
     /**
-     * Sets information helpful to a developer in diagnosing and correcting the problem.
-     * For the information to be meaningful, the value passed should have a reasonable
-     * toString() implementation.
-     * Any existing values with the same labels are removed before the new one is added.
-     * <p>
-     * Note: This exception is only serializable if the object added as value is serializable.
-     * </p>
-     *
-     * @param label  a textual label associated with information, {@code null} not recommended
-     * @param value  information needed to understand exception, may be {@code null}
-     * @return {@code this}, for method chaining, not {@code null}
+     * {@inheritDoc}
      */
     @Override
-    public ContextedRuntimeException setContextValue(final String label, final Object value) {
-        exceptionContext.setContextValue(label, value);
-        return this;
+    public List<Pair<String, Object>> getContextEntries() {
+        return this.exceptionContext.getContextEntries();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<String> getContextLabels() {
+        return exceptionContext.getContextLabels();
     }
 
     /**
@@ -211,22 +206,14 @@ public class ContextedRuntimeException extends RuntimeException implements Excep
      * {@inheritDoc}
      */
     @Override
-    public List<Pair<String, Object>> getContextEntries() {
-        return this.exceptionContext.getContextEntries();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Set<String> getContextLabels() {
-        return exceptionContext.getContextLabels();
+    public String getFormattedExceptionMessage(final String baseMessage) {
+        return exceptionContext.getFormattedExceptionMessage(baseMessage);
     }
 
     /**
      * Provides the message explaining the exception, including the contextual data.
      *
-     * @see java.lang.Throwable#getMessage()
+     * @see Throwable#getMessage()
      * @return the message, never null
      */
     @Override
@@ -237,7 +224,7 @@ public class ContextedRuntimeException extends RuntimeException implements Excep
     /**
      * Provides the message explaining the exception without the contextual data.
      *
-     * @see java.lang.Throwable#getMessage()
+     * @see Throwable#getMessage()
      * @return the message
      * @since 3.0.1
      */
@@ -246,11 +233,22 @@ public class ContextedRuntimeException extends RuntimeException implements Excep
     }
 
     /**
-     * {@inheritDoc}
+     * Sets information helpful to a developer in diagnosing and correcting the problem.
+     * For the information to be meaningful, the value passed should have a reasonable
+     * toString() implementation.
+     * Any existing values with the same labels are removed before the new one is added.
+     * <p>
+     * Note: This exception is only serializable if the object added as value is serializable.
+     * </p>
+     *
+     * @param label  a textual label associated with information, {@code null} not recommended
+     * @param value  information needed to understand exception, may be {@code null}
+     * @return {@code this}, for method chaining, not {@code null}
      */
     @Override
-    public String getFormattedExceptionMessage(final String baseMessage) {
-        return exceptionContext.getFormattedExceptionMessage(baseMessage);
+    public ContextedRuntimeException setContextValue(final String label, final Object value) {
+        exceptionContext.setContextValue(label, value);
+        return this;
     }
 
 }

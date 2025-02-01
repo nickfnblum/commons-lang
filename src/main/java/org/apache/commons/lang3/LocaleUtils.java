@@ -19,15 +19,18 @@ package org.apache.commons.lang3;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
- * <p>Operations to assist when working with a {@link Locale}.</p>
+ * Operations to assist when working with a {@link Locale}.
  *
  * <p>This class tries to handle {@code null} input gracefully.
  * An exception will not be thrown for a {@code null} input.
@@ -37,30 +40,56 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class LocaleUtils {
 
-    // class to avoid synchronization (Init on demand)
-    static class SyncAvoid {
-        /** Unmodifiable list of available locales. */
-        private static final List<Locale> AVAILABLE_LOCALE_LIST;
-        /** Unmodifiable set of available locales. */
-        private static final Set<Locale> AVAILABLE_LOCALE_SET;
+    /**
+     * Avoids synchronization, inits on demand.
+     */
+    private static final class SyncAvoid {
+
+        /** Private unmodifiable list of available locales. */
+        private static final List<Locale> AVAILABLE_LOCALE_ULIST;
+
+        /** Private unmodifiable set of available locales. */
+        private static final Set<Locale> AVAILABLE_LOCALE_USET;
 
         static {
-            final List<Locale> list = new ArrayList<>(Arrays.asList(Locale.getAvailableLocales()));  // extra safe
-            AVAILABLE_LOCALE_LIST = Collections.unmodifiableList(list);
-            AVAILABLE_LOCALE_SET = Collections.unmodifiableSet(new HashSet<>(list));
+            AVAILABLE_LOCALE_ULIST = Collections
+                    .unmodifiableList(Arrays.asList(ArraySorter.sort(Locale.getAvailableLocales(), Comparator.comparing(Locale::toString))));
+            AVAILABLE_LOCALE_USET = Collections.unmodifiableSet(new LinkedHashSet<>(AVAILABLE_LOCALE_ULIST));
         }
     }
 
-    /** Concurrent map of language locales by country. */
-    private static final ConcurrentMap<String, List<Locale>> cLanguagesByCountry =
-        new ConcurrentHashMap<>();
-
-    /** Concurrent map of country locales by language. */
-    private static final ConcurrentMap<String, List<Locale>> cCountriesByLanguage =
-        new ConcurrentHashMap<>();
+    /**
+     * The underscore character {@code '}{@value}{@code '}.
+     */
+    private static final char UNDERSCORE = '_';
 
     /**
-     * <p>Obtains an unmodifiable list of installed locales.</p>
+     * The undetermined language {@value}.
+     * <p>
+     * If a language is empty, or not <em>well-formed</am> (for example "a" or "e2"), {@link Locale#toLanguageTag()} will return {@code "und"} (Undetermined).
+     * </p>
+     *
+     * @see Locale#toLanguageTag()
+     */
+    private static final String UNDETERMINED = "und";
+
+    /**
+     * The dash character {@code '}{@value}{@code '}.
+     */
+    private static final char DASH = '-';
+
+    /**
+     * Concurrent map of language locales by country.
+     */
+    private static final ConcurrentMap<String, List<Locale>> cLanguagesByCountry = new ConcurrentHashMap<>();
+
+    /**
+     * Concurrent map of country locales by language.
+     */
+    private static final ConcurrentMap<String, List<Locale>> cCountriesByLanguage = new ConcurrentHashMap<>();
+
+    /**
+     * Obtains an unmodifiable list of installed locales.
      *
      * <p>This method is a wrapper around {@link Locale#getAvailableLocales()}.
      * It is more efficient, as the JDK method must create a new array each
@@ -69,11 +98,15 @@ public class LocaleUtils {
      * @return the unmodifiable list of available locales
      */
     public static List<Locale> availableLocaleList() {
-        return SyncAvoid.AVAILABLE_LOCALE_LIST;
+        return SyncAvoid.AVAILABLE_LOCALE_ULIST;
+    }
+
+    private static List<Locale> availableLocaleList(final Predicate<Locale> predicate) {
+        return availableLocaleList().stream().filter(predicate).collect(Collectors.toList());
     }
 
     /**
-     * <p>Obtains an unmodifiable set of installed locales.</p>
+     * Obtains an unmodifiable set of installed locales.
      *
      * <p>This method is a wrapper around {@link Locale#getAvailableLocales()}.
      * It is more efficient, as the JDK method must create a new array each
@@ -82,11 +115,11 @@ public class LocaleUtils {
      * @return the unmodifiable set of available locales
      */
     public static Set<Locale> availableLocaleSet() {
-        return SyncAvoid.AVAILABLE_LOCALE_SET;
+        return SyncAvoid.AVAILABLE_LOCALE_USET;
     }
 
     /**
-     * <p>Obtains the list of countries supported for a given language.</p>
+     * Obtains the list of countries supported for a given language.
      *
      * <p>This method takes a language code and searches to find the
      * countries available for that language. Variant locales are removed.</p>
@@ -98,36 +131,22 @@ public class LocaleUtils {
         if (languageCode == null) {
             return Collections.emptyList();
         }
-        List<Locale> countries = cCountriesByLanguage.get(languageCode);
-        if (countries == null) {
-            countries = new ArrayList<>();
-            final List<Locale> locales = availableLocaleList();
-            for (final Locale locale : locales) {
-                if (languageCode.equals(locale.getLanguage()) &&
-                        !locale.getCountry().isEmpty() &&
-                    locale.getVariant().isEmpty()) {
-                    countries.add(locale);
-                }
-            }
-            countries = Collections.unmodifiableList(countries);
-            cCountriesByLanguage.putIfAbsent(languageCode, countries);
-            countries = cCountriesByLanguage.get(languageCode);
-        }
-        return countries;
+        return cCountriesByLanguage.computeIfAbsent(languageCode, lc -> Collections.unmodifiableList(
+            availableLocaleList(locale -> languageCode.equals(locale.getLanguage()) && !locale.getCountry().isEmpty() && locale.getVariant().isEmpty())));
     }
 
     /**
-     * <p>Checks if the locale specified is in the list of available locales.</p>
+     * Checks if the locale specified is in the set of available locales.
      *
      * @param locale the Locale object to check if it is available
      * @return true if the locale is a known locale
      */
     public static boolean isAvailableLocale(final Locale locale) {
-        return availableLocaleList().contains(locale);
+        return availableLocaleSet().contains(locale);
     }
 
     /**
-     * Checks whether the given String is a ISO 3166 alpha-2 country code.
+     * Tests whether the given String is a ISO 3166 alpha-2 country code.
      *
      * @param str the String to check
      * @return true, is the given String is a ISO 3166 compliant country code.
@@ -137,7 +156,7 @@ public class LocaleUtils {
     }
 
     /**
-     * Checks whether the given String is a ISO 639 compliant language code.
+     * Tests whether the given String is a ISO 639 compliant language code.
      *
      * @param str the String to check.
      * @return true, if the given String is a ISO 639 compliant language code.
@@ -147,7 +166,23 @@ public class LocaleUtils {
     }
 
     /**
-     * Checks whether the given String is a UN M.49 numeric area code.
+     * Tests whether a Locale's language is undetermined.
+     * <p>
+     * A Locale's language tag is undetermined if it's value is {@code "und"}. If a language is empty, or not well-formed (for example, "a" or "e2"), it will be
+     * equal to {@code "und"}.
+     * </p>
+     *
+     * @param locale the locale to test.
+     * @return whether a Locale's language is undetermined.
+     * @see Locale#toLanguageTag()
+     * @since 3.14.0
+     */
+    public static boolean isLanguageUndetermined(final Locale locale) {
+        return locale == null || UNDETERMINED.equals(locale.toLanguageTag());
+    }
+
+    /**
+     * TestsNo whether the given String is a UN M.49 numeric area code.
      *
      * @param str the String to check
      * @return true, is the given String is a UN M.49 numeric area code.
@@ -157,38 +192,25 @@ public class LocaleUtils {
     }
 
     /**
-     * <p>Obtains the list of languages supported for a given country.</p>
+     * Obtains the list of languages supported for a given country.
      *
      * <p>This method takes a country code and searches to find the
      * languages available for that country. Variant locales are removed.</p>
      *
-     * @param countryCode  the 2 letter country code, null returns empty
+     * @param countryCode  the 2-letter country code, null returns empty
      * @return an unmodifiable List of Locale objects, not null
      */
     public static List<Locale> languagesByCountry(final String countryCode) {
         if (countryCode == null) {
             return Collections.emptyList();
         }
-        List<Locale> langs = cLanguagesByCountry.get(countryCode);
-        if (langs == null) {
-            langs = new ArrayList<>();
-            final List<Locale> locales = availableLocaleList();
-            for (final Locale locale : locales) {
-                if (countryCode.equals(locale.getCountry()) &&
-                    locale.getVariant().isEmpty()) {
-                    langs.add(locale);
-                }
-            }
-            langs = Collections.unmodifiableList(langs);
-            cLanguagesByCountry.putIfAbsent(countryCode, langs);
-            langs = cLanguagesByCountry.get(countryCode);
-        }
-        return langs;
+        return cLanguagesByCountry.computeIfAbsent(countryCode,
+            k -> Collections.unmodifiableList(availableLocaleList(locale -> countryCode.equals(locale.getCountry()) && locale.getVariant().isEmpty())));
     }
 
     /**
-     * <p>Obtains the list of locales to search through when performing
-     * a locale search.</p>
+     * Obtains the list of locales to search through when performing
+     * a locale search.
      *
      * <pre>
      * localeLookupList(Locale("fr", "CA", "xxx"))
@@ -203,8 +225,8 @@ public class LocaleUtils {
     }
 
     /**
-     * <p>Obtains the list of locales to search through when performing
-     * a locale search.</p>
+     * Obtains the list of locales to search through when performing
+     * a locale search.
      *
      * <pre>
      * localeLookupList(Locale("fr", "CA", "xxx"), Locale("en"))
@@ -237,26 +259,30 @@ public class LocaleUtils {
     }
 
     /**
-     * Tries to parse a locale from the given String.
+     * Tries to parse a Locale from the given String.
+     * <p>
+     * See {@link Locale} for the format.
+     * </p>
      *
-     * @param str the String to parse a locale from.
-     * @return a Locale instance parsed from the given String.
-     * @throws IllegalArgumentException if the given String can not be parsed.
+     * @param str the String to parse as a Locale.
+     * @return a Locale parsed from the given String.
+     * @throws IllegalArgumentException if the given String cannot be parsed.
+     * @see Locale
      */
     private static Locale parseLocale(final String str) {
         if (isISO639LanguageCode(str)) {
             return new Locale(str);
         }
-
-        final String[] segments = str.split("_", -1);
+        final int limit = 3;
+        final char separator = str.indexOf(UNDERSCORE) != -1 ? UNDERSCORE : DASH;
+        final String[] segments = str.split(String.valueOf(separator), 3);
         final String language = segments[0];
         if (segments.length == 2) {
             final String country = segments[1];
-            if (isISO639LanguageCode(language) && isISO3166CountryCode(country) ||
-                    isNumericAreaCode(country)) {
+            if (isISO639LanguageCode(language) && isISO3166CountryCode(country) || isNumericAreaCode(country)) {
                 return new Locale(language, country);
             }
-        } else if (segments.length == 3) {
+        } else if (segments.length == limit) {
             final String country = segments[1];
             final String variant = segments[2];
             if (isISO639LanguageCode(language) &&
@@ -280,7 +306,7 @@ public class LocaleUtils {
     }
 
     /**
-     * <p>Converts a String to a Locale.</p>
+     * Converts a String to a Locale.
      *
      * <p>This method takes the string format of a locale and creates the
      * locale object from it.</p>
@@ -289,6 +315,7 @@ public class LocaleUtils {
      *   LocaleUtils.toLocale("")           = new Locale("", "")
      *   LocaleUtils.toLocale("en")         = new Locale("en", "")
      *   LocaleUtils.toLocale("en_GB")      = new Locale("en", "GB")
+     *   LocaleUtils.toLocale("en-GB")      = new Locale("en", "GB")
      *   LocaleUtils.toLocale("en_001")     = new Locale("en", "001")
      *   LocaleUtils.toLocale("en_GB_xxx")  = new Locale("en", "GB", "xxx")   (#)
      * </pre>
@@ -300,7 +327,7 @@ public class LocaleUtils {
      * <p>This method validates the input strictly.
      * The language code must be lowercase.
      * The country code must be uppercase.
-     * The separator must be an underscore.
+     * The separator must be an underscore or a dash.
      * The length must be correct.
      * </p>
      *
@@ -311,6 +338,7 @@ public class LocaleUtils {
      */
     public static Locale toLocale(final String str) {
         if (str == null) {
+            // TODO Should this return the default locale?
             return null;
         }
         if (str.isEmpty()) { // LANG-941 - JDK 8 introduced an empty locale where all fields are blank
@@ -324,7 +352,7 @@ public class LocaleUtils {
             throw new IllegalArgumentException("Invalid locale format: " + str);
         }
         final char ch0 = str.charAt(0);
-        if (ch0 == '_') {
+        if (ch0 == UNDERSCORE || ch0 == DASH) {
             if (len < 3) {
                 throw new IllegalArgumentException("Invalid locale format: " + str);
             }
@@ -339,7 +367,7 @@ public class LocaleUtils {
             if (len < 5) {
                 throw new IllegalArgumentException("Invalid locale format: " + str);
             }
-            if (str.charAt(3) != '_') {
+            if (str.charAt(3) != ch0) {
                 throw new IllegalArgumentException("Invalid locale format: " + str);
             }
             return new Locale(StringUtils.EMPTY, str.substring(1, 3), str.substring(4));
@@ -349,13 +377,17 @@ public class LocaleUtils {
     }
 
     /**
-     * <p>{@code LocaleUtils} instances should NOT be constructed in standard programming.
-     * Instead, the class should be used as {@code LocaleUtils.toLocale("en_GB");}.</p>
+     * {@link LocaleUtils} instances should NOT be constructed in standard programming.
+     * Instead, the class should be used as {@code LocaleUtils.toLocale("en_GB");}.
      *
      * <p>This constructor is public to permit tools that require a JavaBean instance
      * to operate.</p>
+     *
+     * @deprecated TODO Make private in 4.0.
      */
+    @Deprecated
     public LocaleUtils() {
+        // empty
     }
 
 }

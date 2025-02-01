@@ -18,27 +18,29 @@ package org.apache.commons.lang3.concurrent;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.function.FailableSupplier;
+
 /**
- * <p>
- * A specialized implementation of the {@code ConcurrentInitializer} interface
+ * A specialized implementation of the {@link ConcurrentInitializer} interface
  * based on an {@link AtomicReference} variable.
- * </p>
+ *
  * <p>
- * This class maintains a member field of type {@code AtomicReference}. It
+ * This class maintains a member field of type {@link AtomicReference}. It
  * implements the following algorithm to create and initialize an object in its
  * {@link #get()} method:
  * </p>
  * <ul>
- * <li>First it is checked whether the {@code AtomicReference} variable contains
+ * <li>First it is checked whether the {@link AtomicReference} variable contains
  * already a value. If this is the case, the value is directly returned.</li>
  * <li>Otherwise the {@link #initialize()} method is called. This method must be
  * defined in concrete subclasses to actually create the managed object.</li>
  * <li>After the object was created by {@link #initialize()} it is checked
- * whether the {@code AtomicReference} variable is still undefined. This has to
+ * whether the {@link AtomicReference} variable is still undefined. This has to
  * be done because in the meantime another thread may have initialized the
  * object. If the reference is still empty, the newly created object is stored
  * in it and returned by this method.</li>
- * <li>Otherwise the value stored in the {@code AtomicReference} is returned.</li>
+ * <li>Otherwise the value stored in the {@link AtomicReference} is returned.</li>
  * </ul>
  * <p>
  * Because atomic variables are used this class does not need any
@@ -63,16 +65,71 @@ import java.util.concurrent.atomic.AtomicReference;
  * @since 3.0
  * @param <T> the type of the object managed by this initializer class
  */
-public abstract class AtomicInitializer<T> implements ConcurrentInitializer<T> {
+public class AtomicInitializer<T> extends AbstractConcurrentInitializer<T, ConcurrentException> {
+
+    /**
+     * Builds a new instance.
+     *
+     * @param <T> The type of results supplied by this builder.
+     * @param <I> The type of the initializer managed by this builder.
+     * @since 3.14.0
+     */
+    public static class Builder<I extends AtomicInitializer<T>, T> extends AbstractBuilder<I, T, Builder<I, T>, ConcurrentException> {
+
+        /**
+         * Constructs a new instance.
+         */
+        public Builder() {
+            // empty
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public I get() {
+            return (I) new AtomicInitializer(getInitializer(), getCloser());
+        }
+
+    }
+
+    private static final Object NO_INIT = new Object();
+
+    /**
+     * Creates a new builder.
+     *
+     * @param <T> the type of object to build.
+     * @return a new builder.
+     * @since 3.14.0
+     */
+    public static <T> Builder<AtomicInitializer<T>, T> builder() {
+        return new Builder<>();
+    }
+
     /** Holds the reference to the managed object. */
-    private final AtomicReference<T> reference = new AtomicReference<>();
+    private final AtomicReference<T> reference = new AtomicReference<>(getNoInit());
+
+    /**
+     * Constructs a new instance.
+     */
+    public AtomicInitializer() {
+        // empty
+    }
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param initializer the initializer supplier called by {@link #initialize()}.
+     * @param closer the closer consumer called by {@link #close()}.
+     */
+    private AtomicInitializer(final FailableSupplier<T, ConcurrentException> initializer, final FailableConsumer<T, ConcurrentException> closer) {
+        super(initializer, closer);
+    }
 
     /**
      * Returns the object managed by this initializer. The object is created if
      * it is not available yet and stored internally. This method always returns
      * the same object.
      *
-     * @return the object created by this {@code AtomicInitializer}
+     * @return the object created by this {@link AtomicInitializer}
      * @throws ConcurrentException if an error occurred during initialization of
      * the object
      */
@@ -80,9 +137,9 @@ public abstract class AtomicInitializer<T> implements ConcurrentInitializer<T> {
     public T get() throws ConcurrentException {
         T result = reference.get();
 
-        if (result == null) {
+        if (result == getNoInit()) {
             result = initialize();
-            if (!reference.compareAndSet(null, result)) {
+            if (!reference.compareAndSet(getNoInit(), result)) {
                 // another thread has initialized the reference
                 result = reference.get();
             }
@@ -91,16 +148,28 @@ public abstract class AtomicInitializer<T> implements ConcurrentInitializer<T> {
         return result;
     }
 
+    /** Gets the internal no-init object cast for this instance. */
+    @SuppressWarnings("unchecked")
+    private T getNoInit() {
+        return (T) NO_INIT;
+    }
+
     /**
-     * Creates and initializes the object managed by this {@code
-     * AtomicInitializer}. This method is called by {@link #get()} when the
-     * managed object is not available yet. An implementation can focus on the
-     * creation of the object. No synchronization is needed, as this is already
-     * handled by {@code get()}. As stated by the class comment, it is possible
-     * that this method is called multiple times.
-     *
-     * @return the managed data object
-     * @throws ConcurrentException if an error occurs during object creation
+     * {@inheritDoc}
      */
-    protected abstract T initialize() throws ConcurrentException;
+    @Override
+    protected ConcurrentException getTypedException(final Exception e) {
+        return new ConcurrentException(e);
+    }
+
+    /**
+     * Tests whether this instance is initialized. Once initialized, always returns true.
+     *
+     * @return whether this instance is initialized. Once initialized, always returns true.
+     * @since 3.14.0
+     */
+    @Override
+    public boolean isInitialized() {
+        return reference.get() != NO_INIT;
+    }
 }

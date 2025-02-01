@@ -26,12 +26,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.AbstractLangTest;
+import org.apache.commons.lang3.concurrent.UncheckedFuture;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -47,9 +48,8 @@ import org.junit.jupiter.api.Test;
  *
  * @see <a href="https://issues.apache.org/jira/browse/LANG-762">[LANG-762] Handle or document ReflectionToStringBuilder
  *      and ToStringBuilder for collections that are not thread safe</a>
- * @since 3.1
  */
-public class ReflectionToStringBuilderConcurrencyTest {
+public class ReflectionToStringBuilderConcurrencyTest extends AbstractLangTest {
 
     static class CollectionHolder<T extends Collection<?>> {
         T collection;
@@ -64,24 +64,11 @@ public class ReflectionToStringBuilderConcurrencyTest {
 
     @Test
     @Disabled
-    public void testLinkedList() throws InterruptedException, ExecutionException {
-        this.testConcurrency(new CollectionHolder<>(new LinkedList<>()));
+    public void testArrayList() throws InterruptedException {
+        testConcurrency(new CollectionHolder<>(new ArrayList<>()));
     }
 
-    @Test
-    @Disabled
-    public void testArrayList() throws InterruptedException, ExecutionException {
-        this.testConcurrency(new CollectionHolder<>(new ArrayList<>()));
-    }
-
-    @Test
-    @Disabled
-    public void testCopyOnWriteArrayList() throws InterruptedException, ExecutionException {
-        this.testConcurrency(new CollectionHolder<>(new CopyOnWriteArrayList<>()));
-    }
-
-    private void testConcurrency(final CollectionHolder<List<Integer>> holder) throws InterruptedException,
-        ExecutionException {
+    private void testConcurrency(final CollectionHolder<List<Integer>> holder) throws InterruptedException {
         final List<Integer> list = holder.collection;
         // make a big array that takes a long time to toString()
         for (int i = 0; i < DATA_SIZE; i++) {
@@ -109,12 +96,22 @@ public class ReflectionToStringBuilderConcurrencyTest {
             tasks.add(consumer);
             tasks.add(producer);
             final List<Future<Integer>> futures = threadPool.invokeAll(tasks);
-            for (final Future<Integer> future : futures) {
-                assertEquals(REPEAT, future.get().intValue());
-            }
+            UncheckedFuture.on(futures).forEach(f -> assertEquals(REPEAT, f.get().intValue()));
         } finally {
             threadPool.shutdown();
             threadPool.awaitTermination(1, TimeUnit.SECONDS);
         }
+    }
+
+    @Test
+    @Disabled
+    public void testCopyOnWriteArrayList() throws InterruptedException {
+        testConcurrency(new CollectionHolder<>(new CopyOnWriteArrayList<>()));
+    }
+
+    @Test
+    @Disabled
+    public void testLinkedList() throws InterruptedException {
+        testConcurrency(new CollectionHolder<>(new LinkedList<>()));
     }
 }

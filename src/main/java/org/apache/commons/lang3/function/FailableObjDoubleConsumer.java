@@ -20,10 +20,10 @@ package org.apache.commons.lang3.function;
 import java.util.function.ObjDoubleConsumer;
 
 /**
- * A functional interface like {@link ObjDoubleConsumer} that declares a {@code Throwable}.
+ * A functional interface like {@link ObjDoubleConsumer} that declares a {@link Throwable}.
  *
  * @param <T> the type of the object argument to the operation.
- * @param <E> Thrown exception.
+ * @param <E> The kind of thrown exception or error.
  * @since 3.11
  */
 @FunctionalInterface
@@ -31,21 +31,22 @@ public interface FailableObjDoubleConsumer<T, E extends Throwable> {
 
     /** NOP singleton */
     @SuppressWarnings("rawtypes")
-    FailableObjDoubleConsumer NOP = (t, u) -> {/* NOP */};
+    FailableObjDoubleConsumer NOP = (t, u) -> { /* NOP */ };
 
     /**
      * Returns The NOP singleton.
      *
      * @param <T> the type of the object argument to the operation.
-     * @param <E> Thrown exception.
+     * @param <E> The kind of thrown exception or error.
      * @return The NOP singleton.
      */
+    @SuppressWarnings("unchecked")
     static <T, E extends Throwable> FailableObjDoubleConsumer<T, E> nop() {
         return NOP;
     }
 
     /**
-     * Accepts the consumer.
+     * Accepts the given arguments.
      *
      * @param object the object parameter for the consumable to accept.
      * @param value the double parameter for the consumable to accept.

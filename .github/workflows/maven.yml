@@ -17,32 +17,44 @@ name: Java CI
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
-        java: [ 8, 11, 15 ]
+        os: [ubuntu-latest, windows-latest, macos-13]
+        java: [ 8, 11, 17, 21 ]
         experimental: [false]
         include:
-          - java: 16-ea
-            experimental: true        
-          - java: 17-ea
-            experimental: true        
-        
+          - java: 23
+            experimental: true
+            os: ubuntu-latest
+          - java: 24-ea
+            experimental: true
+            os: ubuntu-latest
+          - java: 25-ea
+            experimental: true
+            os: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2.3.4
-    - uses: actions/cache@v2.1.4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        persist-credentials: false
+    - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v1.4.3
+      uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
       with:
+        distribution: 'temurin'      
         java-version: ${{ matrix.java }}
     - name: Build with Maven
-      run: mvn -V -Ddoclint=all --file pom.xml --no-transfer-progress
+      run: mvn --errors --show-version --batch-mode --no-transfer-progress -Ddoclint=all

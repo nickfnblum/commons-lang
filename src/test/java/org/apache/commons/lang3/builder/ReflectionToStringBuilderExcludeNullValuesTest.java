@@ -20,9 +20,10 @@ package org.apache.commons.lang3.builder;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
-public class ReflectionToStringBuilderExcludeNullValuesTest {
+public class ReflectionToStringBuilderExcludeNullValuesTest extends AbstractLangTest {
 
     static class TestFixture {
         @SuppressWarnings("unused")
@@ -42,53 +43,6 @@ public class ReflectionToStringBuilderExcludeNullValuesTest {
     private final TestFixture FIRST_NULL = new TestFixture(null, "str");
     private final TestFixture SECOND_NULL = new TestFixture(0, null);
     private final TestFixture BOTH_NULL = new TestFixture(null, null);
-
-    @Test
-    public void test_NonExclude() {
-        //normal case=
-        String toString = ReflectionToStringBuilder.toString(BOTH_NON_NULL, null, false, false, false, null);
-        assertTrue(toString.contains(INTEGER_FIELD_NAME));
-        assertTrue(toString.contains(STRING_FIELD_NAME));
-
-        //make one null
-        toString = ReflectionToStringBuilder.toString(FIRST_NULL, null, false, false, false, null);
-        assertTrue(toString.contains(INTEGER_FIELD_NAME));
-        assertTrue(toString.contains(STRING_FIELD_NAME));
-
-        //other one null
-        toString = ReflectionToStringBuilder.toString(SECOND_NULL, null, false, false, false, null);
-        assertTrue(toString.contains(INTEGER_FIELD_NAME));
-        assertTrue(toString.contains(STRING_FIELD_NAME));
-
-        //make the both null
-        toString = ReflectionToStringBuilder.toString(BOTH_NULL, null, false, false, false, null);
-        assertTrue(toString.contains(INTEGER_FIELD_NAME));
-        assertTrue(toString.contains(STRING_FIELD_NAME));
-    }
-
-    @Test
-    public void test_excludeNull() {
-
-        //test normal case
-        String toString = ReflectionToStringBuilder.toString(BOTH_NON_NULL, null, false, false, true, null);
-        assertTrue(toString.contains(INTEGER_FIELD_NAME));
-        assertTrue(toString.contains(STRING_FIELD_NAME));
-
-        //make one null
-        toString = ReflectionToStringBuilder.toString(FIRST_NULL, null, false, false, true, null);
-        assertFalse(toString.contains(INTEGER_FIELD_NAME));
-        assertTrue(toString.contains(STRING_FIELD_NAME));
-
-        //other one null
-        toString = ReflectionToStringBuilder.toString(SECOND_NULL, null, false, false, true, null);
-        assertTrue(toString.contains(INTEGER_FIELD_NAME));
-        assertFalse(toString.contains(STRING_FIELD_NAME));
-
-        //both null
-        toString = ReflectionToStringBuilder.toString(BOTH_NULL, null, false, false, true, null);
-        assertFalse(toString.contains(INTEGER_FIELD_NAME));
-        assertFalse(toString.contains(STRING_FIELD_NAME));
-    }
 
     @Test
     public void test_ConstructorOption() {
@@ -112,6 +66,28 @@ public class ReflectionToStringBuilderExcludeNullValuesTest {
         toString = builder.toString();
         assertFalse(toString.contains(INTEGER_FIELD_NAME));
         assertFalse(toString.contains(STRING_FIELD_NAME));
+    }
+
+    @Test
+    public void test_ConstructorOption_ExcludeNull() {
+        ReflectionToStringBuilder builder = new ReflectionToStringBuilder(BOTH_NULL, null, null, null, false, false, false);
+        builder.setExcludeNullValues(true);
+        assertTrue(builder.isExcludeNullValues());
+        String toString = builder.toString();
+        assertFalse(toString.contains(STRING_FIELD_NAME));
+        assertFalse(toString.contains(INTEGER_FIELD_NAME));
+
+        builder = new ReflectionToStringBuilder(BOTH_NULL, null, null, null, false, false, true);
+        toString = builder.toString();
+        assertFalse(toString.contains(STRING_FIELD_NAME));
+        assertFalse(toString.contains(INTEGER_FIELD_NAME));
+
+        final ReflectionToStringBuilder oldBuilder = new ReflectionToStringBuilder(BOTH_NULL);
+        oldBuilder.setExcludeNullValues(true);
+        assertTrue(oldBuilder.isExcludeNullValues());
+        toString = oldBuilder.toString();
+        assertFalse(toString.contains(STRING_FIELD_NAME));
+        assertFalse(toString.contains(INTEGER_FIELD_NAME));
     }
 
     @Test
@@ -140,25 +116,50 @@ public class ReflectionToStringBuilderExcludeNullValuesTest {
     }
 
     @Test
-    public void test_ConstructorOption_ExcludeNull() {
-        ReflectionToStringBuilder builder = new ReflectionToStringBuilder(BOTH_NULL, null, null, null, false, false, false);
-        builder.setExcludeNullValues(true);
-        assertTrue(builder.isExcludeNullValues());
-        String toString = builder.toString();
-        assertFalse(toString.contains(STRING_FIELD_NAME));
-        assertFalse(toString.contains(INTEGER_FIELD_NAME));
+    public void test_excludeNull() {
 
-        builder = new ReflectionToStringBuilder(BOTH_NULL, null, null, null, false, false, true);
-        toString = builder.toString();
-        assertFalse(toString.contains(STRING_FIELD_NAME));
-        assertFalse(toString.contains(INTEGER_FIELD_NAME));
+        //test normal case
+        String toString = ReflectionToStringBuilder.toString(BOTH_NON_NULL, null, false, false, true, null);
+        assertTrue(toString.contains(INTEGER_FIELD_NAME));
+        assertTrue(toString.contains(STRING_FIELD_NAME));
 
-        final ReflectionToStringBuilder oldBuilder = new ReflectionToStringBuilder(BOTH_NULL);
-        oldBuilder.setExcludeNullValues(true);
-        assertTrue(oldBuilder.isExcludeNullValues());
-        toString = oldBuilder.toString();
-        assertFalse(toString.contains(STRING_FIELD_NAME));
+        //make one null
+        toString = ReflectionToStringBuilder.toString(FIRST_NULL, null, false, false, true, null);
         assertFalse(toString.contains(INTEGER_FIELD_NAME));
+        assertTrue(toString.contains(STRING_FIELD_NAME));
+
+        //other one null
+        toString = ReflectionToStringBuilder.toString(SECOND_NULL, null, false, false, true, null);
+        assertTrue(toString.contains(INTEGER_FIELD_NAME));
+        assertFalse(toString.contains(STRING_FIELD_NAME));
+
+        //both null
+        toString = ReflectionToStringBuilder.toString(BOTH_NULL, null, false, false, true, null);
+        assertFalse(toString.contains(INTEGER_FIELD_NAME));
+        assertFalse(toString.contains(STRING_FIELD_NAME));
+    }
+
+    @Test
+    public void test_NonExclude() {
+        //normal case=
+        String toString = ReflectionToStringBuilder.toString(BOTH_NON_NULL, null, false, false, false, null);
+        assertTrue(toString.contains(INTEGER_FIELD_NAME));
+        assertTrue(toString.contains(STRING_FIELD_NAME));
+
+        //make one null
+        toString = ReflectionToStringBuilder.toString(FIRST_NULL, null, false, false, false, null);
+        assertTrue(toString.contains(INTEGER_FIELD_NAME));
+        assertTrue(toString.contains(STRING_FIELD_NAME));
+
+        //other one null
+        toString = ReflectionToStringBuilder.toString(SECOND_NULL, null, false, false, false, null);
+        assertTrue(toString.contains(INTEGER_FIELD_NAME));
+        assertTrue(toString.contains(STRING_FIELD_NAME));
+
+        //make the both null
+        toString = ReflectionToStringBuilder.toString(BOTH_NULL, null, false, false, false, null);
+        assertTrue(toString.contains(INTEGER_FIELD_NAME));
+        assertTrue(toString.contains(STRING_FIELD_NAME));
     }
 
 }

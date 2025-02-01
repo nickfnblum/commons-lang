@@ -19,13 +19,23 @@ package org.apache.commons.lang3.text.translate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link org.apache.commons.lang3.text.translate.UnicodeEscaper}.
+ * Tests for {@link org.apache.commons.lang3.text.translate.UnicodeEscaper}.
  */
 @Deprecated
-public class UnicodeEscaperTest  {
+public class UnicodeEscaperTest extends AbstractLangTest {
+
+    @Test
+    public void testAbove() {
+        final UnicodeEscaper ue = UnicodeEscaper.above('F');
+
+        final String input = "ADFGZ";
+        final String result = ue.translate(input);
+        assertEquals("ADF\\u0047\\u005A", result, "Failed to escape Unicode characters via the above method");
+    }
 
     @Test
     public void testBelow() {
@@ -43,14 +53,5 @@ public class UnicodeEscaperTest  {
         final String input = "ADFGZ";
         final String result = ue.translate(input);
         assertEquals("AD\\u0046\\u0047Z", result, "Failed to escape Unicode characters via the between method");
-    }
-
-    @Test
-    public void testAbove() {
-        final UnicodeEscaper ue = UnicodeEscaper.above('F');
-
-        final String input = "ADFGZ";
-        final String result = ue.translate(input);
-        assertEquals("ADF\\u0047\\u005A", result, "Failed to escape Unicode characters via the above method");
     }
 }

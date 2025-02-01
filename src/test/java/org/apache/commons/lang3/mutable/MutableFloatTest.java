@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,7 +29,7 @@ import org.junit.jupiter.api.Test;
  *
  * @see MutableFloat
  */
-public class MutableFloatTest {
+public class MutableFloatTest extends AbstractLangTest {
 
     @Test
     public void testAddAndGetValueObject() {
@@ -84,7 +85,6 @@ public class MutableFloatTest {
         assertThrows(NullPointerException.class, () -> new MutableFloat((Number) null));
     }
 
-    // ----------------------------------------------------------------
     @Test
     public void testConstructors() {
         assertEquals(0f, new MutableFloat().floatValue(), 0.0001f);
@@ -239,12 +239,12 @@ public class MutableFloatTest {
     public void testPrimitiveValues() {
         final MutableFloat mutNum = new MutableFloat(1.7F);
 
-        assertEquals( 1, mutNum.intValue() );
-        assertEquals( 1.7, mutNum.doubleValue(), 0.00001 );
-        assertEquals( (byte) 1, mutNum.byteValue() );
-        assertEquals( (short) 1, mutNum.shortValue() );
-        assertEquals( 1, mutNum.intValue() );
-        assertEquals( 1L, mutNum.longValue() );
+        assertEquals(1, mutNum.intValue());
+        assertEquals(1.7, mutNum.doubleValue(), 0.00001);
+        assertEquals((byte) 1, mutNum.byteValue());
+        assertEquals((short) 1, mutNum.shortValue());
+        assertEquals(1, mutNum.intValue());
+        assertEquals(1L, mutNum.longValue());
     }
 
     @Test

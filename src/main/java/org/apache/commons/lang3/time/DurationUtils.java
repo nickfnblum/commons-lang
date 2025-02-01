@@ -18,13 +18,17 @@
 package org.apache.commons.lang3.time;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.LongRange;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.function.FailableBiConsumer;
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.function.FailableRunnable;
 import org.apache.commons.lang3.math.NumberUtils;
 
 /**
@@ -37,8 +41,7 @@ public class DurationUtils {
     /**
      * An Integer Range that accepts Longs.
      */
-    static final Range<Long> LONG_TO_INT_RANGE = Range.between(NumberUtils.LONG_INT_MIN_VALUE,
-            NumberUtils.LONG_INT_MAX_VALUE);
+    static final LongRange LONG_TO_INT_RANGE = LongRange.of(NumberUtils.LONG_INT_MIN_VALUE, NumberUtils.LONG_INT_MAX_VALUE);
 
     /**
      * Accepts the function with the duration as a long milliseconds and int nanoseconds.
@@ -47,11 +50,13 @@ public class DurationUtils {
      * @param consumer Accepting function.
      * @param duration The duration to pick apart.
      * @throws T See the function signature.
+     * @see StopWatch
      */
+    @SuppressWarnings("boxing") // boxing unavoidable
     public static <T extends Throwable> void accept(final FailableBiConsumer<Long, Integer, T> consumer, final Duration duration)
             throws T {
         if (consumer != null && duration != null) {
-            consumer.accept(duration.toMillis(), getNanosOfMiili(duration));
+            consumer.accept(duration.toMillis(), getNanosOfMilli(duration));
         }
     }
 
@@ -67,9 +72,29 @@ public class DurationUtils {
      *
      * @param duration The duration to query.
      * @return nanoseconds between 0 and 999,999.
+     * @deprecated Use {@link #getNanosOfMilli(Duration)}.
      */
+    @Deprecated
     public static int getNanosOfMiili(final Duration duration) {
-        return duration.getNano() % 1_000_000;
+        return getNanosOfMilli(duration);
+    }
+
+    /**
+     * Gets the nanosecond part of a Duration converted to milliseconds.
+     * <p>
+     * Handy when calling an API that takes a long of milliseconds and an int of nanoseconds. For example,
+     * {@link Object#wait(long, int)} and {@link Thread#sleep(long, int)}.
+     * </p>
+     * <p>
+     * Note that is this different from {@link Duration#getNano()} because a duration are seconds and nanoseconds.
+     * </p>
+     *
+     * @param duration The duration to query.
+     * @return nanoseconds between 0 and 999,999.
+     * @since 3.13.0
+     */
+    public static int getNanosOfMilli(final Duration duration) {
+        return zeroIfNull(duration).getNano() % 1_000_000;
     }
 
     /**
@@ -80,6 +105,51 @@ public class DurationUtils {
      */
     public static boolean isPositive(final Duration duration) {
         return !duration.isNegative() && !duration.isZero();
+    }
+
+    private static <E extends Throwable> Instant now(final FailableConsumer<Instant, E> nowConsumer) throws E {
+        final Instant start = Instant.now();
+        nowConsumer.accept(start);
+        return start;
+    }
+
+    /**
+     * Runs the lambda and returns the duration of its execution.
+     *
+     * @param <E> The type of exception throw by the lambda.
+     * @param consumer What to execute.
+     * @return The Duration of execution.
+     * @throws E thrown by the lambda.
+     * @see StopWatch
+     * @since 3.13.0
+     */
+    public static <E extends Throwable> Duration of(final FailableConsumer<Instant, E> consumer) throws E {
+        return since(now(consumer::accept));
+    }
+
+    /**
+     * Runs the lambda and returns the duration of its execution.
+     *
+     * @param <E> The type of exception throw by the lambda.
+     * @param runnable What to execute.
+     * @return The Duration of execution.
+     * @throws E thrown by the lambda.
+     * @see StopWatch
+     * @since 3.13.0
+     */
+    public static <E extends Throwable> Duration of(final FailableRunnable<E> runnable) throws E {
+        return of(start -> runnable.run());
+    }
+
+    /**
+     * Computes the Duration between a start instant and now.
+     *
+     * @param startInclusive the start instant, inclusive, not null.
+     * @return a {@link Duration}, not null.
+     * @since 3.13.0
+     */
+    public static Duration since(final Temporal startInclusive) {
+        return Duration.between(startInclusive, Instant.now());
     }
 
     /**
@@ -152,4 +222,13 @@ public class DurationUtils {
         return ObjectUtils.defaultIfNull(duration, Duration.ZERO);
     }
 
+    /**
+     * Make private in 4.0.
+     *
+     * @deprecated TODO Make private in 4.0.
+     */
+    @Deprecated
+    public DurationUtils() {
+        // empty
+    }
 }

@@ -20,13 +20,25 @@ package org.apache.commons.lang3.text.translate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link org.apache.commons.lang3.text.translate.UnicodeEscaper}.
+ * Tests for {@link org.apache.commons.lang3.text.translate.UnicodeEscaper}.
  */
 @Deprecated
-public class UnicodeUnescaperTest {
+public class UnicodeUnescaperTest extends AbstractLangTest {
+
+    @Test
+    public void testLessThanFour() {
+        final UnicodeUnescaper uu = new UnicodeUnescaper();
+
+        final String input = "\\0047\\u006";
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> uu.translate(input),
+                "A lack of digits in a Unicode escape sequence failed to throw an exception");
+    }
 
     // Requested in LANG-507
     @Test
@@ -44,16 +56,5 @@ public class UnicodeUnescaperTest {
         final String input = "\\uuuuuuuu0047";
         final String result = uu.translate(input);
         assertEquals("G", result, "Failed to unescape Unicode characters with many 'u' characters");
-    }
-
-    @Test
-    public void testLessThanFour() {
-        final UnicodeUnescaper uu = new UnicodeUnescaper();
-
-        final String input = "\\0047\\u006";
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> uu.translate(input),
-                "A lack of digits in a Unicode escape sequence failed to throw an exception");
     }
 }

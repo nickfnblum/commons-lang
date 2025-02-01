@@ -18,13 +18,21 @@ package org.apache.commons.lang3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests {@link org.apache.commons.lang3.NotImplementedException}.
+ * Tests {@link NotImplementedException}.
  */
-public class NotImplementedExceptionTest {
+public class NotImplementedExceptionTest extends AbstractLangTest {
+
+    private void assertCorrect(final String assertMessage, final NotImplementedException nie, final String message, final Throwable nested, final String code) {
+        assertNotNull(nie, assertMessage + ": target is null");
+        assertEquals(message, nie.getMessage(), assertMessage + ": Message not equal");
+        assertEquals(nested, nie.getCause(), assertMessage + ": Nested throwable not equal");
+        assertEquals(code, nie.getCode(), assertMessage + ": Code not equal");
+    }
 
     @Test
     public void testConstructors() {
@@ -44,12 +52,7 @@ public class NotImplementedExceptionTest {
         assertCorrect("Issue in (Throwable, String)", nie, nested.toString(), nested, code);
         nie = new NotImplementedException(message, nested, code);
         assertCorrect("Issue in (String, Throwable, String)", nie, message, nested, code);
-    }
 
-    private void assertCorrect(final String assertMessage, final NotImplementedException nie, final String message, final Throwable nested, final String code) {
-        assertNotNull(nie, assertMessage + ": target is null");
-        assertEquals(message, nie.getMessage(), assertMessage + ": Message not equal");
-        assertEquals(nested, nie.getCause(), assertMessage + ": Nested throwable not equal");
-        assertEquals(code, nie.getCode(), assertMessage + ": Code not equal");
+        assertNull(new NotImplementedException().getCode());
     }
 }

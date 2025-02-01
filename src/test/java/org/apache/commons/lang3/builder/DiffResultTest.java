@@ -23,50 +23,46 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests {@link DiffResult}.
+ * Tests {@link DiffResult}.
  */
-public class DiffResultTest {
+public class DiffResultTest extends AbstractLangTest {
 
-    private static final SimpleClass SIMPLE_FALSE = new SimpleClass(false);
-    private static final SimpleClass SIMPLE_TRUE = new SimpleClass(true);
-    private static final ToStringStyle SHORT_STYLE = ToStringStyle.SHORT_PREFIX_STYLE;
+    private static final class EmptyClass {
+        // empty
+    }
 
-    private static class SimpleClass implements Diffable<SimpleClass> {
+    private static final class SimpleClass implements Diffable<SimpleClass> {
+        static String getFieldName() {
+            return "booleanField";
+        }
+
         private final boolean booleanField;
 
         SimpleClass(final boolean booleanField) {
             this.booleanField = booleanField;
         }
 
-        static String getFieldName() {
-            return "booleanField";
-        }
-
         @Override
-        public DiffResult diff(final SimpleClass obj) {
-            return new DiffBuilder(this, obj, ToStringStyle.SHORT_PREFIX_STYLE)
-                    .append(getFieldName(), booleanField, obj.booleanField)
-                    .build();
+        public DiffResult<SimpleClass> diff(final SimpleClass obj) {
+            return new DiffBuilder<>(this, obj, ToStringStyle.SHORT_PREFIX_STYLE).append(getFieldName(), booleanField, obj.booleanField).build();
         }
     }
 
-    private static class EmptyClass {
-    }
+    private static final ToStringStyle SHORT_STYLE = ToStringStyle.SHORT_PREFIX_STYLE;
+
+    private static final SimpleClass SIMPLE_FALSE = new SimpleClass(false);
+
+    private static final SimpleClass SIMPLE_TRUE = new SimpleClass(true);
 
     @Test
-    public void testListIsNonModifiable() {
-        final SimpleClass lhs = new SimpleClass(true);
-        final SimpleClass rhs = new SimpleClass(false);
-
-        final List<Diff<?>> diffs = lhs.diff(rhs).getDiffs();
-
-        final DiffResult list = new DiffResult(lhs, rhs, diffs, SHORT_STYLE);
-        assertEquals(diffs, list.getDiffs());
-        assertEquals(1, list.getNumberOfDiffs());
-        assertThrows(UnsupportedOperationException.class, () -> list.getDiffs().remove(0));
+    public void testDefaultStyle() {
+        final DiffResult<SimpleClass> diffResult = new DiffResult<>(SIMPLE_TRUE, SIMPLE_FALSE, SIMPLE_TRUE.diff(SIMPLE_FALSE).getDiffs(),
+                ToStringStyle.DEFAULT_STYLE, DiffBuilder.TO_STRING_FORMAT);
+        assertEquals(ToStringStyle.DEFAULT_STYLE, diffResult.getToStringStyle());
     }
 
     @Test
@@ -77,7 +73,7 @@ public class DiffResultTest {
         final List<Diff<?>> diffs = lhs.diff(rhs).getDiffs();
         final Iterator<Diff<?>> expectedIterator = diffs.iterator();
 
-        final DiffResult list = new DiffResult(lhs, rhs, diffs, SHORT_STYLE);
+        final DiffResult<SimpleClass> list = new DiffResult<>(lhs, rhs, diffs, SHORT_STYLE, DiffBuilder.TO_STRING_FORMAT);
         final Iterator<Diff<?>> iterator = list.iterator();
 
         while (iterator.hasNext()) {
@@ -87,75 +83,98 @@ public class DiffResultTest {
     }
 
     @Test
-    public void testToStringOutput() {
-        final DiffResult list = new DiffBuilder(new EmptyClass(), new EmptyClass(),
-                ToStringStyle.SHORT_PREFIX_STYLE).append("test", false, true)
-                .build();
-        assertEquals(
-                "DiffResultTest.EmptyClass[test=false] differs from DiffResultTest.EmptyClass[test=true]",
-                list.toString());
-    }
-
-    @Test
-    public void testToStringSpecifyStyleOutput() {
-        final DiffResult list = SIMPLE_FALSE.diff(SIMPLE_TRUE);
-        assertEquals(list.getToStringStyle(), SHORT_STYLE);
-
-        final String lhsString = new ToStringBuilder(SIMPLE_FALSE,
-                ToStringStyle.MULTI_LINE_STYLE).append(
-                SimpleClass.getFieldName(), SIMPLE_FALSE.booleanField).build();
-
-        final String rhsString = new ToStringBuilder(SIMPLE_TRUE,
-                ToStringStyle.MULTI_LINE_STYLE).append(
-                SimpleClass.getFieldName(), SIMPLE_TRUE.booleanField).build();
-
-        final String expectedOutput = String.format("%s differs from %s", lhsString,
-                rhsString);
-        assertEquals(expectedOutput,
-                list.toString(ToStringStyle.MULTI_LINE_STYLE));
-    }
-
-    @Test
-    public void testNullLhs() {
-        assertThrows(NullPointerException.class,
-            () -> new DiffResult(null, SIMPLE_FALSE, SIMPLE_TRUE.diff(SIMPLE_FALSE).getDiffs(), SHORT_STYLE));
-    }
-
-    @Test
-    public void testNullRhs() {
-        assertThrows(NullPointerException.class,
-            () -> new DiffResult(SIMPLE_TRUE, null, SIMPLE_TRUE.diff(SIMPLE_FALSE).getDiffs(), SHORT_STYLE));
-    }
-
-    @Test
-    public void testNullList() {
-        assertThrows(NullPointerException.class,
-            () -> new DiffResult(SIMPLE_TRUE, SIMPLE_FALSE, null, SHORT_STYLE));
-    }
-
-    @Test
-    public void testNullStyle() {
-        final DiffResult diffResult = new DiffResult(SIMPLE_TRUE, SIMPLE_FALSE, SIMPLE_TRUE
-                .diff(SIMPLE_FALSE).getDiffs(), null);
-        assertEquals(ToStringStyle.DEFAULT_STYLE, diffResult.getToStringStyle());
-    }
-
-    @Test
-    public void testNoDifferencesString() {
-        final DiffResult diffResult = new DiffBuilder(SIMPLE_TRUE, SIMPLE_TRUE,
-                SHORT_STYLE).build();
-        assertEquals(DiffResult.OBJECTS_SAME_STRING, diffResult.toString());
-    }
-
-    @Test
     public void testLeftAndRightGetters() {
         final SimpleClass left = new SimpleClass(true);
         final SimpleClass right = new SimpleClass(false);
 
         final List<Diff<?>> diffs = left.diff(right).getDiffs();
-        final DiffResult diffResult = new DiffResult(left, right, diffs, SHORT_STYLE);
+        final DiffResult<SimpleClass> diffResult = new DiffResult<>(left, right, diffs, SHORT_STYLE, DiffBuilder.TO_STRING_FORMAT);
 
         assertEquals(left, diffResult.getLeft());
         assertEquals(right, diffResult.getRight());
+    }
+
+    @Test
+    public void testListIsNonModifiable() {
+        final SimpleClass lhs = new SimpleClass(true);
+        final SimpleClass rhs = new SimpleClass(false);
+
+        final List<Diff<?>> diffs = lhs.diff(rhs).getDiffs();
+
+        final DiffResult<SimpleClass> result = new DiffResult<>(lhs, rhs, diffs, SHORT_STYLE, DiffBuilder.TO_STRING_FORMAT);
+        assertEquals(diffs, result.getDiffs());
+        assertEquals(1, result.getNumberOfDiffs());
+        assertThrows(UnsupportedOperationException.class, () -> result.getDiffs().remove(0));
+    }
+
+    @Test
+    public void testNoDifferencesString() {
+        final DiffResult<SimpleClass> diffResult = DiffBuilder.<SimpleClass>builder().setLeft(SIMPLE_TRUE).setRight(SIMPLE_TRUE).setStyle(SHORT_STYLE).build()
+                .build();
+        assertEquals(DiffResult.OBJECTS_SAME_STRING, diffResult.toString());
+    }
+
+    @Test
+    public void testNullLhs() {
+        assertThrows(NullPointerException.class,
+                () -> new DiffResult<>(null, SIMPLE_FALSE, SIMPLE_TRUE.diff(SIMPLE_FALSE).getDiffs(), SHORT_STYLE, DiffBuilder.TO_STRING_FORMAT));
+    }
+
+    @Test
+    public void testNullList() {
+        assertThrows(NullPointerException.class, () -> new DiffResult<>(SIMPLE_TRUE, SIMPLE_FALSE, null, SHORT_STYLE, null));
+    }
+
+    @Test
+    public void testNullRhs() {
+        assertThrows(NullPointerException.class,
+                () -> new DiffResult<>(SIMPLE_TRUE, null, SIMPLE_TRUE.diff(SIMPLE_FALSE).getDiffs(), SHORT_STYLE, DiffBuilder.TO_STRING_FORMAT));
+    }
+
+    @Test
+    public void testToStringFormat() {
+        // @formatter:off
+        final DiffResult<EmptyClass> result = DiffBuilder.<EmptyClass>builder()
+                .setLeft(new EmptyClass())
+                .setRight(new EmptyClass())
+                .setStyle(ToStringStyle.SHORT_PREFIX_STYLE)
+                .setToStringFormat("%s <> %s")
+                .build()
+                .append("test", false, true)
+                .build();
+        // @formatter:on
+        assertEquals("DiffResultTest.EmptyClass[test=false] <> DiffResultTest.EmptyClass[test=true]", result.toString());
+    }
+
+    @Test
+    public void testToStringOutput() {
+        // @formatter:off
+        final DiffResult<EmptyClass> result = DiffBuilder.<EmptyClass>builder()
+                .setLeft(new EmptyClass())
+                .setRight(new EmptyClass())
+                .setStyle(ToStringStyle.SHORT_PREFIX_STYLE)
+                .build()
+                .append("test", false, true)
+                .build();
+        // @formatter:on
+        assertEquals("DiffResultTest.EmptyClass[test=false] differs from DiffResultTest.EmptyClass[test=true]", result.toString());
+    }
+
+    @Test
+    public void testToStringSpecifyStyleOutput() {
+        final DiffResult<SimpleClass> result = SIMPLE_FALSE.diff(SIMPLE_TRUE);
+        assertEquals(result.getToStringStyle(), SHORT_STYLE);
+
+        // @formatter:off
+        final String lhsString = new ToStringBuilder(SIMPLE_FALSE, ToStringStyle.MULTI_LINE_STYLE)
+                .append(SimpleClass.getFieldName(), SIMPLE_FALSE.booleanField)
+                .build();
+
+        final String rhsString = new ToStringBuilder(SIMPLE_TRUE, ToStringStyle.MULTI_LINE_STYLE)
+                .append(SimpleClass.getFieldName(), SIMPLE_TRUE.booleanField)
+                .build();
+        // @formatter:on
+
+        assertEquals(String.format("%s differs from %s", lhsString, rhsString), result.toString(ToStringStyle.MULTI_LINE_STYLE));
     }
 }

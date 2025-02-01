@@ -19,21 +19,40 @@ package org.apache.commons.lang3.text;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test class for StrLookup.
  */
 @Deprecated
-public class StrLookupTest  {
+public class StrLookupTest extends AbstractLangTest {
 
-    //-----------------------------------------------------------------------
+    @Test
+    public void testMapLookup() {
+        final Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("number", Integer.valueOf(2));
+        assertEquals("value", StrLookup.mapLookup(map).lookup("key"));
+        assertEquals("2", StrLookup.mapLookup(map).lookup("number"));
+        assertNull(StrLookup.mapLookup(map).lookup(null));
+        assertNull(StrLookup.mapLookup(map).lookup(""));
+        assertNull(StrLookup.mapLookup(map).lookup("other"));
+    }
+
+    @Test
+    public void testMapLookup_nullMap() {
+        final Map<String, ?> map = null;
+        assertNull(StrLookup.mapLookup(map).lookup(null));
+        assertNull(StrLookup.mapLookup(map).lookup(""));
+        assertNull(StrLookup.mapLookup(map).lookup("any"));
+    }
+
     @Test
     public void testNoneLookup() {
         assertNull(StrLookup.noneLookup().lookup(null));
@@ -46,7 +65,7 @@ public class StrLookupTest  {
         assertEquals(System.getProperty("os.name"), StrLookup.systemPropertiesLookup().lookup("os.name"));
         assertNull(StrLookup.systemPropertiesLookup().lookup(""));
         assertNull(StrLookup.systemPropertiesLookup().lookup("other"));
-        assertThrows(NullPointerException.class, () -> StrLookup.systemPropertiesLookup().lookup(null));
+        assertNull(StrLookup.systemPropertiesLookup().lookup(null));
     }
 
     /**
@@ -88,26 +107,6 @@ public class StrLookupTest  {
         } finally {
             System.setProperty(osName, oldOs);
         }
-    }
-
-    @Test
-    public void testMapLookup() {
-        final Map<String, Object> map = new HashMap<>();
-        map.put("key", "value");
-        map.put("number", Integer.valueOf(2));
-        assertEquals("value", StrLookup.mapLookup(map).lookup("key"));
-        assertEquals("2", StrLookup.mapLookup(map).lookup("number"));
-        assertNull(StrLookup.mapLookup(map).lookup(null));
-        assertNull(StrLookup.mapLookup(map).lookup(""));
-        assertNull(StrLookup.mapLookup(map).lookup("other"));
-    }
-
-    @Test
-    public void testMapLookup_nullMap() {
-        final Map<String, ?> map = null;
-        assertNull(StrLookup.mapLookup(map).lookup(null));
-        assertNull(StrLookup.mapLookup(map).lookup(""));
-        assertNull(StrLookup.mapLookup(map).lookup("any"));
     }
 
 }

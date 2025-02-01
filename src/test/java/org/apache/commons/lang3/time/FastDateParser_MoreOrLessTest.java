@@ -26,9 +26,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
-public class FastDateParser_MoreOrLessTest {
+public class FastDateParser_MoreOrLessTest extends AbstractLangTest {
 
     private static final TimeZone NEW_YORK = TimeZone.getTimeZone("America/New_York");
 
@@ -95,7 +96,7 @@ public class FastDateParser_MoreOrLessTest {
         assertEquals(input.length(), parsePosition.getIndex());
 
         parsePosition.setIndex(0);
-        assertNull(parser.parse( "Thorsday, 03/23/61", parsePosition));
+        assertNull(parser.parse("Thorsday, 03/23/61", parsePosition));
         assertEquals(0, parsePosition.getErrorIndex());
     }
 
@@ -109,7 +110,7 @@ public class FastDateParser_MoreOrLessTest {
         assertEquals(input.length(), parsePosition.getIndex());
 
         parsePosition.setIndex(0);
-        assertNull(parser.parse( "11:23 Pacific Standard ", parsePosition));
+        assertNull(parser.parse("11:23 Pacific Standard ", parsePosition));
         assertEquals(6, parsePosition.getErrorIndex());
     }
 }

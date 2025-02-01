@@ -23,12 +23,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.AbstractLangTest;
+import org.apache.commons.lang3.concurrent.UncheckedFuture;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -43,9 +44,8 @@ import org.junit.jupiter.api.Test;
  *
  * @see <a href="https://issues.apache.org/jira/browse/LANG-762">[LANG-762] Handle or document ReflectionToStringBuilder
  *      and ToStringBuilder for collections that are not thread safe</a>
- * @since 3.1
  */
-public class ToStringStyleConcurrencyTest {
+public class ToStringStyleConcurrencyTest extends AbstractLangTest {
 
     static class CollectionHolder<T extends Collection<?>> {
         T collection;
@@ -67,22 +67,11 @@ public class ToStringStyleConcurrencyTest {
     }
 
     @Test
-    public void testLinkedList() throws InterruptedException, ExecutionException {
-        this.testConcurrency(new CollectionHolder<>(new LinkedList<>()));
+    public void testArrayList() throws InterruptedException {
+        testConcurrency(new CollectionHolder<>(new ArrayList<>()));
     }
 
-    @Test
-    public void testArrayList() throws InterruptedException, ExecutionException {
-        this.testConcurrency(new CollectionHolder<>(new ArrayList<>()));
-    }
-
-    @Test
-    public void testCopyOnWriteArrayList() throws InterruptedException, ExecutionException {
-        this.testConcurrency(new CollectionHolder<>(new CopyOnWriteArrayList<>()));
-    }
-
-    private void testConcurrency(final CollectionHolder<List<Integer>> holder) throws InterruptedException,
-        ExecutionException {
+    private void testConcurrency(final CollectionHolder<List<Integer>> holder) throws InterruptedException {
         final List<Integer> list = holder.collection;
         // make a big array that takes a long time to toString()
         list.addAll(LIST);
@@ -101,12 +90,20 @@ public class ToStringStyleConcurrencyTest {
             tasks.add(consumer);
             tasks.add(consumer);
             final List<Future<Integer>> futures = threadPool.invokeAll(tasks);
-            for (final Future<Integer> future : futures) {
-                future.get();
-            }
+            UncheckedFuture.on(futures).forEach(UncheckedFuture::get);
         } finally {
             threadPool.shutdown();
             threadPool.awaitTermination(1, TimeUnit.SECONDS);
         }
+    }
+
+    @Test
+    public void testCopyOnWriteArrayList() throws InterruptedException {
+        testConcurrency(new CollectionHolder<>(new CopyOnWriteArrayList<>()));
+    }
+
+    @Test
+    public void testLinkedList() throws InterruptedException {
+        testConcurrency(new CollectionHolder<>(new LinkedList<>()));
     }
 }

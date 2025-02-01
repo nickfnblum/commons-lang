@@ -30,11 +30,11 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * <p>Assists in implementing {@link Object#equals(Object)} methods.</p>
+ * Assists in implementing {@link Object#equals(Object)} methods.
  *
- * <p> This class provides methods to build a good equals method for any
+ * <p>This class provides methods to build a good equals method for any
  * class. It follows rules laid out in
- * <a href="http://www.oracle.com/technetwork/java/effectivejava-136174.html">Effective Java</a>
+ * <a href="https://www.oracle.com/java/technologies/effectivejava.html">Effective Java</a>
  * , by Joshua Bloch. In particular the rule for comparing {@code doubles},
  * {@code floats}, and arrays can be tricky. Also, making sure that
  * {@code equals()} and {@code hashCode()} are consistent can be
@@ -66,7 +66,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *  }
  * </pre>
  *
- * <p> Alternatively, there is a method that uses reflection to determine
+ * <p>Alternatively, there is a method that uses reflection to determine
  * the fields to test. Because these fields are usually private, the method,
  * {@code reflectionEquals}, uses {@code AccessibleObject.setAccessible} to
  * change the visibility of the fields. This will fail under a security
@@ -74,7 +74,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * also slower than testing explicitly.  Non-primitive fields are compared using
  * {@code equals()}.</p>
  *
- * <p> A typical invocation for this method would look like:</p>
+ * <p>A typical invocation for this method would look like:</p>
  * <pre>
  * public boolean equals(Object obj) {
  *   return EqualsBuilder.reflectionEquals(this, obj);
@@ -89,13 +89,11 @@ import org.apache.commons.lang3.tuple.Pair;
 public class EqualsBuilder implements Builder<Boolean> {
 
     /**
-     * <p>
      * A registry of objects used by reflection methods to detect cyclical object references and avoid infinite loops.
-     * </p>
      *
      * @since 3.0
      */
-    private static final ThreadLocal<Set<Pair<IDKey, IDKey>>> REGISTRY = new ThreadLocal<>();
+    private static final ThreadLocal<Set<Pair<IDKey, IDKey>>> REGISTRY = ThreadLocal.withInitial(HashSet::new);
 
     /*
      * NOTE: we cannot store the actual objects in a HashSet, as that would use the very hashCode()
@@ -115,10 +113,19 @@ public class EqualsBuilder implements Builder<Boolean> {
      */
 
     /**
-     * <p>
+     * Converters value pair into a register pair.
+     *
+     * @param lhs {@code this} object
+     * @param rhs the other object
+     * @return the pair
+     */
+    static Pair<IDKey, IDKey> getRegisterPair(final Object lhs, final Object rhs) {
+        return Pair.of(new IDKey(lhs), new IDKey(rhs));
+    }
+
+    /**
      * Returns the registry of object pairs being traversed by the reflection
      * methods in the current thread.
-     * </p>
      *
      * @return Set the registry of objects being traversed
      * @since 3.0
@@ -128,28 +135,10 @@ public class EqualsBuilder implements Builder<Boolean> {
     }
 
     /**
-     * <p>
-     * Converters value pair into a register pair.
-     * </p>
-     *
-     * @param lhs {@code this} object
-     * @param rhs the other object
-     *
-     * @return the pair
-     */
-    static Pair<IDKey, IDKey> getRegisterPair(final Object lhs, final Object rhs) {
-        final IDKey left = new IDKey(lhs);
-        final IDKey right = new IDKey(rhs);
-        return Pair.of(left, right);
-    }
-
-    /**
-     * <p>
      * Returns {@code true} if the registry contains the given object pair.
      * Used by the reflection methods to avoid infinite loops.
      * Objects might be swapped therefore a check is needed if the object pair
      * is registered in given or swapped order.
-     * </p>
      *
      * @param lhs {@code this} object to lookup in registry
      * @param rhs the other object to lookup on registry
@@ -160,148 +149,125 @@ public class EqualsBuilder implements Builder<Boolean> {
         final Set<Pair<IDKey, IDKey>> registry = getRegistry();
         final Pair<IDKey, IDKey> pair = getRegisterPair(lhs, rhs);
         final Pair<IDKey, IDKey> swappedPair = Pair.of(pair.getRight(), pair.getLeft());
-
-        return registry != null
-                && (registry.contains(pair) || registry.contains(swappedPair));
+        return registry != null && (registry.contains(pair) || registry.contains(swappedPair));
     }
 
     /**
-     * <p>
-     * Registers the given object pair.
-     * Used by the reflection methods to avoid infinite loops.
-     * </p>
+     * This method uses reflection to determine if the two {@link Object}s
+     * are equal.
      *
-     * @param lhs {@code this} object to register
-     * @param rhs the other object to register
+     * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
+     * fields. This means that it will throw a security exception if run under
+     * a security manager, if the permissions are not set up correctly. It is also
+     * not as efficient as testing explicitly. Non-primitive fields are compared using
+     * {@code equals()}.</p>
+     *
+     * <p>If the TestTransients parameter is set to {@code true}, transient
+     * members will be tested, otherwise they are ignored, as they are likely
+     * derived fields, and not part of the value of the {@link Object}.</p>
+     *
+     * <p>Static fields will not be tested. Superclass fields will be included.</p>
+     *
+     * @param lhs  {@code this} object
+     * @param rhs  the other object
+     * @param testTransients  whether to include transient fields
+     * @return {@code true} if the two Objects have tested equals.
+     * @see EqualsExclude
      */
-    private static void register(final Object lhs, final Object rhs) {
-        Set<Pair<IDKey, IDKey>> registry = getRegistry();
-        if (registry == null) {
-            registry = new HashSet<>();
-            REGISTRY.set(registry);
+    public static boolean reflectionEquals(final Object lhs, final Object rhs, final boolean testTransients) {
+        return reflectionEquals(lhs, rhs, testTransients, null);
+    }
+
+    /**
+     * This method uses reflection to determine if the two {@link Object}s
+     * are equal.
+     *
+     * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
+     * fields. This means that it will throw a security exception if run under
+     * a security manager, if the permissions are not set up correctly. It is also
+     * not as efficient as testing explicitly. Non-primitive fields are compared using
+     * {@code equals()}.</p>
+     *
+     * <p>If the testTransients parameter is set to {@code true}, transient
+     * members will be tested, otherwise they are ignored, as they are likely
+     * derived fields, and not part of the value of the {@link Object}.</p>
+     *
+     * <p>Static fields will not be included. Superclass fields will be appended
+     * up to and including the specified superclass. A null superclass is treated
+     * as java.lang.Object.</p>
+     *
+     * <p>If the testRecursive parameter is set to {@code true}, non primitive
+     * (and non primitive wrapper) field types will be compared by
+     * {@link EqualsBuilder} recursively instead of invoking their
+     * {@code equals()} method. Leading to a deep reflection equals test.
+     *
+     * @param lhs  {@code this} object
+     * @param rhs  the other object
+     * @param testTransients  whether to include transient fields
+     * @param reflectUpToClass  the superclass to reflect up to (inclusive),
+     *  may be {@code null}
+     * @param testRecursive  whether to call reflection equals on non-primitive
+     *  fields recursively.
+     * @param excludeFields  array of field names to exclude from testing
+     * @return {@code true} if the two Objects have tested equals.
+     * @see EqualsExclude
+     * @since 3.6
+     */
+    public static boolean reflectionEquals(final Object lhs, final Object rhs, final boolean testTransients, final Class<?> reflectUpToClass,
+            final boolean testRecursive, final String... excludeFields) {
+        if (lhs == rhs) {
+            return true;
         }
-        final Pair<IDKey, IDKey> pair = getRegisterPair(lhs, rhs);
-        registry.add(pair);
-    }
-
-    /**
-     * <p>
-     * Unregisters the given object pair.
-     * </p>
-     *
-     * <p>
-     * Used by the reflection methods to avoid infinite loops.
-     *
-     * @param lhs {@code this} object to unregister
-     * @param rhs the other object to unregister
-     * @since 3.0
-     */
-    private static void unregister(final Object lhs, final Object rhs) {
-        final Set<Pair<IDKey, IDKey>> registry = getRegistry();
-        if (registry != null) {
-            final Pair<IDKey, IDKey> pair = getRegisterPair(lhs, rhs);
-            registry.remove(pair);
-            if (registry.isEmpty()) {
-                REGISTRY.remove();
-            }
+        if (lhs == null || rhs == null) {
+            return false;
         }
+        // @formatter:off
+        return new EqualsBuilder()
+            .setExcludeFields(excludeFields)
+            .setReflectUpToClass(reflectUpToClass)
+            .setTestTransients(testTransients)
+            .setTestRecursive(testRecursive)
+            .reflectionAppend(lhs, rhs)
+            .isEquals();
+        // @formatter:on
     }
 
     /**
-     * If the fields tested are equals.
-     * The default value is {@code true}.
-     */
-    private boolean isEquals = true;
-
-    private boolean testTransients;
-    private boolean testRecursive;
-    private List<Class<?>> bypassReflectionClasses;
-    private Class<?> reflectUpToClass;
-    private String[] excludeFields;
-
-    /**
-     * <p>Constructor for EqualsBuilder.</p>
+     * This method uses reflection to determine if the two {@link Object}s
+     * are equal.
      *
-     * <p>Starts off assuming that equals is {@code true}.</p>
-     * @see Object#equals(Object)
-     */
-    public EqualsBuilder() {
-        // set up default classes to bypass reflection for
-        bypassReflectionClasses = new ArrayList<>();
-        bypassReflectionClasses.add(String.class); //hashCode field being lazy but not transient
-    }
-
-    //-------------------------------------------------------------------------
-
-    /**
-     * Set whether to include transient fields when reflectively comparing objects.
-     * @param testTransients whether to test transient fields
-     * @return EqualsBuilder - used to chain calls.
-     * @since 3.6
-     */
-    public EqualsBuilder setTestTransients(final boolean testTransients) {
-        this.testTransients = testTransients;
-        return this;
-    }
-
-    /**
-     * Set whether to test fields recursively, instead of using their equals method, when reflectively comparing objects.
-     * String objects, which cache a hash value, are automatically excluded from recursive testing.
-     * You may specify other exceptions by calling {@link #setBypassReflectionClasses(List)}.
-     * @param testRecursive whether to do a recursive test
-     * @return EqualsBuilder - used to chain calls.
-     * @see #setBypassReflectionClasses(List)
-     * @since 3.6
-     */
-    public EqualsBuilder setTestRecursive(final boolean testRecursive) {
-        this.testRecursive = testRecursive;
-        return this;
-    }
-
-    /**
-     * <p>Set {@code Class}es whose instances should be compared by calling their {@code equals}
-     * although being in recursive mode. So the fields of theses classes will not be compared recursively by reflection.</p>
+     * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
+     * fields. This means that it will throw a security exception if run under
+     * a security manager, if the permissions are not set up correctly. It is also
+     * not as efficient as testing explicitly. Non-primitive fields are compared using
+     * {@code equals()}.</p>
      *
-     * <p>Here you should name classes having non-transient fields which are cache fields being set lazily.<br>
-     * Prominent example being {@link String} class with its hash code cache field. Due to the importance
-     * of the {@code String} class, it is included in the default bypasses classes. Usually, if you use
-     * your own set of classes here, remember to include {@code String} class, too.</p>
-     * @param bypassReflectionClasses  classes to bypass reflection test
-     * @return EqualsBuilder - used to chain calls.
-     * @see #setTestRecursive(boolean)
-     * @since 3.8
+     * <p>If the testTransients parameter is set to {@code true}, transient
+     * members will be tested, otherwise they are ignored, as they are likely
+     * derived fields, and not part of the value of the {@link Object}.</p>
+     *
+     * <p>Static fields will not be included. Superclass fields will be appended
+     * up to and including the specified superclass. A null superclass is treated
+     * as java.lang.Object.</p>
+     *
+     * @param lhs  {@code this} object
+     * @param rhs  the other object
+     * @param testTransients  whether to include transient fields
+     * @param reflectUpToClass  the superclass to reflect up to (inclusive),
+     *  may be {@code null}
+     * @param excludeFields  array of field names to exclude from testing
+     * @return {@code true} if the two Objects have tested equals.
+     * @see EqualsExclude
+     * @since 2.0
      */
-    public EqualsBuilder setBypassReflectionClasses(final List<Class<?>> bypassReflectionClasses) {
-        this.bypassReflectionClasses = bypassReflectionClasses;
-        return this;
+    public static boolean reflectionEquals(final Object lhs, final Object rhs, final boolean testTransients, final Class<?> reflectUpToClass,
+            final String... excludeFields) {
+        return reflectionEquals(lhs, rhs, testTransients, reflectUpToClass, false, excludeFields);
     }
 
     /**
-     * Set the superclass to reflect up to at reflective tests.
-     * @param reflectUpToClass the super class to reflect up to
-     * @return EqualsBuilder - used to chain calls.
-     * @since 3.6
-     */
-    public EqualsBuilder setReflectUpToClass(final Class<?> reflectUpToClass) {
-        this.reflectUpToClass = reflectUpToClass;
-        return this;
-    }
-
-    /**
-     * Set field names to be excluded by reflection tests.
-     * @param excludeFields the fields to exclude
-     * @return EqualsBuilder - used to chain calls.
-     * @since 3.6
-     */
-    public EqualsBuilder setExcludeFields(final String... excludeFields) {
-        this.excludeFields = excludeFields;
-        return this;
-    }
-
-
-    /**
-     * <p>This method uses reflection to determine if the two {@code Object}s
-     * are equal.</p>
+     * This method uses reflection to determine if the two {@link Object}s
+     * are equal.
      *
      * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
      * fields. This means that it will throw a security exception if run under
@@ -318,7 +284,6 @@ public class EqualsBuilder implements Builder<Boolean> {
      * @param rhs  the other object
      * @param excludeFields  Collection of String field names to exclude from testing
      * @return {@code true} if the two Objects have tested equals.
-     *
      * @see EqualsExclude
      */
     public static boolean reflectionEquals(final Object lhs, final Object rhs, final Collection<String> excludeFields) {
@@ -326,8 +291,8 @@ public class EqualsBuilder implements Builder<Boolean> {
     }
 
     /**
-     * <p>This method uses reflection to determine if the two {@code Object}s
-     * are equal.</p>
+     * This method uses reflection to determine if the two {@link Object}s
+     * are equal.
      *
      * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
      * fields. This means that it will throw a security exception if run under
@@ -344,7 +309,6 @@ public class EqualsBuilder implements Builder<Boolean> {
      * @param rhs  the other object
      * @param excludeFields  array of field names to exclude from testing
      * @return {@code true} if the two Objects have tested equals.
-     *
      * @see EqualsExclude
      */
     public static boolean reflectionEquals(final Object lhs, final Object rhs, final String... excludeFields) {
@@ -352,121 +316,583 @@ public class EqualsBuilder implements Builder<Boolean> {
     }
 
     /**
-     * <p>This method uses reflection to determine if the two {@code Object}s
-     * are equal.</p>
+     * Registers the given object pair.
+     * Used by the reflection methods to avoid infinite loops.
      *
-     * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
-     * fields. This means that it will throw a security exception if run under
-     * a security manager, if the permissions are not set up correctly. It is also
-     * not as efficient as testing explicitly. Non-primitive fields are compared using
-     * {@code equals()}.</p>
-     *
-     * <p>If the TestTransients parameter is set to {@code true}, transient
-     * members will be tested, otherwise they are ignored, as they are likely
-     * derived fields, and not part of the value of the {@code Object}.</p>
-     *
-     * <p>Static fields will not be tested. Superclass fields will be included.</p>
-     *
-     * @param lhs  {@code this} object
-     * @param rhs  the other object
-     * @param testTransients  whether to include transient fields
-     * @return {@code true} if the two Objects have tested equals.
-     *
-     * @see EqualsExclude
+     * @param lhs {@code this} object to register
+     * @param rhs the other object to register
      */
-    public static boolean reflectionEquals(final Object lhs, final Object rhs, final boolean testTransients) {
-        return reflectionEquals(lhs, rhs, testTransients, null);
+    private static void register(final Object lhs, final Object rhs) {
+        getRegistry().add(getRegisterPair(lhs, rhs));
     }
 
     /**
-     * <p>This method uses reflection to determine if the two {@code Object}s
-     * are equal.</p>
+     * Unregisters the given object pair.
      *
-     * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
-     * fields. This means that it will throw a security exception if run under
-     * a security manager, if the permissions are not set up correctly. It is also
-     * not as efficient as testing explicitly. Non-primitive fields are compared using
-     * {@code equals()}.</p>
+     * <p>
+     * Used by the reflection methods to avoid infinite loops.
+     * </p>
      *
-     * <p>If the testTransients parameter is set to {@code true}, transient
-     * members will be tested, otherwise they are ignored, as they are likely
-     * derived fields, and not part of the value of the {@code Object}.</p>
-     *
-     * <p>Static fields will not be included. Superclass fields will be appended
-     * up to and including the specified superclass. A null superclass is treated
-     * as java.lang.Object.</p>
-     *
-     * @param lhs  {@code this} object
-     * @param rhs  the other object
-     * @param testTransients  whether to include transient fields
-     * @param reflectUpToClass  the superclass to reflect up to (inclusive),
-     *  may be {@code null}
-     * @param excludeFields  array of field names to exclude from testing
-     * @return {@code true} if the two Objects have tested equals.
-     *
-     * @see EqualsExclude
-     * @since 2.0
+     * @param lhs {@code this} object to unregister
+     * @param rhs the other object to unregister
+     * @since 3.0
      */
-    public static boolean reflectionEquals(final Object lhs, final Object rhs, final boolean testTransients, final Class<?> reflectUpToClass,
-            final String... excludeFields) {
-        return reflectionEquals(lhs, rhs, testTransients, reflectUpToClass, false, excludeFields);
+    private static void unregister(final Object lhs, final Object rhs) {
+        final Set<Pair<IDKey, IDKey>> registry = getRegistry();
+        registry.remove(getRegisterPair(lhs, rhs));
+        if (registry.isEmpty()) {
+            REGISTRY.remove();
+        }
     }
 
     /**
-     * <p>This method uses reflection to determine if the two {@code Object}s
-     * are equal.</p>
-     *
-     * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
-     * fields. This means that it will throw a security exception if run under
-     * a security manager, if the permissions are not set up correctly. It is also
-     * not as efficient as testing explicitly. Non-primitive fields are compared using
-     * {@code equals()}.</p>
-     *
-     * <p>If the testTransients parameter is set to {@code true}, transient
-     * members will be tested, otherwise they are ignored, as they are likely
-     * derived fields, and not part of the value of the {@code Object}.</p>
-     *
-     * <p>Static fields will not be included. Superclass fields will be appended
-     * up to and including the specified superclass. A null superclass is treated
-     * as java.lang.Object.</p>
-     *
-     * <p>If the testRecursive parameter is set to {@code true}, non primitive
-     * (and non primitive wrapper) field types will be compared by
-     * {@code EqualsBuilder} recursively instead of invoking their
-     * {@code equals()} method. Leading to a deep reflection equals test.
-     *
-     * @param lhs  {@code this} object
-     * @param rhs  the other object
-     * @param testTransients  whether to include transient fields
-     * @param reflectUpToClass  the superclass to reflect up to (inclusive),
-     *  may be {@code null}
-     * @param testRecursive  whether to call reflection equals on non primitive
-     *  fields recursively.
-     * @param excludeFields  array of field names to exclude from testing
-     * @return {@code true} if the two Objects have tested equals.
-     *
-     * @see EqualsExclude
-     * @since 3.6
+     * If the fields tested are equals.
+     * The default value is {@code true}.
      */
-    public static boolean reflectionEquals(final Object lhs, final Object rhs, final boolean testTransients, final Class<?> reflectUpToClass,
-            final boolean testRecursive, final String... excludeFields) {
+    private boolean isEquals = true;
+
+    private boolean testTransients;
+
+    private boolean testRecursive;
+
+    private List<Class<?>> bypassReflectionClasses;
+
+    private Class<?> reflectUpToClass;
+
+    private String[] excludeFields;
+
+    /**
+     * Constructor for EqualsBuilder.
+     *
+     * <p>Starts off assuming that equals is {@code true}.</p>
+     * @see Object#equals(Object)
+     */
+    public EqualsBuilder() {
+        // set up default classes to bypass reflection for
+        bypassReflectionClasses = new ArrayList<>(1);
+        bypassReflectionClasses.add(String.class); //hashCode field being lazy but not transient
+    }
+
+    /**
+     * Test if two {@code booleans}s are equal.
+     *
+     * @param lhs  the left-hand side {@code boolean}
+     * @param rhs  the right-hand side {@code boolean}
+     * @return {@code this} instance.
+      */
+    public EqualsBuilder append(final boolean lhs, final boolean rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        isEquals = lhs == rhs;
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code boolean}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(boolean, boolean)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code boolean[]}
+     * @param rhs  the right-hand side {@code boolean[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final boolean[] lhs, final boolean[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
         if (lhs == rhs) {
-            return true;
+            return this;
         }
         if (lhs == null || rhs == null) {
-            return false;
+            setEquals(false);
+            return this;
         }
-        return new EqualsBuilder()
-                    .setExcludeFields(excludeFields)
-                    .setReflectUpToClass(reflectUpToClass)
-                    .setTestTransients(testTransients)
-                    .setTestRecursive(testRecursive)
-                    .reflectionAppend(lhs, rhs)
-                    .isEquals();
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
     }
 
     /**
-     * <p>Tests if two {@code objects} by using reflection.</p>
+     * Test if two {@code byte}s are equal.
+     *
+     * @param lhs  the left-hand side {@code byte}
+     * @param rhs  the right-hand side {@code byte}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final byte lhs, final byte rhs) {
+        if (isEquals) {
+            isEquals = lhs == rhs;
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code byte}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(byte, byte)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code byte[]}
+     * @param rhs  the right-hand side {@code byte[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final byte[] lhs, final byte[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@code char}s are equal.
+     *
+     * @param lhs  the left-hand side {@code char}
+     * @param rhs  the right-hand side {@code char}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final char lhs, final char rhs) {
+        if (isEquals) {
+            isEquals = lhs == rhs;
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code char}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(char, char)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code char[]}
+     * @param rhs  the right-hand side {@code char[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final char[] lhs, final char[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@code double}s are equal by testing that the
+     * pattern of bits returned by {@code doubleToLong} are equal.
+     *
+     * <p>This handles NaNs, Infinities, and {@code -0.0}.</p>
+     *
+     * <p>It is compatible with the hash code generated by
+     * {@link HashCodeBuilder}.</p>
+     *
+     * @param lhs  the left-hand side {@code double}
+     * @param rhs  the right-hand side {@code double}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final double lhs, final double rhs) {
+        if (isEquals) {
+            return append(Double.doubleToLongBits(lhs), Double.doubleToLongBits(rhs));
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code double}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(double, double)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code double[]}
+     * @param rhs  the right-hand side {@code double[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final double[] lhs, final double[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@code float}s are equal by testing that the
+     * pattern of bits returned by doubleToLong are equal.
+     *
+     * <p>This handles NaNs, Infinities, and {@code -0.0}.</p>
+     *
+     * <p>It is compatible with the hash code generated by
+     * {@link HashCodeBuilder}.</p>
+     *
+     * @param lhs  the left-hand side {@code float}
+     * @param rhs  the right-hand side {@code float}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final float lhs, final float rhs) {
+        if (isEquals) {
+            return append(Float.floatToIntBits(lhs), Float.floatToIntBits(rhs));
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code float}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(float, float)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code float[]}
+     * @param rhs  the right-hand side {@code float[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final float[] lhs, final float[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@code int}s are equal.
+     *
+     * @param lhs  the left-hand side {@code int}
+     * @param rhs  the right-hand side {@code int}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final int lhs, final int rhs) {
+        if (isEquals) {
+            isEquals = lhs == rhs;
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code int}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(int, int)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code int[]}
+     * @param rhs  the right-hand side {@code int[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final int[] lhs, final int[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@code long}s are equal.
+     *
+     * @param lhs
+     *                  the left-hand side {@code long}
+     * @param rhs
+     *                  the right-hand side {@code long}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final long lhs, final long rhs) {
+        if (isEquals) {
+            isEquals = lhs == rhs;
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code long}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(long, long)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code long[]}
+     * @param rhs  the right-hand side {@code long[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final long[] lhs, final long[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@link Object}s are equal using either
+     * #{@link #reflectionAppend(Object, Object)}, if object are non
+     * primitives (or wrapper of primitives) or if field {@code testRecursive}
+     * is set to {@code false}. Otherwise, using their
+     * {@code equals} method.
+     *
+     * @param lhs  the left-hand side object
+     * @param rhs  the right-hand side object
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final Object lhs, final Object rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        final Class<?> lhsClass = lhs.getClass();
+        if (lhsClass.isArray()) {
+            // factor out array case in order to keep method small enough
+            // to be inlined
+            appendArray(lhs, rhs);
+        } else // The simple case, not an array, just test the element
+        if (testRecursive && !ClassUtils.isPrimitiveOrWrapper(lhsClass)) {
+            reflectionAppend(lhs, rhs);
+        } else {
+            isEquals = lhs.equals(rhs);
+        }
+        return this;
+    }
+
+    /**
+     * Performs a deep comparison of two {@link Object} arrays.
+     *
+     * <p>This also will be called for the top level of
+     * multi-dimensional, ragged, and multi-typed arrays.</p>
+     *
+     * <p>Note that this method does not compare the type of the arrays; it only
+     * compares the contents.</p>
+     *
+     * @param lhs  the left-hand side {@code Object[]}
+     * @param rhs  the right-hand side {@code Object[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final Object[] lhs, final Object[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if two {@code short}s are equal.
+     *
+     * @param lhs  the left-hand side {@code short}
+     * @param rhs  the right-hand side {@code short}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final short lhs, final short rhs) {
+        if (isEquals) {
+            isEquals = lhs == rhs;
+        }
+        return this;
+    }
+
+    /**
+     * Deep comparison of array of {@code short}. Length and all
+     * values are compared.
+     *
+     * <p>The method {@link #append(short, short)} is used.</p>
+     *
+     * @param lhs  the left-hand side {@code short[]}
+     * @param rhs  the right-hand side {@code short[]}
+     * @return {@code this} instance.
+     */
+    public EqualsBuilder append(final short[] lhs, final short[] rhs) {
+        if (!isEquals) {
+            return this;
+        }
+        if (lhs == rhs) {
+            return this;
+        }
+        if (lhs == null || rhs == null) {
+            setEquals(false);
+            return this;
+        }
+        if (lhs.length != rhs.length) {
+            setEquals(false);
+            return this;
+        }
+        for (int i = 0; i < lhs.length && isEquals; ++i) {
+            append(lhs[i], rhs[i]);
+        }
+        return this;
+    }
+
+    /**
+     * Test if an {@link Object} is equal to an array.
+     *
+     * @param lhs  the left-hand side object, an array
+     * @param rhs  the right-hand side object
+     */
+    private void appendArray(final Object lhs, final Object rhs) {
+        // First we compare different dimensions, for example: a boolean[][] to a boolean[]
+        // then we 'Switch' on type of array, to dispatch to the correct handler
+        // This handles multidimensional arrays of the same depth
+        if (lhs.getClass() != rhs.getClass()) {
+            setEquals(false);
+        } else if (lhs instanceof long[]) {
+            append((long[]) lhs, (long[]) rhs);
+        } else if (lhs instanceof int[]) {
+            append((int[]) lhs, (int[]) rhs);
+        } else if (lhs instanceof short[]) {
+            append((short[]) lhs, (short[]) rhs);
+        } else if (lhs instanceof char[]) {
+            append((char[]) lhs, (char[]) rhs);
+        } else if (lhs instanceof byte[]) {
+            append((byte[]) lhs, (byte[]) rhs);
+        } else if (lhs instanceof double[]) {
+            append((double[]) lhs, (double[]) rhs);
+        } else if (lhs instanceof float[]) {
+            append((float[]) lhs, (float[]) rhs);
+        } else if (lhs instanceof boolean[]) {
+            append((boolean[]) lhs, (boolean[]) rhs);
+        } else {
+            // Not an array of primitives
+            append((Object[]) lhs, (Object[]) rhs);
+        }
+    }
+
+    /**
+     * Adds the result of {@code super.equals()} to this builder.
+     *
+     * @param superEquals  the result of calling {@code super.equals()}
+     * @return {@code this} instance.
+     * @since 2.0
+     */
+    public EqualsBuilder appendSuper(final boolean superEquals) {
+        if (!isEquals) {
+            return this;
+        }
+        isEquals = superEquals;
+        return this;
+    }
+
+    /**
+     * Returns {@code true} if the fields that have been checked
+     * are all equal.
+     *
+     * @return {@code true} if all of the fields that have been checked
+     *         are equal, {@code false} otherwise.
+     *
+     * @since 3.0
+     */
+    @Override
+    public Boolean build() {
+        return Boolean.valueOf(isEquals());
+    }
+
+    /**
+     * Returns {@code true} if the fields that have been checked
+     * are all equal.
+     *
+     * @return boolean
+     */
+    public boolean isEquals() {
+        return isEquals;
+    }
+
+    /**
+     * Tests if two {@code objects} by using reflection.
      *
      * <p>It uses {@code AccessibleObject.setAccessible} to gain access to private
      * fields. This means that it will throw a security exception if run under
@@ -476,7 +902,7 @@ public class EqualsBuilder implements Builder<Boolean> {
      *
      * <p>If the testTransients field is set to {@code true}, transient
      * members will be tested, otherwise they are ignored, as they are likely
-     * derived fields, and not part of the value of the {@code Object}.</p>
+     * derived fields, and not part of the value of the {@link Object}.</p>
      *
      * <p>Static fields will not be included. Superclass fields will be appended
      * up to and including the specified superclass in field {@code reflectUpToClass}.
@@ -486,11 +912,11 @@ public class EqualsBuilder implements Builder<Boolean> {
      *
      * <p>If either class of the compared objects is contained in
      * {@code bypassReflectionClasses}, both objects are compared by calling
-     * the equals method of the left hand object with the right hand object as an argument.</p>
+     * the equals method of the left-hand side object with the right-hand side object as an argument.</p>
      *
-     * @param lhs  the left hand object
-     * @param rhs  the left hand object
-     * @return EqualsBuilder - used to chain calls.
+     * @param lhs  the left-hand side object
+     * @param rhs  the right-hand side object
+     * @return {@code this} instance.
      */
     public EqualsBuilder reflectionAppend(final Object lhs, final Object rhs) {
         if (!isEquals) {
@@ -555,11 +981,11 @@ public class EqualsBuilder implements Builder<Boolean> {
     }
 
     /**
-     * <p>Appends the fields and values defined by the given object of the
-     * given Class.</p>
+     * Appends the fields and values defined by the given object of the
+     * given Class.
      *
-     * @param lhs  the left hand object
-     * @param rhs  the right hand object
+     * @param lhs  the left-hand side object
+     * @param rhs  the right-hand side object
      * @param clazz  the class to append details of
      */
     private void reflectionAppend(
@@ -576,19 +1002,13 @@ public class EqualsBuilder implements Builder<Boolean> {
             final Field[] fields = clazz.getDeclaredFields();
             AccessibleObject.setAccessible(fields, true);
             for (int i = 0; i < fields.length && isEquals; i++) {
-                final Field f = fields[i];
-                if (!ArrayUtils.contains(excludeFields, f.getName())
-                    && !f.getName().contains("$")
-                    && (testTransients || !Modifier.isTransient(f.getModifiers()))
-                    && !Modifier.isStatic(f.getModifiers())
-                    && !f.isAnnotationPresent(EqualsExclude.class)) {
-                    try {
-                        append(f.get(lhs), f.get(rhs));
-                    } catch (final IllegalAccessException e) {
-                        //this can't happen. Would get a Security exception instead
-                        //throw a runtime exception in case the impossible happens.
-                        throw new InternalError("Unexpected IllegalAccessException");
-                    }
+                final Field field = fields[i];
+                if (!ArrayUtils.contains(excludeFields, field.getName())
+                    && !field.getName().contains("$")
+                    && (testTransients || !Modifier.isTransient(field.getModifiers()))
+                    && !Modifier.isStatic(field.getModifiers())
+                    && !field.isAnnotationPresent(EqualsExclude.class)) {
+                    append(Reflection.getUnchecked(field, lhs), Reflection.getUnchecked(field, rhs));
                 }
             }
         } finally {
@@ -596,533 +1016,32 @@ public class EqualsBuilder implements Builder<Boolean> {
         }
     }
 
-    //-------------------------------------------------------------------------
+    /**
+     * Reset the EqualsBuilder so you can use the same object again.
+     *
+     * @since 2.5
+     */
+    public void reset() {
+        isEquals = true;
+    }
 
     /**
-     * <p>Adds the result of {@code super.equals()} to this builder.</p>
+     * Sets {@link Class}es whose instances should be compared by calling their {@code equals}
+     * although being in recursive mode. So the fields of these classes will not be compared recursively by reflection.
      *
-     * @param superEquals  the result of calling {@code super.equals()}
-     * @return EqualsBuilder - used to chain calls.
-     * @since 2.0
+     * <p>Here you should name classes having non-transient fields which are cache fields being set lazily.<br>
+     * Prominent example being {@link String} class with its hash code cache field. Due to the importance
+     * of the {@link String} class, it is included in the default bypasses classes. Usually, if you use
+     * your own set of classes here, remember to include {@link String} class, too.</p>
+     *
+     * @param bypassReflectionClasses  classes to bypass reflection test
+     * @return {@code this} instance.
+     * @see #setTestRecursive(boolean)
+     * @since 3.8
      */
-    public EqualsBuilder appendSuper(final boolean superEquals) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = superEquals;
+    public EqualsBuilder setBypassReflectionClasses(final List<Class<?>> bypassReflectionClasses) {
+        this.bypassReflectionClasses = bypassReflectionClasses;
         return this;
-    }
-
-    //-------------------------------------------------------------------------
-
-    /**
-     * <p>Test if two {@code Object}s are equal using either
-     * #{@link #reflectionAppend(Object, Object)}, if object are non
-     * primitives (or wrapper of primitives) or if field {@code testRecursive}
-     * is set to {@code false}. Otherwise, using their
-     * {@code equals} method.</p>
-     *
-     * @param lhs  the left hand object
-     * @param rhs  the right hand object
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final Object lhs, final Object rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        final Class<?> lhsClass = lhs.getClass();
-        if (lhsClass.isArray()) {
-            // factor out array case in order to keep method small enough
-            // to be inlined
-            appendArray(lhs, rhs);
-        } else // The simple case, not an array, just test the element
-        if (testRecursive && !ClassUtils.isPrimitiveOrWrapper(lhsClass)) {
-            reflectionAppend(lhs, rhs);
-        } else {
-            isEquals = lhs.equals(rhs);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Test if an {@code Object} is equal to an array.</p>
-     *
-     * @param lhs  the left hand object, an array
-     * @param rhs  the right hand object
-     */
-    private void appendArray(final Object lhs, final Object rhs) {
-        // First we compare different dimensions, for example: a boolean[][] to a boolean[]
-        // then we 'Switch' on type of array, to dispatch to the correct handler
-        // This handles multi dimensional arrays of the same depth
-        if (lhs.getClass() != rhs.getClass()) {
-            this.setEquals(false);
-        } else if (lhs instanceof long[]) {
-            append((long[]) lhs, (long[]) rhs);
-        } else if (lhs instanceof int[]) {
-            append((int[]) lhs, (int[]) rhs);
-        } else if (lhs instanceof short[]) {
-            append((short[]) lhs, (short[]) rhs);
-        } else if (lhs instanceof char[]) {
-            append((char[]) lhs, (char[]) rhs);
-        } else if (lhs instanceof byte[]) {
-            append((byte[]) lhs, (byte[]) rhs);
-        } else if (lhs instanceof double[]) {
-            append((double[]) lhs, (double[]) rhs);
-        } else if (lhs instanceof float[]) {
-            append((float[]) lhs, (float[]) rhs);
-        } else if (lhs instanceof boolean[]) {
-            append((boolean[]) lhs, (boolean[]) rhs);
-        } else {
-            // Not an array of primitives
-            append((Object[]) lhs, (Object[]) rhs);
-        }
-    }
-
-    /**
-     * <p>
-     * Test if two {@code long} s are equal.
-     * </p>
-     *
-     * @param lhs
-     *                  the left hand {@code long}
-     * @param rhs
-     *                  the right hand {@code long}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final long lhs, final long rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = lhs == rhs;
-        return this;
-    }
-
-    /**
-     * <p>Test if two {@code int}s are equal.</p>
-     *
-     * @param lhs  the left hand {@code int}
-     * @param rhs  the right hand {@code int}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final int lhs, final int rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = lhs == rhs;
-        return this;
-    }
-
-    /**
-     * <p>Test if two {@code short}s are equal.</p>
-     *
-     * @param lhs  the left hand {@code short}
-     * @param rhs  the right hand {@code short}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final short lhs, final short rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = lhs == rhs;
-        return this;
-    }
-
-    /**
-     * <p>Test if two {@code char}s are equal.</p>
-     *
-     * @param lhs  the left hand {@code char}
-     * @param rhs  the right hand {@code char}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final char lhs, final char rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = lhs == rhs;
-        return this;
-    }
-
-    /**
-     * <p>Test if two {@code byte}s are equal.</p>
-     *
-     * @param lhs  the left hand {@code byte}
-     * @param rhs  the right hand {@code byte}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final byte lhs, final byte rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = lhs == rhs;
-        return this;
-    }
-
-    /**
-     * <p>Test if two {@code double}s are equal by testing that the
-     * pattern of bits returned by {@code doubleToLong} are equal.</p>
-     *
-     * <p>This handles NaNs, Infinities, and {@code -0.0}.</p>
-     *
-     * <p>It is compatible with the hash code generated by
-     * {@code HashCodeBuilder}.</p>
-     *
-     * @param lhs  the left hand {@code double}
-     * @param rhs  the right hand {@code double}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final double lhs, final double rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        return append(Double.doubleToLongBits(lhs), Double.doubleToLongBits(rhs));
-    }
-
-    /**
-     * <p>Test if two {@code float}s are equal by testing that the
-     * pattern of bits returned by doubleToLong are equal.</p>
-     *
-     * <p>This handles NaNs, Infinities, and {@code -0.0}.</p>
-     *
-     * <p>It is compatible with the hash code generated by
-     * {@code HashCodeBuilder}.</p>
-     *
-     * @param lhs  the left hand {@code float}
-     * @param rhs  the right hand {@code float}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final float lhs, final float rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        return append(Float.floatToIntBits(lhs), Float.floatToIntBits(rhs));
-    }
-
-    /**
-     * <p>Test if two {@code booleans}s are equal.</p>
-     *
-     * @param lhs  the left hand {@code boolean}
-     * @param rhs  the right hand {@code boolean}
-     * @return EqualsBuilder - used to chain calls.
-      */
-    public EqualsBuilder append(final boolean lhs, final boolean rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = lhs == rhs;
-        return this;
-    }
-
-    /**
-     * <p>Performs a deep comparison of two {@code Object} arrays.</p>
-     *
-     * <p>This also will be called for the top level of
-     * multi-dimensional, ragged, and multi-typed arrays.</p>
-     *
-     * <p>Note that this method does not compare the type of the arrays; it only
-     * compares the contents.</p>
-     *
-     * @param lhs  the left hand {@code Object[]}
-     * @param rhs  the right hand {@code Object[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final Object[] lhs, final Object[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code long}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(long, long)} is used.</p>
-     *
-     * @param lhs  the left hand {@code long[]}
-     * @param rhs  the right hand {@code long[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final long[] lhs, final long[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code int}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(int, int)} is used.</p>
-     *
-     * @param lhs  the left hand {@code int[]}
-     * @param rhs  the right hand {@code int[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final int[] lhs, final int[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code short}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(short, short)} is used.</p>
-     *
-     * @param lhs  the left hand {@code short[]}
-     * @param rhs  the right hand {@code short[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final short[] lhs, final short[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code char}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(char, char)} is used.</p>
-     *
-     * @param lhs  the left hand {@code char[]}
-     * @param rhs  the right hand {@code char[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final char[] lhs, final char[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code byte}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(byte, byte)} is used.</p>
-     *
-     * @param lhs  the left hand {@code byte[]}
-     * @param rhs  the right hand {@code byte[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final byte[] lhs, final byte[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code double}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(double, double)} is used.</p>
-     *
-     * @param lhs  the left hand {@code double[]}
-     * @param rhs  the right hand {@code double[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final double[] lhs, final double[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code float}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(float, float)} is used.</p>
-     *
-     * @param lhs  the left hand {@code float[]}
-     * @param rhs  the right hand {@code float[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final float[] lhs, final float[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Deep comparison of array of {@code boolean}. Length and all
-     * values are compared.</p>
-     *
-     * <p>The method {@link #append(boolean, boolean)} is used.</p>
-     *
-     * @param lhs  the left hand {@code boolean[]}
-     * @param rhs  the right hand {@code boolean[]}
-     * @return EqualsBuilder - used to chain calls.
-     */
-    public EqualsBuilder append(final boolean[] lhs, final boolean[] rhs) {
-        if (!isEquals) {
-            return this;
-        }
-        if (lhs == rhs) {
-            return this;
-        }
-        if (lhs == null || rhs == null) {
-            this.setEquals(false);
-            return this;
-        }
-        if (lhs.length != rhs.length) {
-            this.setEquals(false);
-            return this;
-        }
-        for (int i = 0; i < lhs.length && isEquals; ++i) {
-            append(lhs[i], rhs[i]);
-        }
-        return this;
-    }
-
-    /**
-     * <p>Returns {@code true} if the fields that have been checked
-     * are all equal.</p>
-     *
-     * @return boolean
-     */
-    public boolean isEquals() {
-        return this.isEquals;
-    }
-
-    /**
-     * <p>Returns {@code true} if the fields that have been checked
-     * are all equal.</p>
-     *
-     * @return {@code true} if all of the fields that have been checked
-     *         are equal, {@code false} otherwise.
-     *
-     * @since 3.0
-     */
-    @Override
-    public Boolean build() {
-        return Boolean.valueOf(isEquals());
     }
 
     /**
@@ -1136,10 +1055,53 @@ public class EqualsBuilder implements Builder<Boolean> {
     }
 
     /**
-     * Reset the EqualsBuilder so you can use the same object again
-     * @since 2.5
+     * Sets field names to be excluded by reflection tests.
+     *
+     * @param excludeFields the fields to exclude
+     * @return {@code this} instance.
+     * @since 3.6
      */
-    public void reset() {
-        this.isEquals = true;
+    public EqualsBuilder setExcludeFields(final String... excludeFields) {
+        this.excludeFields = excludeFields;
+        return this;
+    }
+
+    /**
+     * Sets the superclass to reflect up to at reflective tests.
+     *
+     * @param reflectUpToClass the super class to reflect up to
+     * @return {@code this} instance.
+     * @since 3.6
+     */
+    public EqualsBuilder setReflectUpToClass(final Class<?> reflectUpToClass) {
+        this.reflectUpToClass = reflectUpToClass;
+        return this;
+    }
+
+    /**
+     * Sets whether to test fields recursively, instead of using their equals method, when reflectively comparing objects.
+     * String objects, which cache a hash value, are automatically excluded from recursive testing.
+     * You may specify other exceptions by calling {@link #setBypassReflectionClasses(List)}.
+     *
+     * @param testRecursive whether to do a recursive test
+     * @return {@code this} instance.
+     * @see #setBypassReflectionClasses(List)
+     * @since 3.6
+     */
+    public EqualsBuilder setTestRecursive(final boolean testRecursive) {
+        this.testRecursive = testRecursive;
+        return this;
+    }
+
+    /**
+     * Sets whether to include transient fields when reflectively comparing objects.
+     *
+     * @param testTransients whether to test transient fields
+     * @return {@code this} instance.
+     * @since 3.6
+     */
+    public EqualsBuilder setTestTransients(final boolean testTransients) {
+        this.testTransients = testTransients;
+        return this;
     }
 }

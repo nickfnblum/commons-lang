@@ -22,20 +22,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link org.apache.commons.lang3.text.translate.LookupTranslator}.
+ * Tests for {@link org.apache.commons.lang3.text.translate.LookupTranslator}.
  */
 @Deprecated
-public class LookupTranslatorTest  {
+public class LookupTranslatorTest extends AbstractLangTest {
 
     @Test
     public void testBasicLookup() throws IOException {
         final LookupTranslator lt = new LookupTranslator(new CharSequence[][] { { "one", "two" } });
         final StringWriter out = new StringWriter();
         final int result = lt.translate("one", 0, out);
-        assertEquals(3, result, "Incorrect codepoint consumption");
+        assertEquals(3, result, "Incorrect code point consumption");
         assertEquals("two", out.toString(), "Incorrect value");
     }
 
@@ -45,7 +46,7 @@ public class LookupTranslatorTest  {
         final LookupTranslator lt = new LookupTranslator(new CharSequence[][] { { new StringBuffer("one"), new StringBuffer("two") } });
         final StringWriter out = new StringWriter();
         final int result = lt.translate(new StringBuffer("one"), 0, out);
-        assertEquals(3, result, "Incorrect codepoint consumption");
+        assertEquals(3, result, "Incorrect code point consumption");
         assertEquals("two", out.toString(), "Incorrect value");
     }
 

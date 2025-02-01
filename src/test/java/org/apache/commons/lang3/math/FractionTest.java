@@ -24,14 +24,15 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test cases for the {@link Fraction} class
  */
-public class FractionTest  {
+public class FractionTest extends AbstractLangTest {
 
-    private static final int SKIP = 500;  //53
+    private static final int SKIP = 500; // 53
 
     @Test
     public void testAbs() {
@@ -115,17 +116,17 @@ public class FractionTest  {
         f = f2.add(f1);
         assertSame(f2, f);
 
-        f1 = Fraction.getFraction(-1, 13*13*2*2);
-        f2 = Fraction.getFraction(-2, 13*17*2);
+        f1 = Fraction.getFraction(-1, 13 * 13 * 2 * 2);
+        f2 = Fraction.getFraction(-2, 13 * 17 * 2);
         final Fraction fr = f1.add(f2);
-        assertEquals(13*13*17*2*2, fr.getDenominator());
-        assertEquals(-17 - 2*13*2, fr.getNumerator());
+        assertEquals(13 * 13 * 17 * 2 * 2, fr.getDenominator());
+        assertEquals(-17 - 2 * 13 * 2, fr.getNumerator());
 
         assertThrows(NullPointerException.class, () -> fr.add(null));
 
         // if this fraction is added naively, it will overflow.
         // check that it doesn't.
-        f1 = Fraction.getFraction(1, 32768*3);
+        f1 = Fraction.getFraction(1, 32768 * 3);
         f2 = Fraction.getFraction(1, 59049);
         f = f1.add(f2);
         assertEquals(52451, f.getNumerator());
@@ -134,7 +135,7 @@ public class FractionTest  {
         f1 = Fraction.getFraction(Integer.MIN_VALUE, 3);
         f2 = Fraction.ONE_THIRD;
         f = f1.add(f2);
-        assertEquals(Integer.MIN_VALUE+1, f.getNumerator());
+        assertEquals(Integer.MIN_VALUE + 1, f.getNumerator());
         assertEquals(3, f.getDenominator());
 
         f1 = Fraction.getFraction(Integer.MAX_VALUE - 1, 1);
@@ -147,9 +148,7 @@ public class FractionTest  {
         assertThrows(ArithmeticException.class, () -> overflower.add(Fraction.ONE)); // should overflow
 
         // denominator should not be a multiple of 2 or 3 to trigger overflow
-        assertThrows(
-                ArithmeticException.class,
-                () -> Fraction.getFraction(Integer.MIN_VALUE, 5).add(Fraction.getFraction(-1, 5)));
+        assertThrows(ArithmeticException.class, () -> Fraction.getFraction(Integer.MIN_VALUE, 5).add(Fraction.getFraction(-1, 5)));
 
         final Fraction maxValue = Fraction.getFraction(-Integer.MAX_VALUE, 1);
         assertThrows(ArithmeticException.class, () -> maxValue.add(maxValue));
@@ -164,7 +163,7 @@ public class FractionTest  {
 
     @Test
     public void testCompareTo() {
-        Fraction f1;
+        final Fraction f1;
         Fraction f2;
 
         f1 = Fraction.getFraction(3, 5);
@@ -195,7 +194,6 @@ public class FractionTest  {
 
     }
 
-    //--------------------------------------------------------------------------
     @Test
     public void testConstants() {
         assertEquals(0, Fraction.ZERO.getNumerator());
@@ -237,7 +235,7 @@ public class FractionTest  {
 
     @Test
     public void testConversions() {
-        Fraction f;
+        final Fraction f;
 
         f = Fraction.getFraction(3, 7, 8);
         assertEquals(3, f.intValue());
@@ -290,7 +288,6 @@ public class FractionTest  {
         final Fraction negative = Fraction.getFraction(1, -Integer.MAX_VALUE);
         assertThrows(ArithmeticException.class, () -> negative.divideBy(negative.invert())); // Should overflow
     }
-
 
     @Test
     public void testEquals() {
@@ -353,14 +350,14 @@ public class FractionTest  {
         assertEquals(3, f.getDenominator());
 
         // small
-        f = Fraction.getFraction(1.0d/10001d);
+        f = Fraction.getFraction(1.0d / 10001d);
         assertEquals(0, f.getNumerator());
         assertEquals(1, f.getDenominator());
 
         // normal
-        Fraction f2 = null;
-        for (int i = 1; i <= 100; i++) {  // denominator
-            for (int j = 1; j <= i; j++) {  // numerator
+        Fraction f2;
+        for (int i = 1; i <= 100; i++) { // denominator
+            for (int j = 1; j <= i; j++) { // numerator
                 f = Fraction.getFraction((double) j / (double) i);
 
                 f2 = Fraction.getReducedFraction(j, i);
@@ -368,9 +365,9 @@ public class FractionTest  {
                 assertEquals(f2.getDenominator(), f.getDenominator());
             }
         }
-        // save time by skipping some tests!  (
-        for (int i = 1001; i <= 10000; i+=SKIP) {  // denominator
-            for (int j = 1; j <= i; j++) {  // numerator
+        // save time by skipping some tests! (
+        for (int i = 1001; i <= 10000; i += SKIP) { // denominator
+            for (int j = 1; j <= i; j++) { // numerator
                 f = Fraction.getFraction((double) j / (double) i);
                 f2 = Fraction.getReducedFraction(j, i);
                 assertEquals(f2.getNumerator(), f.getNumerator());
@@ -685,7 +682,6 @@ public class FractionTest  {
         assertEquals(6, f.getNumerator());
         assertEquals(25, f.getDenominator());
 
-
         f1 = Fraction.getFraction(0, 5);
         f2 = Fraction.getFraction(2, 7);
         f = f1.multiplyBy(f2);
@@ -728,9 +724,9 @@ public class FractionTest  {
         assertEquals(75, f.getDenominator());
 
         // large values
-        f = Fraction.getFraction(Integer.MAX_VALUE-1, Integer.MAX_VALUE);
+        f = Fraction.getFraction(Integer.MAX_VALUE - 1, Integer.MAX_VALUE);
         f = f.negate();
-        assertEquals(Integer.MIN_VALUE+2, f.getNumerator());
+        assertEquals(Integer.MIN_VALUE + 2, f.getNumerator());
         assertEquals(Integer.MAX_VALUE, f.getDenominator());
 
         assertThrows(ArithmeticException.class, () -> Fraction.getFraction(Integer.MIN_VALUE, 1).negate());
@@ -1016,7 +1012,7 @@ public class FractionTest  {
 
         // if this fraction is subtracted naively, it will overflow.
         // check that it doesn't.
-        f1 = Fraction.getFraction(1, 32768*3);
+        f1 = Fraction.getFraction(1, 32768 * 3);
         f2 = Fraction.getFraction(1, 59049);
         f = f1.subtract(f2);
         assertEquals(-13085, f.getNumerator());
@@ -1025,37 +1021,27 @@ public class FractionTest  {
         f1 = Fraction.getFraction(Integer.MIN_VALUE, 3);
         f2 = Fraction.ONE_THIRD.negate();
         f = f1.subtract(f2);
-        assertEquals(Integer.MIN_VALUE+1, f.getNumerator());
+        assertEquals(Integer.MIN_VALUE + 1, f.getNumerator());
         assertEquals(3, f.getDenominator());
 
         f1 = Fraction.getFraction(Integer.MAX_VALUE, 1);
         f2 = Fraction.ONE;
         f = f1.subtract(f2);
-        assertEquals(Integer.MAX_VALUE-1, f.getNumerator());
+        assertEquals(Integer.MAX_VALUE - 1, f.getNumerator());
         assertEquals(1, f.getDenominator());
 
         // Should overflow
-        assertThrows(
-                ArithmeticException.class,
-                () -> Fraction.getFraction(1, Integer.MAX_VALUE).subtract(Fraction.getFraction(1, Integer.MAX_VALUE - 1)));
-            f = f1.subtract(f2);
+        assertThrows(ArithmeticException.class, () -> Fraction.getFraction(1, Integer.MAX_VALUE).subtract(Fraction.getFraction(1, Integer.MAX_VALUE - 1)));
 
         // denominator should not be a multiple of 2 or 3 to trigger overflow
-        assertThrows(
-                ArithmeticException.class,
-                () -> Fraction.getFraction(Integer.MIN_VALUE, 5).subtract(Fraction.getFraction(1, 5)));
+        assertThrows(ArithmeticException.class, () -> Fraction.getFraction(Integer.MIN_VALUE, 5).subtract(Fraction.getFraction(1, 5)));
 
-        assertThrows(
-                ArithmeticException.class, () -> Fraction.getFraction(Integer.MIN_VALUE, 1).subtract(Fraction.ONE));
+        assertThrows(ArithmeticException.class, () -> Fraction.getFraction(Integer.MIN_VALUE, 1).subtract(Fraction.ONE));
 
-        assertThrows(
-                ArithmeticException.class,
-                () -> Fraction.getFraction(Integer.MAX_VALUE, 1).subtract(Fraction.ONE.negate()));
+        assertThrows(ArithmeticException.class, () -> Fraction.getFraction(Integer.MAX_VALUE, 1).subtract(Fraction.ONE.negate()));
 
         // Should overflow
-        assertThrows(
-                ArithmeticException.class,
-                () -> Fraction.getFraction(3, 327680).subtract(Fraction.getFraction(2, 59049)));
+        assertThrows(ArithmeticException.class, () -> Fraction.getFraction(3, 327680).subtract(Fraction.getFraction(2, 59049)));
     }
 
     @Test

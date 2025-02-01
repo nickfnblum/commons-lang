@@ -19,20 +19,20 @@ package org.apache.commons.lang3.time;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class FastDatePrinterTimeZonesTest {
+public class FastDatePrinterTimeZonesTest extends AbstractLangTest {
 
     private static final String PATTERN = "h:mma z";
 
     public static Stream<TimeZone> data() {
-        return Arrays.stream(TimeZone.getAvailableIDs()).map(TimeZone::getTimeZone);
+        return Stream.of(TimeZone.getAvailableIDs()).map(TimeZone::getTimeZone);
     }
 
     @ParameterizedTest

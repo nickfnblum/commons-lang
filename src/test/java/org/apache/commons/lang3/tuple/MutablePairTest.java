@@ -19,23 +19,25 @@ package org.apache.commons.lang3.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test the MutablePair class.
  */
-public class MutablePairTest {
+public class MutablePairTest extends AbstractLangTest {
 
     @Test
     public void testBasic() {
         MutablePair<Integer, String> oldPair = new MutablePair<>(0, "foo");
         MutablePair<Integer, String> nowPair;
-        for (int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             nowPair = MutablePair.of(oldPair);
             assertEquals(0, nowPair.left.intValue());
             assertEquals(0, nowPair.getLeft().intValue());
@@ -47,7 +49,7 @@ public class MutablePairTest {
 
         MutablePair<Object, String> oldPair2 = new MutablePair<>(null, "bar");
         MutablePair<Object, String> nowPair2;
-        for (int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             nowPair2 = MutablePair.of(oldPair2);
             assertNull(nowPair2.left);
             assertNull(nowPair2.getLeft());
@@ -100,6 +102,16 @@ public class MutablePairTest {
         pair.setRight("bar");
         assertEquals(42, pair.getLeft().intValue());
         assertEquals("bar", pair.getRight());
+    }
+
+    @Test
+    public void testOfNonNull() {
+        assertThrows(NullPointerException.class, () -> MutablePair.ofNonNull(null, null));
+        assertThrows(NullPointerException.class, () -> MutablePair.ofNonNull(null, "x"));
+        assertThrows(NullPointerException.class, () -> MutablePair.ofNonNull("x", null));
+        final MutablePair<String, String> pair = MutablePair.ofNonNull("x", "y");
+        assertEquals("x", pair.left);
+        assertEquals("y", pair.right);
     }
 
     @Test

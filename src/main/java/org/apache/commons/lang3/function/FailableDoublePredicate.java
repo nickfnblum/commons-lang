@@ -21,9 +21,9 @@ import java.util.Objects;
 import java.util.function.DoublePredicate;
 
 /**
- * A functional interface like {@link DoublePredicate} that declares a {@code Throwable}.
+ * A functional interface like {@link DoublePredicate} that declares a {@link Throwable}.
  *
- * @param <E> Thrown exception.
+ * @param <E> The kind of thrown exception or error.
  * @since 3.11
  */
 @FunctionalInterface
@@ -40,28 +40,30 @@ public interface FailableDoublePredicate<E extends Throwable> {
     /**
      * Returns The FALSE singleton.
      *
-     * @param <E> Thrown exception.
+     * @param <E> The kind of thrown exception or error.
      * @return The NOP singleton.
      */
-    static <E extends Throwable> FailableDoublePredicate<E> falsePredicate() {
+   @SuppressWarnings("unchecked")
+   static <E extends Throwable> FailableDoublePredicate<E> falsePredicate() {
         return FALSE;
     }
 
     /**
-     * Returns The FALSE TRUE.
+     * Returns The TRUE singleton.
      *
-     * @param <E> Thrown exception.
+     * @param <E> The kind of thrown exception or error.
      * @return The NOP singleton.
      */
-    static <E extends Throwable> FailableDoublePredicate<E> truePredicate() {
+   @SuppressWarnings("unchecked")
+   static <E extends Throwable> FailableDoublePredicate<E> truePredicate() {
         return TRUE;
     }
 
     /**
-     * Returns a composed {@code FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
+     * Returns a composed {@link FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
      *
      * @param other a predicate that will be logically-ANDed with this predicate.
-     * @return a composed {@code FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
+     * @return a composed {@link FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
      * @throws NullPointerException if other is null
      */
     default FailableDoublePredicate<E> and(final FailableDoublePredicate<E> other) {
@@ -79,10 +81,10 @@ public interface FailableDoublePredicate<E extends Throwable> {
     }
 
     /**
-     * Returns a composed {@code FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
+     * Returns a composed {@link FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
      *
      * @param other a predicate that will be logically-ORed with this predicate.
-     * @return a composed {@code FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
+     * @return a composed {@link FailableDoublePredicate} like {@link DoublePredicate#and(DoublePredicate)}.
      * @throws NullPointerException if other is null
      */
     default FailableDoublePredicate<E> or(final FailableDoublePredicate<E> other) {

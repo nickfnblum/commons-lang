@@ -17,10 +17,9 @@
 package org.apache.commons.lang3.concurrent;
 
 /**
- * <p>
  * An interface describing a <a
- * href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a> component.
- * </p>
+ * href="https://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a> component.
+ *
  * <p>
  * A <em>circuit breaker</em> can be used to protect an application against unreliable
  * services or unexpected load. It typically monitors a specific resource. As long as this
@@ -40,31 +39,14 @@ package org.apache.commons.lang3.concurrent;
  * @since 3.5
  */
 public interface CircuitBreaker<T> {
-    /**
-     * Returns the current open state of this circuit breaker. A return value of
-     * <strong>true</strong> means that the circuit breaker is currently open indicating a
-     * problem in the monitored sub system.
-     *
-     * @return the current open state of this circuit breaker
-     */
-    boolean isOpen();
-
-    /**
-     * Returns the current closed state of this circuit breaker. A return value of
-     * <strong>true</strong> means that the circuit breaker is currently closed. This
-     * means that everything is okay with the monitored sub system.
-     *
-     * @return the current closed state of this circuit breaker
-     */
-    boolean isClosed();
 
     /**
      * Checks the state of this circuit breaker and changes it if necessary. The return
-     * value indicates whether the circuit breaker is now in state {@code CLOSED}; a value
+     * value indicates whether the circuit breaker is now in state <em>closed</em>; a value
      * of <strong>true</strong> typically means that the current operation can continue.
      *
      * @return <strong>true</strong> if the circuit breaker is now closed;
-     * <strong>false</strong> otherwise
+     * <strong>false</strong> otherwise.
      */
     boolean checkState();
 
@@ -73,13 +55,6 @@ public interface CircuitBreaker<T> {
      * breaker is already closed, this method has no effect.
      */
     void close();
-
-    /**
-     * Opens this circuit breaker. Its state is changed to open. Depending on a concrete
-     * implementation, it may close itself again if the monitored sub system becomes
-     * available. If this circuit breaker is already open, this method has no effect.
-     */
-    void open();
 
     /**
      * Increments the monitored value and performs a check of the current state of this
@@ -91,4 +66,29 @@ public interface CircuitBreaker<T> {
      * <strong>false</strong> otherwise
      */
     boolean incrementAndCheckState(T increment);
+
+    /**
+     * Tests the current closed state of this circuit breaker. A return value of
+     * <strong>true</strong> means that the circuit breaker is currently closed. This
+     * means that everything is okay with the monitored subsystem.
+     *
+     * @return the current closed state of this circuit breaker.
+     */
+    boolean isClosed();
+
+    /**
+     * Tests the current open state of this circuit breaker. A return value of
+     * <strong>true</strong> means that the circuit breaker is currently open indicating a
+     * problem in the monitored subsystem.
+     *
+     * @return the current open state of this circuit breaker.
+     */
+    boolean isOpen();
+
+    /**
+     * Opens this circuit breaker. Its state is changed to open. Depending on a concrete
+     * implementation, it may close itself again if the monitored subsystem becomes
+     * available. If this circuit breaker is already open, this method has no effect.
+     */
+    void open();
 }

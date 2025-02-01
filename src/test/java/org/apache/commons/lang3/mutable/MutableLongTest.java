@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.Test;
  *
  * @see MutableLong
  */
-public class MutableLongTest {
+public class MutableLongTest extends AbstractLangTest {
 
     @Test
     public void testAddAndGetValueObject() {
@@ -85,7 +86,6 @@ public class MutableLongTest {
         assertThrows(NullPointerException.class, () -> new MutableLong((Number) null));
     }
 
-    // ----------------------------------------------------------------
     @Test
     public void testConstructors() {
         assertEquals(0, new MutableLong().longValue());
@@ -229,10 +229,10 @@ public class MutableLongTest {
         final MutableLong mutNum = new MutableLong(1L);
         assertEquals(1.0F, mutNum.floatValue());
         assertEquals(1.0, mutNum.doubleValue());
-        assertEquals( (byte) 1, mutNum.byteValue() );
-        assertEquals( (short) 1, mutNum.shortValue() );
-        assertEquals( 1, mutNum.intValue() );
-        assertEquals( 1L, mutNum.longValue() );
+        assertEquals((byte) 1, mutNum.byteValue());
+        assertEquals((short) 1, mutNum.shortValue());
+        assertEquals(1, mutNum.intValue());
+        assertEquals(1L, mutNum.longValue());
     }
 
     @Test

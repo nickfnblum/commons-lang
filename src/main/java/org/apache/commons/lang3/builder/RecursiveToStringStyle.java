@@ -21,7 +21,7 @@ import java.util.Collection;
 import org.apache.commons.lang3.ClassUtils;
 
 /**
- * <p>Works with {@link ToStringBuilder} to create a "deep" {@code toString}.</p>
+ * Works with {@link ToStringBuilder} to create a "deep" {@code toString}.
  *
  * <p>To use this class write code as follows:</p>
  *
@@ -60,9 +60,29 @@ public class RecursiveToStringStyle extends ToStringStyle {
     private static final long serialVersionUID = 1L;
 
     /**
-     * <p>Constructor.</p>
+     * Constructs a new instance.
      */
     public RecursiveToStringStyle() {
+    }
+
+    /**
+     * Returns whether or not to recursively format the given {@link Class}.
+     * By default, this method always returns {@code true}, but may be overwritten by
+     * subclasses to filter specific classes.
+     *
+     * @param clazz
+     *            The class to test.
+     * @return Whether or not to recursively format the given {@link Class}.
+     */
+    protected boolean accept(final Class<?> clazz) {
+        return true;
+    }
+
+    @Override
+    protected void appendDetail(final StringBuffer buffer, final String fieldName, final Collection<?> coll) {
+        appendClassName(buffer, coll);
+        appendIdentityHashCode(buffer, coll);
+        appendDetail(buffer, fieldName, coll.toArray());
     }
 
     @Override
@@ -74,25 +94,5 @@ public class RecursiveToStringStyle extends ToStringStyle {
         } else {
             super.appendDetail(buffer, fieldName, value);
         }
-    }
-
-    @Override
-    protected void appendDetail(final StringBuffer buffer, final String fieldName, final Collection<?> coll) {
-        appendClassName(buffer, coll);
-        appendIdentityHashCode(buffer, coll);
-        appendDetail(buffer, fieldName, coll.toArray());
-    }
-
-    /**
-     * Returns whether or not to recursively format the given {@code Class}.
-     * By default, this method always returns {@code true}, but may be overwritten by
-     * sub-classes to filter specific classes.
-     *
-     * @param clazz
-     *            The class to test.
-     * @return Whether or not to recursively format the given {@code Class}.
-     */
-    protected boolean accept(final Class<?> clazz) {
-        return true;
     }
 }

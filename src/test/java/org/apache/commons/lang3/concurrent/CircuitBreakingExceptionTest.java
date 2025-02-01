@@ -24,23 +24,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.apache.commons.lang3.exception.AbstractExceptionTest;
 import org.junit.jupiter.api.Test;
 
-
 /**
  * JUnit tests for {@link CircuitBreakingException}.
  */
 public class CircuitBreakingExceptionTest extends AbstractExceptionTest {
 
     @Test
-    public void testThrowingInformativeException() {
+    public void testThrowingEmptyException() {
         assertThrows(CircuitBreakingException.class, () -> {
-            throw new CircuitBreakingException(EXCEPTION_MESSAGE, generateCause());
-        });
-    }
-
-    @Test
-    public void testThrowingExceptionWithMessage() {
-        assertThrows(CircuitBreakingException.class, () -> {
-            throw new CircuitBreakingException(EXCEPTION_MESSAGE);
+            throw new CircuitBreakingException();
         });
     }
 
@@ -52,9 +44,16 @@ public class CircuitBreakingExceptionTest extends AbstractExceptionTest {
     }
 
     @Test
-    public void testThrowingEmptyException() {
+    public void testThrowingExceptionWithMessage() {
         assertThrows(CircuitBreakingException.class, () -> {
-            throw new CircuitBreakingException();
+            throw new CircuitBreakingException(EXCEPTION_MESSAGE);
+        });
+    }
+
+    @Test
+    public void testThrowingInformativeException() {
+        assertThrows(CircuitBreakingException.class, () -> {
+            throw new CircuitBreakingException(EXCEPTION_MESSAGE, generateCause());
         });
     }
 

@@ -22,7 +22,7 @@ import java.util.Objects;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
 /**
- * <p>A triple consisting of three elements.</p>
+ * A triple consisting of three elements.
  *
  * <p>This class is an abstract implementation defining the basic API.
  * It refers to the elements as 'left', 'middle' and 'right'.</p>
@@ -34,31 +34,9 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
  * @param <L> the left element type
  * @param <M> the middle element type
  * @param <R> the right element type
- *
  * @since 3.2
  */
 public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Serializable {
-
-    private static final class TripleAdapter<L, M, R> extends Triple<L, M, R> {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public L getLeft() {
-            return null;
-        }
-
-        @Override
-        public M getMiddle() {
-            return null;
-        }
-
-        @Override
-        public R getRight() {
-            return null;
-        }
-
-    }
 
     /** Serialization version */
     private static final long serialVersionUID = 1L;
@@ -71,7 +49,7 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
      *
      * @since 3.10.
      */
-    public static final Triple<?, ?, ?>[] EMPTY_ARRAY = new TripleAdapter[0];
+    public static final Triple<?, ?, ?>[] EMPTY_ARRAY = {};
 
     /**
      * Returns the empty array singleton that can be assigned without compiler warning.
@@ -80,7 +58,6 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
      * @param <M> the middle element type
      * @param <R> the right element type
      * @return the empty array singleton that can be assigned without compiler warning.
-     *
      * @since 3.10.
      */
     @SuppressWarnings("unchecked")
@@ -89,7 +66,7 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
     }
 
     /**
-     * <p>Obtains an immutable triple of three objects inferring the generic types.</p>
+     * Obtains an immutable triple of three objects inferring the generic types.
      *
      * <p>This factory allows the triple to be created using inference to
      * obtain the generic types.</p>
@@ -103,14 +80,40 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
      * @return a triple formed from the three parameters, not null
      */
     public static <L, M, R> Triple<L, M, R> of(final L left, final M middle, final R right) {
-        return new ImmutableTriple<>(left, middle, right);
+        return ImmutableTriple.of(left, middle, right);
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Compares the triple based on the left element, followed by the middle element,
+     * Obtains an immutable triple of three non-null objects inferring the generic types.
+     *
+     * <p>This factory allows the triple to be created using inference to
+     * obtain the generic types.</p>
+     *
+     * @param <L> the left element type
+     * @param <M> the middle element type
+     * @param <R> the right element type
+     * @param left  the left element, may not be null
+     * @param middle  the middle element, may not be null
+     * @param right  the right element, may not be null
+     * @return a triple formed from the three parameters, not null
+     * @throws NullPointerException if any input is null
+     * @since 3.13.0
+     */
+    public static <L, M, R> Triple<L, M, R> ofNonNull(final L left, final M middle, final R right) {
+        return ImmutableTriple.ofNonNull(left, middle, right);
+    }
+
+    /**
+     * Constructs a new instance.
+     */
+    public Triple() {
+        // empty
+    }
+
+    /**
+     * Compares the triple based on the left element, followed by the middle element,
      * finally the right element.
-     * The types must be {@code Comparable}.</p>
+     * The types must be {@link Comparable}.
      *
      * @param other  the other triple, not null
      * @return negative if this is less, zero if equal, positive if greater
@@ -123,7 +126,7 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
     }
 
     /**
-     * <p>Compares this triple to another based on the three elements.</p>
+     * Compares this triple to another based on the three elements.
      *
      * @param obj  the object to compare to, null returns false
      * @return true if the elements of the triple are equal
@@ -142,40 +145,43 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
         return false;
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Gets the left element from this triple.</p>
+     * Gets the left element from this triple.
      *
      * @return the left element, may be null
      */
     public abstract L getLeft();
 
     /**
-     * <p>Gets the middle element from this triple.</p>
+     * Gets the middle element from this triple.
      *
      * @return the middle element, may be null
      */
     public abstract M getMiddle();
 
     /**
-     * <p>Gets the right element from this triple.</p>
+     * Gets the right element from this triple.
      *
      * @return the right element, may be null
      */
     public abstract R getRight();
 
     /**
-     * <p>Returns a suitable hash code.</p>
+     * Returns a suitable hash code.
+     * <p>
+     * The hash code is adapted from the definition in {@code Map.Entry}.
+     * </p>
      *
-     * @return the hash code
+     * @return the hash code.
      */
     @Override
     public int hashCode() {
+        // See Map.Entry API specification
         return Objects.hashCode(getLeft()) ^ Objects.hashCode(getMiddle()) ^ Objects.hashCode(getRight());
     }
 
     /**
-     * <p>Returns a String representation of this triple using the format {@code ($left,$middle,$right)}.</p>
+     * Returns a String representation of this triple using the format {@code ($left,$middle,$right)}.
      *
      * @return a string describing this object, not null
      */
@@ -185,7 +191,7 @@ public abstract class Triple<L, M, R> implements Comparable<Triple<L, M, R>>, Se
     }
 
     /**
-     * <p>Formats the receiver using the given format.</p>
+     * Formats the receiver using the given format.
      *
      * <p>This uses {@link java.util.Formattable} to perform the formatting. Three variables may
      * be used to embed the left and right elements. Use {@code %1$s} for the left

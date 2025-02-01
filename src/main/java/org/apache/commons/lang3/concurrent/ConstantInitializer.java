@@ -19,10 +19,9 @@ package org.apache.commons.lang3.concurrent;
 import java.util.Objects;
 
 /**
- * <p>
  * A very simple implementation of the {@link ConcurrentInitializer} interface
  * which always returns the same object.
- * </p>
+ *
  * <p>
  * An instance of this class is passed a reference to an object when it is
  * constructed. The {@link #get()} method just returns this object. No
@@ -38,6 +37,7 @@ import java.util.Objects;
  * @param <T> the type of the object managed by this initializer
  */
 public class ConstantInitializer<T> implements ConcurrentInitializer<T> {
+
     /** Constant for the format of the string representation. */
     private static final String FMT_TO_STRING = "ConstantInitializer@%d [ object = %s ]";
 
@@ -45,11 +45,11 @@ public class ConstantInitializer<T> implements ConcurrentInitializer<T> {
     private final T object;
 
     /**
-     * Creates a new instance of {@code ConstantInitializer} and initializes it
+     * Creates a new instance of {@link ConstantInitializer} and initializes it
      * with the object to be managed. The {@code get()} method will always
      * return the object passed here. This class does not place any restrictions
-     * on the object. It may be <b>null</b>, then {@code get()} will return
-     * <b>null</b>, too.
+     * on the object. It may be <strong>null</strong>, then {@code get()} will return
+     * <strong>null</strong>, too.
      *
      * @param obj the object to be managed by this initializer
      */
@@ -58,43 +58,9 @@ public class ConstantInitializer<T> implements ConcurrentInitializer<T> {
     }
 
     /**
-     * Directly returns the object that was passed to the constructor. This is
-     * the same object as returned by {@code get()}. However, this method does
-     * not declare that it throws an exception.
-     *
-     * @return the object managed by this initializer
-     */
-    public final T getObject() {
-        return object;
-    }
-
-    /**
-     * Returns the object managed by this initializer. This implementation just
-     * returns the object passed to the constructor.
-     *
-     * @return the object managed by this initializer
-     * @throws ConcurrentException if an error occurs
-     */
-    @Override
-    public T get() throws ConcurrentException {
-        return getObject();
-    }
-
-    /**
-     * Returns a hash code for this object. This implementation returns the hash
-     * code of the managed object.
-     *
-     * @return a hash code for this object
-     */
-    @Override
-    public int hashCode() {
-        return getObject() != null ? getObject().hashCode() : 0;
-    }
-
-    /**
      * Compares this object with another one. This implementation returns
-     * <b>true</b> if and only if the passed in object is an instance of
-     * {@code ConstantInitializer} which refers to an object equals to the
+     * <strong>true</strong> if and only if the passed in object is an instance of
+     * {@link ConstantInitializer} which refers to an object equals to the
      * object managed by this instance.
      *
      * @param obj the object to compare to
@@ -114,6 +80,51 @@ public class ConstantInitializer<T> implements ConcurrentInitializer<T> {
     }
 
     /**
+     * Returns the object managed by this initializer. This implementation just
+     * returns the object passed to the constructor.
+     *
+     * @return the object managed by this initializer
+     * @throws ConcurrentException if an error occurs
+     */
+    @Override
+    public T get() throws ConcurrentException {
+        return getObject();
+    }
+
+    /**
+     * Directly returns the object that was passed to the constructor. This is
+     * the same object as returned by {@code get()}. However, this method does
+     * not declare that it throws an exception.
+     *
+     * @return the object managed by this initializer
+     */
+    public final T getObject() {
+        return object;
+    }
+
+    /**
+     * Returns a hash code for this object. This implementation returns the hash
+     * code of the managed object.
+     *
+     * @return a hash code for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(object);
+    }
+
+    /**
+     * As a {@link ConstantInitializer} is initialized on construction this will
+     * always return true.
+     *
+     * @return true.
+     * @since 3.14.0
+     */
+    public boolean isInitialized() {
+        return true;
+    }
+
+    /**
      * Returns a string representation for this object. This string also
      * contains a string representation of the object managed by this
      * initializer.
@@ -122,7 +133,6 @@ public class ConstantInitializer<T> implements ConcurrentInitializer<T> {
      */
     @Override
     public String toString() {
-        return String.format(FMT_TO_STRING, Integer.valueOf(System.identityHashCode(this)),
-                String.valueOf(getObject()));
+        return String.format(FMT_TO_STRING, Integer.valueOf(System.identityHashCode(this)), getObject());
     }
 }

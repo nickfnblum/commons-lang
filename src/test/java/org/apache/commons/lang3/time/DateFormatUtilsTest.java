@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.DefaultLocale;
 import org.junitpioneer.jupiter.DefaultTimeZone;
@@ -37,7 +38,7 @@ import org.junitpioneer.jupiter.DefaultTimeZone;
  * TestCase for DateFormatUtils.
  */
 @SuppressWarnings("deprecation") // tests lots of deprecated items
-public class DateFormatUtilsTest {
+public class DateFormatUtilsTest extends AbstractLangTest {
     private void assertFormats(final String expectedValue, final String pattern, final TimeZone timeZone, final Calendar cal) {
         assertEquals(expectedValue, DateFormatUtils.format(cal.getTime(), pattern, timeZone));
         assertEquals(expectedValue, DateFormatUtils.format(cal.getTime().getTime(), pattern, timeZone));
@@ -56,7 +57,6 @@ public class DateFormatUtilsTest {
         return cal;
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testConstructor() {
         assertNotNull(new DateFormatUtils());
@@ -81,7 +81,6 @@ public class DateFormatUtilsTest {
         testUTC("2002-02-23T09:11:12Z", DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern());
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testFormat() {
         final Calendar c = Calendar.getInstance(FastTimeZone.getGmtTimeZone());
@@ -105,7 +104,6 @@ public class DateFormatUtilsTest {
         assertEquals(buffer.toString(), DateFormatUtils.format(c.getTime().getTime(), "yyyyMdH", Locale.US));
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testFormatCalendar() {
         final Calendar c = Calendar.getInstance(FastTimeZone.getGmtTimeZone());
@@ -151,6 +149,15 @@ public class DateFormatUtilsTest {
     public void testLANG1000() throws Exception {
         final String date = "2013-11-18T12:48:05Z";
         DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.parse(date);
+    }
+
+    @Test
+    public void testLANG1462() {
+        final TimeZone timeZone = TimeZone.getTimeZone("GMT-3");
+        final Calendar calendar = createJuneTestDate(timeZone);
+        assertEquals("20030608101112", DateFormatUtils.format(calendar, "yyyyMMddHHmmss"));
+        calendar.setTimeZone(TimeZone.getTimeZone("JST"));
+        assertEquals("20030608221112", DateFormatUtils.format(calendar, "yyyyMMddHHmmss"));
     }
 
     @DefaultTimeZone("UTC")

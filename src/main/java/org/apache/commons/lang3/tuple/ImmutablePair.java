@@ -17,23 +17,22 @@
 package org.apache.commons.lang3.tuple;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * <p>An immutable pair consisting of two {@code Object} elements.</p>
+ * An immutable pair consisting of two {@link Object} elements.
  *
  * <p>Although the implementation is immutable, there is no restriction on the objects
  * that may be stored. If mutable objects are stored in the pair, then the pair
- * itself effectively becomes mutable. The class is also {@code final}, so a subclass
- * can not add undesirable behavior.</p>
+ * itself effectively becomes mutable.</p>
  *
  * <p>#ThreadSafe# if both paired objects are thread-safe</p>
  *
  * @param <L> the left element type
  * @param <R> the right element type
- *
  * @since 3.0
  */
-public final class ImmutablePair<L, R> extends Pair<L, R> {
+public class ImmutablePair<L, R> extends Pair<L, R> {
 
     /**
      * An empty array.
@@ -43,14 +42,14 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
      *
      * @since 3.10.
      */
-    public static final ImmutablePair<?, ?>[] EMPTY_ARRAY = new ImmutablePair[0];
+    public static final ImmutablePair<?, ?>[] EMPTY_ARRAY = {};
 
     /**
      * An immutable pair of nulls.
      */
     // This is not defined with generics to avoid warnings in call sites.
     @SuppressWarnings("rawtypes")
-    private static final ImmutablePair NULL = of(null, null);
+    private static final ImmutablePair NULL = new ImmutablePair<>(null, null);
 
     /** Serialization version */
     private static final long serialVersionUID = 4954918890077093841L;
@@ -61,7 +60,6 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
      * @param <L> the left element type
      * @param <R> the right element type
      * @return the empty array singleton that can be assigned without compiler warning.
-     *
      * @since 3.10.
      */
     @SuppressWarnings("unchecked")
@@ -70,7 +68,7 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
     }
 
     /**
-     * <p>Creates an immutable pair of two objects inferring the generic types.</p>
+     * Creates an immutable pair of two objects inferring the generic types.
      *
      * <p>This factory allows the pair to be created using inference to
      * obtain the generic types.</p>
@@ -82,7 +80,7 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
      * @since 3.11
      */
     public static <L, R> Pair<L, R> left(final L left) {
-        return ImmutablePair.of(left, null);
+        return of(left, null);
     }
 
     /**
@@ -93,12 +91,13 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
      * @return an immutable pair of nulls.
      * @since 3.6
      */
+    @SuppressWarnings("unchecked")
     public static <L, R> ImmutablePair<L, R> nullPair() {
         return NULL;
     }
 
     /**
-     * <p>Creates an immutable pair of two objects inferring the generic types.</p>
+     * Creates an immutable pair of two objects inferring the generic types.
      *
      * <p>This factory allows the pair to be created using inference to
      * obtain the generic types.</p>
@@ -110,36 +109,45 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
      * @return a pair formed from the two parameters, not null
      */
     public static <L, R> ImmutablePair<L, R> of(final L left, final R right) {
-        return new ImmutablePair<>(left, right);
+        return left != null || right != null ? new ImmutablePair<>(left, right) : nullPair();
     }
 
     /**
-     * <p>Creates an immutable pair from an existing pair.</p>
+     * Creates an immutable pair from a map entry.
      *
      * <p>This factory allows the pair to be created using inference to
      * obtain the generic types.</p>
      *
      * @param <L> the left element type
      * @param <R> the right element type
-     * @param pair the existing pair.
-     * @return a pair formed from the two parameters, not null
+     * @param pair the existing map entry.
+     * @return a pair formed from the map entry
      * @since 3.10
      */
     public static <L, R> ImmutablePair<L, R> of(final Map.Entry<L, R> pair) {
-        final L left;
-        final R right;
-        if (pair != null) {
-            left = pair.getKey();
-            right = pair.getValue();
-        } else {
-            left = null;
-            right = null;
-        }
-        return new ImmutablePair<>(left, right);
+        return pair != null ? new ImmutablePair<>(pair.getKey(), pair.getValue()) : nullPair();
     }
 
     /**
-     * <p>Creates an immutable pair of two objects inferring the generic types.</p>
+     * Creates an immutable pair of two non-null objects inferring the generic types.
+     *
+     * <p>This factory allows the pair to be created using inference to
+     * obtain the generic types.</p>
+     *
+     * @param <L> the left element type
+     * @param <R> the right element type
+     * @param left  the left element, may not be null
+     * @param right  the right element, may not  be null
+     * @return a pair formed from the two parameters, not null
+     * @throws NullPointerException if any input is null
+     * @since 3.13.0
+     */
+    public static <L, R> ImmutablePair<L, R> ofNonNull(final L left, final R right) {
+        return of(Objects.requireNonNull(left, "left"), Objects.requireNonNull(right, "right"));
+    }
+
+    /**
+     * Creates an immutable pair of two objects inferring the generic types.
      *
      * <p>This factory allows the pair to be created using inference to
      * obtain the generic types.</p>
@@ -151,7 +159,7 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
      * @since 3.11
      */
     public static <L, R> Pair<L, R> right(final R right) {
-        return ImmutablePair.of(null, right);
+        return of(null, right);
     }
 
     /** Left object */
@@ -188,7 +196,7 @@ public final class ImmutablePair<L, R> extends Pair<L, R> {
     }
 
     /**
-     * <p>Throws {@code UnsupportedOperationException}.</p>
+     * Throws {@link UnsupportedOperationException}.
      *
      * <p>This pair is immutable, so this operation is not supported.</p>
      *

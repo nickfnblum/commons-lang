@@ -19,27 +19,25 @@ package org.apache.commons.lang3.reflect;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.reflect.testbed.AnotherChild;
 import org.apache.commons.lang3.reflect.testbed.AnotherParent;
 import org.apache.commons.lang3.reflect.testbed.Grandchild;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests InheritanceUtils
+ * Tests InheritanceUtils
  */
-public class InheritanceUtilsTest {
+public class InheritanceUtilsTest extends AbstractLangTest {
 
     @Test
     public void testConstructor() throws Exception {
-        assertNotNull(InheritanceUtils.class.newInstance());
+        assertNotNull(InheritanceUtils.class.getConstructor().newInstance());
     }
 
     @Test
-    public void testDistanceGreaterThanZero() {
-        assertEquals(1, InheritanceUtils.distance(AnotherChild.class, AnotherParent.class));
-        assertEquals(1, InheritanceUtils.distance(Grandchild.class, AnotherChild.class));
-        assertEquals(2, InheritanceUtils.distance(Grandchild.class, AnotherParent.class));
-        assertEquals(3, InheritanceUtils.distance(Grandchild.class, Object.class));
+    public void testDistanceDisjoint() {
+        assertEquals(-1, InheritanceUtils.distance(Boolean.class, String.class));
     }
 
     @Test
@@ -50,6 +48,14 @@ public class InheritanceUtilsTest {
     @Test
     public void testDistanceEqualObject() {
         assertEquals(0, InheritanceUtils.distance(Object.class, Object.class));
+    }
+
+    @Test
+    public void testDistanceGreaterThanZero() {
+        assertEquals(1, InheritanceUtils.distance(AnotherChild.class, AnotherParent.class));
+        assertEquals(1, InheritanceUtils.distance(Grandchild.class, AnotherChild.class));
+        assertEquals(2, InheritanceUtils.distance(Grandchild.class, AnotherParent.class));
+        assertEquals(3, InheritanceUtils.distance(Grandchild.class, Object.class));
     }
 
     @Test
@@ -65,11 +71,6 @@ public class InheritanceUtilsTest {
     @Test
     public void testDistanceNullParentNullChild() {
         assertEquals(-1, InheritanceUtils.distance(null, null));
-    }
-
-    @Test
-    public void testDistanceDisjoint() {
-        assertEquals(-1, InheritanceUtils.distance(Boolean.class, String.class));
     }
 
     @Test

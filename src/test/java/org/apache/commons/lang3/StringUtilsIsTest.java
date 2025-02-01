@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests {@link org.apache.commons.lang3.StringUtils} - IsX methods
+ * Tests {@link StringUtils} - IsX methods
  */
-public class StringUtilsIsTest  {
+public class StringUtilsIsTest extends AbstractLangTest {
 
     @Test
     public void testIsAlpha() {
@@ -166,6 +166,7 @@ public class StringUtilsIsTest  {
         assertFalse(StringUtils.isWhitespace("a  "));
         assertFalse(StringUtils.isWhitespace("  a"));
         assertFalse(StringUtils.isWhitespace("aba"));
+        assertFalse(StringUtils.isWhitespace("a"));
         assertTrue(StringUtils.isWhitespace(StringUtilsTest.WHITESPACE));
         assertFalse(StringUtils.isWhitespace(StringUtilsTest.NON_WHITESPACE));
     }

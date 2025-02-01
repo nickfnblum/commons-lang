@@ -18,9 +18,10 @@
 package org.apache.commons.lang3.mutable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
- * A mutable {@code Object} wrapper.
+ * A mutable {@link Object} wrapper.
  *
  * @param <T> the type to set and get
  * @since 2.1
@@ -52,34 +53,10 @@ public class MutableObject<T> implements Mutable<T>, Serializable {
         this.value = value;
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * Gets the value.
-     *
-     * @return the value, may be null
-     */
-    @Override
-    public T getValue() {
-        return this.value;
-    }
-
-    /**
-     * Sets the value.
-     *
-     * @param value  the value to set
-     */
-    @Override
-    public void setValue(final T value) {
-        this.value = value;
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * <p>
      * Compares this object against the specified object. The result is {@code true} if and only if the argument
-     * is not {@code null} and is a {@code MutableObject} object that contains the same {@code T}
+     * is not {@code null} and is a {@link MutableObject} object that contains the same {@link T}
      * value as this object.
-     * </p>
      *
      * @param obj  the object to compare with, {@code null} returns {@code false}
      * @return  {@code true} if the objects are the same;
@@ -96,9 +73,19 @@ public class MutableObject<T> implements Mutable<T>, Serializable {
         }
         if (this.getClass() == obj.getClass()) {
             final MutableObject<?> that = (MutableObject<?>) obj;
-            return this.value.equals(that.value);
+            return Objects.equals(this.value, that.value);
         }
         return false;
+    }
+
+    /**
+     * Gets the value.
+     *
+     * @return the value, may be null
+     */
+    @Override
+    public T getValue() {
+        return this.value;
     }
 
     /**
@@ -108,10 +95,19 @@ public class MutableObject<T> implements Mutable<T>, Serializable {
      */
     @Override
     public int hashCode() {
-        return value == null ? 0 : value.hashCode();
+        return Objects.hashCode(value);
     }
 
-    //-----------------------------------------------------------------------
+    /**
+     * Sets the value.
+     *
+     * @param value  the value to set
+     */
+    @Override
+    public void setValue(final T value) {
+        this.value = value;
+    }
+
     /**
      * Returns the String value of this mutable.
      *
@@ -119,7 +115,7 @@ public class MutableObject<T> implements Mutable<T>, Serializable {
      */
     @Override
     public String toString() {
-        return value == null ? "null" : value.toString();
+        return Objects.toString(value);
     }
 
 }

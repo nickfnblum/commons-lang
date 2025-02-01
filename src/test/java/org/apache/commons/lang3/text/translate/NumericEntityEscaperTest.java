@@ -19,13 +19,23 @@ package org.apache.commons.lang3.text.translate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link org.apache.commons.lang3.text.translate.NumericEntityEscaper}.
+ * Tests for {@link org.apache.commons.lang3.text.translate.NumericEntityEscaper}.
  */
 @Deprecated
-public class NumericEntityEscaperTest  {
+public class NumericEntityEscaperTest extends AbstractLangTest {
+
+    @Test
+    public void testAbove() {
+        final NumericEntityEscaper nee = NumericEntityEscaper.above('F');
+
+        final String input = "ADFGZ";
+        final String result = nee.translate(input);
+        assertEquals("ADF&#71;&#90;", result, "Failed to escape numeric entities via the above method");
+    }
 
     @Test
     public void testBelow() {
@@ -43,15 +53,6 @@ public class NumericEntityEscaperTest  {
         final String input = "ADFGZ";
         final String result = nee.translate(input);
         assertEquals("AD&#70;&#71;Z", result, "Failed to escape numeric entities via the between method");
-    }
-
-    @Test
-    public void testAbove() {
-        final NumericEntityEscaper nee = NumericEntityEscaper.above('F');
-
-        final String input = "ADFGZ";
-        final String result = nee.translate(input);
-        assertEquals("ADF&#71;&#90;", result, "Failed to escape numeric entities via the above method");
     }
 
     // See LANG-617

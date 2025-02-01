@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,8 +33,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.test.NotVisibleExceptionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,17 +46,15 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests {@link org.apache.commons.lang3.exception.ExceptionUtils}.
- *
- * @since 1.0
  */
-public class ExceptionUtilsTest {
+public class ExceptionUtilsTest extends AbstractLangTest {
 
     /**
      * Provides a method with a well known chained/nested exception
      * name which matches the full signature (e.g. has a return value
-     * of {@code Throwable}.
+     * of {@code Throwable}).
      */
-    private static class ExceptionWithCause extends Exception {
+    private static final class ExceptionWithCause extends Exception {
         private static final long serialVersionUID = 1L;
 
         private Throwable cause;
@@ -66,7 +69,7 @@ public class ExceptionUtilsTest {
         }
 
         @Override
-        public Throwable getCause() {
+        public synchronized Throwable getCause() {
             return cause;
         }
 
@@ -74,12 +77,13 @@ public class ExceptionUtilsTest {
             this.cause = cause;
         }
     }
+
     /**
      * Provides a method with a well known chained/nested exception
      * name which does not match the full signature (e.g. lacks a
-     * return value of {@code Throwable}.
+     * return value of {@code Throwable}).
      */
-    private static class ExceptionWithoutCause extends Exception {
+    private static final class ExceptionWithoutCause extends Exception {
         private static final long serialVersionUID = 1L;
 
         @SuppressWarnings("unused")
@@ -87,9 +91,10 @@ public class ExceptionUtilsTest {
             // noop
         }
     }
+
     // Temporary classes to allow the nested exception code to be removed
     // prior to a rewrite of this test class.
-    private static class NestableException extends Exception {
+    private static final class NestableException extends Exception {
         private static final long serialVersionUID = 1L;
 
         @SuppressWarnings("unused")
@@ -100,35 +105,35 @@ public class ExceptionUtilsTest {
             super(t);
         }
     }
+
     public static class TestThrowable extends Throwable {
         private static final long serialVersionUID = 1L;
     }
+
     private static int redeclareCheckedException() {
         return throwsCheckedException();
     }
+
     private static int throwsCheckedException() {
         try {
             throw new IOException();
         } catch (final Exception e) {
-            return ExceptionUtils.<Integer>rethrow(e);
+            ExceptionUtils.asRuntimeException(e);
+            return -1;
         }
     }
 
+    private ExceptionWithCause cyclicCause;
+
+    private Throwable jdkNoCause;
 
     private NestableException nested;
 
+    private Throwable notVisibleException;
 
     private Throwable withCause;
 
     private Throwable withoutCause;
-
-    private Throwable jdkNoCause;
-
-    //-----------------------------------------------------------------------
-
-    private ExceptionWithCause cyclicCause;
-
-    private Throwable notVisibleException;
 
     private Throwable createExceptionWithCause() {
         try {
@@ -142,7 +147,6 @@ public class ExceptionUtilsTest {
         }
     }
 
-    //-----------------------------------------------------------------------
     private Throwable createExceptionWithoutCause() {
         try {
             throw new ExceptionWithoutCause();
@@ -199,6 +203,28 @@ public class ExceptionUtilsTest {
     }
 
     @Test
+    public void testAsRuntimeException() {
+        final Exception expected = new InterruptedException();
+        assertSame(expected, assertThrows(Exception.class, () -> ExceptionUtils.asRuntimeException(expected)));
+        assertNotSame(expected, assertThrows(Exception.class, () -> ExceptionUtils.asRuntimeException(new InterruptedException())));
+        // API return typed to compile to Object
+        assertThrows(expected.getClass(), () -> {
+            @SuppressWarnings("unused")
+            final Object retVal = ExceptionUtils.asRuntimeException(expected);
+        });
+        // API return typed to compile to RuntimeException
+        assertThrows(expected.getClass(), () -> {
+            @SuppressWarnings("unused")
+            final RuntimeException retVal = ExceptionUtils.asRuntimeException(expected);
+        });
+        // API return typed to compile to RuntimeException subclass
+        assertThrows(expected.getClass(), () -> {
+            @SuppressWarnings("unused")
+            final IllegalStateException retVal = ExceptionUtils.asRuntimeException(expected);
+        });
+    }
+
+    @Test
     public void testCatchTechniques() {
         IOException ioe = assertThrows(IOException.class, ExceptionUtilsTest::throwsCheckedException);
         assertEquals(1, ExceptionUtils.getThrowableCount(ioe));
@@ -217,7 +243,58 @@ public class ExceptionUtilsTest {
         assertFalse(Modifier.isFinal(ExceptionUtils.class.getModifiers()));
     }
 
-    //-----------------------------------------------------------------------
+    @Test
+    public void testForEach_jdkNoCause() {
+        final List<Throwable> throwables = new ArrayList<>();
+        ExceptionUtils.forEach(jdkNoCause, throwables::add);
+        assertEquals(1, throwables.size());
+        assertSame(jdkNoCause, throwables.get(0));
+    }
+
+    @Test
+    public void testForEach_nested() {
+        final List<Throwable> throwables = new ArrayList<>();
+        ExceptionUtils.forEach(nested, throwables::add);
+        assertEquals(2, throwables.size());
+        assertSame(nested, throwables.get(0));
+        assertSame(withoutCause, throwables.get(1));
+    }
+
+    @Test
+    public void testForEach_null() {
+        final List<Throwable> throwables = new ArrayList<>();
+        ExceptionUtils.forEach(null, throwables::add);
+        assertEquals(0, throwables.size());
+    }
+
+    @Test
+    public void testForEach_recursiveCause() {
+        final List<Throwable> throwables = new ArrayList<>();
+        ExceptionUtils.forEach(cyclicCause, throwables::add);
+        assertEquals(3, throwables.size());
+        assertSame(cyclicCause, throwables.get(0));
+        assertSame(cyclicCause.getCause(), throwables.get(1));
+        assertSame(cyclicCause.getCause().getCause(), throwables.get(2));
+    }
+
+    @Test
+    public void testForEach_withCause() {
+        final List<Throwable> throwables = new ArrayList<>();
+        ExceptionUtils.forEach(withCause, throwables::add);
+        assertEquals(3, throwables.size());
+        assertSame(withCause, throwables.get(0));
+        assertSame(nested, throwables.get(1));
+        assertSame(withoutCause, throwables.get(2));
+    }
+
+    @Test
+    public void testForEach_withoutCause() {
+        final List<Throwable> throwables = new ArrayList<>();
+        ExceptionUtils.forEach(withoutCause, throwables::add);
+        assertEquals(1, throwables.size());
+        assertSame(withoutCause, throwables.get(0));
+    }
+
     @SuppressWarnings("deprecation") // Specifically tests the deprecated methods
     @Test
     public void testGetCause_Throwable() {
@@ -262,7 +339,6 @@ public class ExceptionUtilsTest {
         assertSame(cyclicCause.getCause().getCause(), ExceptionUtils.getRootCause(cyclicCause));
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testGetRootCauseStackTrace_Throwable() {
         assertEquals(0, ExceptionUtils.getRootCauseStackTrace(null).length);
@@ -289,7 +365,65 @@ public class ExceptionUtilsTest {
         assertFalse(match);
     }
 
-    //-----------------------------------------------------------------------
+    @Test
+    public void testGetRootCauseStackTraceList_Throwable() {
+        assertEquals(0, ExceptionUtils.getRootCauseStackTraceList(null).size());
+
+        final Throwable cause = createExceptionWithCause();
+        List<String> stackTrace = ExceptionUtils.getRootCauseStackTraceList(cause);
+        boolean match = false;
+        for (final String element : stackTrace) {
+            if (element.startsWith(ExceptionUtils.WRAPPED_MARKER)) {
+                match = true;
+                break;
+            }
+        }
+        assertTrue(match);
+
+        stackTrace = ExceptionUtils.getRootCauseStackTraceList(withoutCause);
+        match = false;
+        for (final String element : stackTrace) {
+            if (element.startsWith(ExceptionUtils.WRAPPED_MARKER)) {
+                match = true;
+                break;
+            }
+        }
+        assertFalse(match);
+    }
+
+    @Test
+    @DisplayName("getStackFrames returns empty string array when the argument is null")
+    public void testgetStackFramesHappyPath() {
+        final String[] actual = ExceptionUtils.getStackFrames(new Throwable() {
+            private static final long serialVersionUID = 1L;
+
+            // provide static stack trace to make test stable
+            @Override
+            public void printStackTrace(final PrintWriter s) {
+                s.write("org.apache.commons.lang3.exception.ExceptionUtilsTest$1\n" +
+                    "\tat org.apache.commons.lang3.exception.ExceptionUtilsTest.testgetStackFramesGappyPath(ExceptionUtilsTest.java:706)\n" +
+                    "\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
+                    "\tat com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:230)\n" +
+                    "\tat com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58)\n");
+            }
+        });
+
+        assertArrayEquals(new String[]{
+            "org.apache.commons.lang3.exception.ExceptionUtilsTest$1",
+            "\tat org.apache.commons.lang3.exception.ExceptionUtilsTest.testgetStackFramesGappyPath(ExceptionUtilsTest.java:706)",
+            "\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)",
+            "\tat com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:230)",
+            "\tat com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58)"
+        }, actual);
+    }
+
+    @Test
+    @DisplayName("getStackFrames returns the string array of the stack frames when there is a real exception")
+    public void testgetStackFramesNullArg() {
+        final String[] actual = ExceptionUtils.getStackFrames((Throwable) null);
+        assertEquals(0, actual.length);
+    }
+
     @Test
     public void testGetThrowableCount_Throwable() {
         assertEquals(0, ExceptionUtils.getThrowableCount(null));
@@ -315,7 +449,6 @@ public class ExceptionUtilsTest {
         assertSame(withoutCause, throwables.get(1));
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testGetThrowableList_Throwable_null() {
         final List<?> throwables = ExceptionUtils.getThrowableList(null);
@@ -362,7 +495,6 @@ public class ExceptionUtilsTest {
         assertSame(withoutCause, throwables[1]);
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testGetThrowables_Throwable_null() {
         assertEquals(0, ExceptionUtils.getThrowables(null).length);
@@ -446,7 +578,6 @@ public class ExceptionUtilsTest {
         assertEquals(-1, ExceptionUtils.indexOfThrowable(withCause, Throwable.class, 0));
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testIndexOfType_ThrowableClass() {
         assertEquals(-1, ExceptionUtils.indexOfType(null, null));
@@ -500,15 +631,62 @@ public class ExceptionUtilsTest {
         assertEquals(0, ExceptionUtils.indexOfType(withCause, Throwable.class, 0));
     }
 
-    //-----------------------------------------------------------------------
+    @Test
+    public void testIsChecked_checked() {
+        assertTrue(ExceptionUtils.isChecked(new IOException()));
+    }
+
+    @Test
+    public void testIsChecked_error() {
+        assertFalse(ExceptionUtils.isChecked(new StackOverflowError()));
+    }
+
+    @Test
+    public void testIsChecked_null() {
+        assertFalse(ExceptionUtils.isChecked(null));
+    }
+
+    @Test
+    public void testIsChecked_unchecked() {
+        assertFalse(ExceptionUtils.isChecked(new IllegalArgumentException()));
+    }
+
+    @Test
+    public void testIsCheckedCustomThrowable() {
+        assertTrue(ExceptionUtils.isChecked(new TestThrowable()));
+    }
+
+    @Test
+    public void testIsUnchecked_checked() {
+        assertFalse(ExceptionUtils.isUnchecked(new IOException()));
+    }
+
+    @Test
+    public void testIsUnchecked_error() {
+        assertTrue(ExceptionUtils.isUnchecked(new StackOverflowError()));
+    }
+
+    @Test
+    public void testIsUnchecked_null() {
+        assertFalse(ExceptionUtils.isUnchecked(null));
+    }
+
+    @Test
+    public void testIsUnchecked_unchecked() {
+        assertTrue(ExceptionUtils.isUnchecked(new IllegalArgumentException()));
+    }
+
+    @Test
+    public void testIsUnCheckedCustomThrowable() {
+        assertFalse(ExceptionUtils.isUnchecked(new TestThrowable()));
+    }
+
     @Test
     public void testPrintRootCauseStackTrace_Throwable() {
         ExceptionUtils.printRootCauseStackTrace(null);
         // could pipe system.err to a known stream, but not much point as
         // internally this method calls stream method anyway
     }
-
-    //-----------------------------------------------------------------------
 
     @Test
     public void testPrintRootCauseStackTrace_ThrowableStream() {
@@ -517,7 +695,6 @@ public class ExceptionUtilsTest {
         ExceptionUtils.printRootCauseStackTrace(null, new PrintStream(out));
         assertEquals(0, out.toString().length());
 
-        out = new ByteArrayOutputStream(1024);
         assertThrows(
                 NullPointerException.class,
                 () -> ExceptionUtils.printRootCauseStackTrace(withCause, (PrintStream) null));
@@ -541,7 +718,6 @@ public class ExceptionUtilsTest {
         ExceptionUtils.printRootCauseStackTrace(null, new PrintWriter(writer));
         assertEquals(0, writer.getBuffer().length());
 
-        writer = new StringWriter(1024);
         assertThrows(
                 NullPointerException.class,
                 () -> ExceptionUtils.printRootCauseStackTrace(withCause, (PrintWriter) null));
@@ -560,85 +736,145 @@ public class ExceptionUtilsTest {
 
     @Test
     public void testRemoveCommonFrames_ListList() {
-        assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.removeCommonFrames(null, null));
+        assertThrows(NullPointerException.class, () -> ExceptionUtils.removeCommonFrames(null, null));
     }
 
     @Test
-    public void testThrow() {
+    public void testRethrow() {
         final Exception expected = new InterruptedException();
-        final Exception actual = assertThrows(Exception.class, () -> ExceptionUtils.rethrow(expected));
-        assertSame(expected, actual);
+        // API return typed to compile to Object
+        assertThrows(expected.getClass(), () -> {
+            @SuppressWarnings("unused")
+            final Object retVal = ExceptionUtils.rethrow(expected);
+        });
+        // API return typed to compile to Object subclass
+        assertThrows(expected.getClass(), () -> {
+            @SuppressWarnings("unused")
+            final String retVal = ExceptionUtils.rethrow(expected);
+        });
+        // API return typed to compile to primitive
+        assertThrows(expected.getClass(), () -> {
+            @SuppressWarnings("unused")
+            final int retVal = ExceptionUtils.rethrow(expected);
+        });
+        //
+        assertSame(expected, assertThrows(expected.getClass(), () -> ExceptionUtils.rethrow(expected)));
+        assertNotSame(expected, assertThrows(expected.getClass(), () -> ExceptionUtils.rethrow(new InterruptedException())));
+    }
+
+    @Test
+    public void testStream_jdkNoCause() {
+        assertEquals(1, ExceptionUtils.stream(jdkNoCause).count());
+        assertSame(jdkNoCause, ExceptionUtils.stream(jdkNoCause).toArray()[0]);
+    }
+
+    @Test
+    public void testStream_nested() {
+        assertEquals(2, ExceptionUtils.stream(nested).count());
+        final Object[] array = ExceptionUtils.stream(nested).toArray();
+        assertSame(nested, array[0]);
+        assertSame(withoutCause, array[1]);
+    }
+
+    @Test
+    public void testStream_null() {
+        assertEquals(0, ExceptionUtils.stream(null).count());
+    }
+
+    @Test
+    public void testStream_recursiveCause() {
+        final List<?> throwables = ExceptionUtils.stream(cyclicCause).collect(Collectors.toList());
+        assertEquals(3, throwables.size());
+        assertSame(cyclicCause, throwables.get(0));
+        assertSame(cyclicCause.getCause(), throwables.get(1));
+        assertSame(cyclicCause.getCause().getCause(), throwables.get(2));
+    }
+
+    @Test
+    public void testStream_withCause() {
+        final List<?> throwables = ExceptionUtils.stream(withCause).collect(Collectors.toList());
+        assertEquals(3, throwables.size());
+        assertSame(withCause, throwables.get(0));
+        assertSame(nested, throwables.get(1));
+        assertSame(withoutCause, throwables.get(2));
+    }
+
+    @Test
+    public void testStream_withoutCause() {
+        final List<?> throwables = ExceptionUtils.stream(withoutCause).collect(Collectors.toList());
+        assertEquals(1, throwables.size());
+        assertSame(withoutCause, throwables.get(0));
     }
 
     @Test
     public void testThrowableOf_ThrowableClass() {
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(null, null));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(null, NestableException.class));
+        assertNull(ExceptionUtils.throwableOfThrowable(null, null));
+        assertNull(ExceptionUtils.throwableOfThrowable(null, NestableException.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withoutCause, null));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withoutCause, ExceptionWithCause.class));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withoutCause, NestableException.class));
+        assertNull(ExceptionUtils.throwableOfThrowable(withoutCause, null));
+        assertNull(ExceptionUtils.throwableOfThrowable(withoutCause, ExceptionWithCause.class));
+        assertNull(ExceptionUtils.throwableOfThrowable(withoutCause, NestableException.class));
         assertEquals(withoutCause, ExceptionUtils.throwableOfThrowable(withoutCause, ExceptionWithoutCause.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(nested, null));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(nested, ExceptionWithCause.class));
+        assertNull(ExceptionUtils.throwableOfThrowable(nested, null));
+        assertNull(ExceptionUtils.throwableOfThrowable(nested, ExceptionWithCause.class));
         assertEquals(nested, ExceptionUtils.throwableOfThrowable(nested, NestableException.class));
         assertEquals(nested.getCause(), ExceptionUtils.throwableOfThrowable(nested, ExceptionWithoutCause.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, null));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, null));
         assertEquals(withCause, ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class));
         assertEquals(withCause.getCause(), ExceptionUtils.throwableOfThrowable(withCause, NestableException.class));
         assertEquals(withCause.getCause().getCause(), ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithoutCause.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, Exception.class));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, Throwable.class));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, Exception.class));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, Throwable.class));
     }
 
     @Test
     public void testThrowableOf_ThrowableClassInt() {
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(null, null, 0));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(null, NestableException.class, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(null, null, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(null, NestableException.class, 0));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withoutCause, null));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withoutCause, ExceptionWithCause.class, 0));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withoutCause, NestableException.class, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(withoutCause, null));
+        assertNull(ExceptionUtils.throwableOfThrowable(withoutCause, ExceptionWithCause.class, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(withoutCause, NestableException.class, 0));
         assertEquals(withoutCause, ExceptionUtils.throwableOfThrowable(withoutCause, ExceptionWithoutCause.class, 0));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(nested, null, 0));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(nested, ExceptionWithCause.class, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(nested, null, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(nested, ExceptionWithCause.class, 0));
         assertEquals(nested, ExceptionUtils.throwableOfThrowable(nested, NestableException.class, 0));
         assertEquals(nested.getCause(), ExceptionUtils.throwableOfThrowable(nested, ExceptionWithoutCause.class, 0));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, null));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, null));
         assertEquals(withCause, ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, 0));
         assertEquals(withCause.getCause(), ExceptionUtils.throwableOfThrowable(withCause, NestableException.class, 0));
         assertEquals(withCause.getCause().getCause(), ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithoutCause.class, 0));
 
         assertEquals(withCause, ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, -1));
         assertEquals(withCause, ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, 0));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, 1));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, 9));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, 1));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, ExceptionWithCause.class, 9));
 
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, Exception.class, 0));
-        assertEquals(null, ExceptionUtils.throwableOfThrowable(withCause, Throwable.class, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, Exception.class, 0));
+        assertNull(ExceptionUtils.throwableOfThrowable(withCause, Throwable.class, 0));
     }
 
     @Test
     public void testThrowableOfType_ThrowableClass() {
-        assertEquals(null, ExceptionUtils.throwableOfType(null, null));
-        assertEquals(null, ExceptionUtils.throwableOfType(null, NestableException.class));
+        assertNull(ExceptionUtils.throwableOfType(null, null));
+        assertNull(ExceptionUtils.throwableOfType(null, NestableException.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfType(withoutCause, null));
-        assertEquals(null, ExceptionUtils.throwableOfType(withoutCause, ExceptionWithCause.class));
-        assertEquals(null, ExceptionUtils.throwableOfType(withoutCause, NestableException.class));
+        assertNull(ExceptionUtils.throwableOfType(withoutCause, null));
+        assertNull(ExceptionUtils.throwableOfType(withoutCause, ExceptionWithCause.class));
+        assertNull(ExceptionUtils.throwableOfType(withoutCause, NestableException.class));
         assertEquals(withoutCause, ExceptionUtils.throwableOfType(withoutCause, ExceptionWithoutCause.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfType(nested, null));
-        assertEquals(null, ExceptionUtils.throwableOfType(nested, ExceptionWithCause.class));
+        assertNull(ExceptionUtils.throwableOfType(nested, null));
+        assertNull(ExceptionUtils.throwableOfType(nested, ExceptionWithCause.class));
         assertEquals(nested, ExceptionUtils.throwableOfType(nested, NestableException.class));
         assertEquals(nested.getCause(), ExceptionUtils.throwableOfType(nested, ExceptionWithoutCause.class));
 
-        assertEquals(null, ExceptionUtils.throwableOfType(withCause, null));
+        assertNull(ExceptionUtils.throwableOfType(withCause, null));
         assertEquals(withCause, ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class));
         assertEquals(withCause.getCause(), ExceptionUtils.throwableOfType(withCause, NestableException.class));
         assertEquals(withCause.getCause().getCause(), ExceptionUtils.throwableOfType(withCause, ExceptionWithoutCause.class));
@@ -649,28 +885,28 @@ public class ExceptionUtilsTest {
 
     @Test
     public void testThrowableOfType_ThrowableClassInt() {
-        assertEquals(null, ExceptionUtils.throwableOfType(null, null, 0));
-        assertEquals(null, ExceptionUtils.throwableOfType(null, NestableException.class, 0));
+        assertNull(ExceptionUtils.throwableOfType(null, null, 0));
+        assertNull(ExceptionUtils.throwableOfType(null, NestableException.class, 0));
 
-        assertEquals(null, ExceptionUtils.throwableOfType(withoutCause, null));
-        assertEquals(null, ExceptionUtils.throwableOfType(withoutCause, ExceptionWithCause.class, 0));
-        assertEquals(null, ExceptionUtils.throwableOfType(withoutCause, NestableException.class, 0));
+        assertNull(ExceptionUtils.throwableOfType(withoutCause, null));
+        assertNull(ExceptionUtils.throwableOfType(withoutCause, ExceptionWithCause.class, 0));
+        assertNull(ExceptionUtils.throwableOfType(withoutCause, NestableException.class, 0));
         assertEquals(withoutCause, ExceptionUtils.throwableOfType(withoutCause, ExceptionWithoutCause.class, 0));
 
-        assertEquals(null, ExceptionUtils.throwableOfType(nested, null, 0));
-        assertEquals(null, ExceptionUtils.throwableOfType(nested, ExceptionWithCause.class, 0));
+        assertNull(ExceptionUtils.throwableOfType(nested, null, 0));
+        assertNull(ExceptionUtils.throwableOfType(nested, ExceptionWithCause.class, 0));
         assertEquals(nested, ExceptionUtils.throwableOfType(nested, NestableException.class, 0));
         assertEquals(nested.getCause(), ExceptionUtils.throwableOfType(nested, ExceptionWithoutCause.class, 0));
 
-        assertEquals(null, ExceptionUtils.throwableOfType(withCause, null));
+        assertNull(ExceptionUtils.throwableOfType(withCause, null));
         assertEquals(withCause, ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, 0));
         assertEquals(withCause.getCause(), ExceptionUtils.throwableOfType(withCause, NestableException.class, 0));
         assertEquals(withCause.getCause().getCause(), ExceptionUtils.throwableOfType(withCause, ExceptionWithoutCause.class, 0));
 
         assertEquals(withCause, ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, -1));
         assertEquals(withCause, ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, 0));
-        assertEquals(null, ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, 1));
-        assertEquals(null, ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, 9));
+        assertNull(ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, 1));
+        assertNull(ExceptionUtils.throwableOfType(withCause, ExceptionWithCause.class, 9));
 
         assertEquals(withCause, ExceptionUtils.throwableOfType(withCause, Exception.class, 0));
         assertEquals(withCause, ExceptionUtils.throwableOfType(withCause, Throwable.class, 0));
@@ -698,36 +934,5 @@ public class ExceptionUtilsTest {
     public void testWrapAndUnwrapThrowable() {
         final Throwable t = assertThrows(Throwable.class, () -> ExceptionUtils.wrapAndThrow(new TestThrowable()));
         assertTrue(ExceptionUtils.hasCause(t, TestThrowable.class));
-    }
-
-    @Test
-    @DisplayName("getStackFrames returns the string array of the stack frames when there is a real exception")
-    public void testgetStackFramesNullArg() {
-        final String[] actual = ExceptionUtils.getStackFrames((Throwable) null);
-        assertEquals(0, actual.length);
-    }
-
-    @Test
-    @DisplayName("getStackFrames returns empty string array when the argument is null")
-    public void testgetStackFramesHappyPath() {
-        final String[] actual = ExceptionUtils.getStackFrames(new Throwable() {
-            // provide static stack trace to make test stable
-            @Override
-            public void printStackTrace(final PrintWriter s) {
-                s.write("org.apache.commons.lang3.exception.ExceptionUtilsTest$1\n" +
-                    "\tat org.apache.commons.lang3.exception.ExceptionUtilsTest.testgetStackFramesGappyPath(ExceptionUtilsTest.java:706)\n" +
-                    "\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
-                    "\tat com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:230)\n" +
-                    "\tat com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58)\n");
-            }
-        });
-
-        assertArrayEquals(new String[]{
-            "org.apache.commons.lang3.exception.ExceptionUtilsTest$1",
-            "\tat org.apache.commons.lang3.exception.ExceptionUtilsTest.testgetStackFramesGappyPath(ExceptionUtilsTest.java:706)",
-            "\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)",
-            "\tat com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:230)",
-            "\tat com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58)"
-        }, actual);
     }
 }

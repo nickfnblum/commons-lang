@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests ArrayUtils remove and removeElement methods.
  */
-public class ArrayUtilsRemoveTest {
+public class ArrayUtilsRemoveTest extends AbstractLangTest {
 
     @Test
     public void testRemoveAllBooleanOccurences() {
@@ -545,41 +545,39 @@ public class ArrayUtilsRemoveTest {
     }
 
     @Test
-    @SuppressWarnings("cast")
     public void testRemoveElementDoubleArray() {
         double[] array;
         array = ArrayUtils.removeElement(null, (double) 1);
         assertNull(array);
-        array = ArrayUtils.removeElement(ArrayUtils.EMPTY_DOUBLE_ARRAY, (double) 1);
+        array = ArrayUtils.removeElement(ArrayUtils.EMPTY_DOUBLE_ARRAY, 1);
         assertArrayEquals(ArrayUtils.EMPTY_DOUBLE_ARRAY, array);
         assertEquals(Double.TYPE, array.getClass().getComponentType());
-        array = ArrayUtils.removeElement(new double[] {1}, (double) 1);
+        array = ArrayUtils.removeElement(new double[] {1}, 1);
         assertArrayEquals(ArrayUtils.EMPTY_DOUBLE_ARRAY, array);
         assertEquals(Double.TYPE, array.getClass().getComponentType());
-        array = ArrayUtils.removeElement(new double[] {1, 2}, (double) 1);
+        array = ArrayUtils.removeElement(new double[] {1, 2}, 1);
         assertArrayEquals(new double[]{2}, array);
         assertEquals(Double.TYPE, array.getClass().getComponentType());
-        array = ArrayUtils.removeElement(new double[] {1, 2, 1}, (double) 1);
+        array = ArrayUtils.removeElement(new double[] {1, 2, 1}, 1);
         assertArrayEquals(new double[]{2, 1}, array);
         assertEquals(Double.TYPE, array.getClass().getComponentType());
     }
 
     @Test
-    @SuppressWarnings("cast")
     public void testRemoveElementFloatArray() {
         float[] array;
-        array = ArrayUtils.removeElement((float[]) null, (float) 1);
+        array = ArrayUtils.removeElement((float[]) null, 1);
         assertNull(array);
-        array = ArrayUtils.removeElement(ArrayUtils.EMPTY_FLOAT_ARRAY, (float) 1);
+        array = ArrayUtils.removeElement(ArrayUtils.EMPTY_FLOAT_ARRAY, 1);
         assertArrayEquals(ArrayUtils.EMPTY_FLOAT_ARRAY, array);
         assertEquals(Float.TYPE, array.getClass().getComponentType());
-        array = ArrayUtils.removeElement(new float[] {1}, (float) 1);
+        array = ArrayUtils.removeElement(new float[] {1}, 1);
         assertArrayEquals(ArrayUtils.EMPTY_FLOAT_ARRAY, array);
         assertEquals(Float.TYPE, array.getClass().getComponentType());
-        array = ArrayUtils.removeElement(new float[] {1, 2}, (float) 1);
+        array = ArrayUtils.removeElement(new float[] {1, 2}, 1);
         assertArrayEquals(new float[]{2}, array);
         assertEquals(Float.TYPE, array.getClass().getComponentType());
-        array = ArrayUtils.removeElement(new float[] {1, 2, 1}, (float) 1);
+        array = ArrayUtils.removeElement(new float[] {1, 2, 1}, 1);
         assertArrayEquals(new float[]{2, 1}, array);
         assertEquals(Float.TYPE, array.getClass().getComponentType());
     }
@@ -603,9 +601,7 @@ public class ArrayUtilsRemoveTest {
         assertEquals(Integer.TYPE, array.getClass().getComponentType());
     }
 
-
     @Test
-    @SuppressWarnings("cast")
     public void testRemoveElementLongArray() {
         long[] array;
         array = ArrayUtils.removeElement((long[]) null, 1L);

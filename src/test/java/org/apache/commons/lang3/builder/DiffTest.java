@@ -19,18 +19,15 @@ package org.apache.commons.lang3.builder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
-
 /**
- * Unit tests {@link Diff}.
+ * Tests {@link Diff}.
  */
-public class DiffTest {
+public class DiffTest extends AbstractLangTest {
 
-    private static final String FIELD_NAME = "field";
-    private static final Diff<Boolean> booleanDiff = new BooleanDiff(FIELD_NAME);
-
-    private static class BooleanDiff extends Diff<Boolean> {
+    private static final class BooleanDiff extends Diff<Boolean> {
         private static final long serialVersionUID = 1L;
 
         protected BooleanDiff(final String fieldName) {
@@ -47,6 +44,9 @@ public class DiffTest {
             return Boolean.FALSE;
         }
     }
+    private static final String FIELD_NAME = "field";
+
+    private static final Diff<Boolean> booleanDiff = new BooleanDiff(FIELD_NAME);
 
     @Test
     public void testCannotModify() {

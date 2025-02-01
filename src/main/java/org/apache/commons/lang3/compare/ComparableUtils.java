@@ -18,8 +18,10 @@ package org.apache.commons.lang3.compare;
 
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 /**
- * <p>Utility library to provide helper methods for translating {@link Comparable#compareTo} result into a boolean.</p>
+ * Utility library to provide helper methods for translating {@link Comparable#compareTo} result into a boolean.
  *
  * <p>Example: {@code boolean x = is(myComparable).lessThanOrEqualTo(otherComparable)}</p>
  *
@@ -204,5 +206,41 @@ public class ComparableUtils {
         return a -> is(a).lessThan(b);
     }
 
-    private ComparableUtils() {}
+    /**
+     * Returns the greater of two {@link Comparable} values, ignoring null.
+     * <p>
+     * For three or more values, use {@link ObjectUtils#max(Comparable...)}.
+     * </p>
+     *
+     * @param <A> Type of what we are comparing.
+     * @param comparable1 the first comparable, may be null.
+     * @param comparable2 the second comparable, may be null.
+     * @return the largest of {@code comparable1} and {@code comparable2}.
+     * @see ObjectUtils#max(Comparable...)
+     * @since 3.13.0
+     */
+    public static <A extends Comparable<A>> A max(final A comparable1, final A comparable2) {
+        return ObjectUtils.compare(comparable1, comparable2, false) > 0 ? comparable1 : comparable2;
+    }
+
+    /**
+     * Returns the lesser of two {@link Comparable} values, ignoring null.
+     * <p>
+     * For three or more values, use {@link ObjectUtils#min(Comparable...)}.
+     * </p>
+     *
+     * @param <A> Type of what we are comparing.
+     * @param comparable1 the first comparable, may be null.
+     * @param comparable2 the second comparable, may be null.
+     * @return the smallest of {@code comparable1} and {@code comparable2}.
+     * @see ObjectUtils#min(Comparable...)
+     * @since 3.13.0
+     */
+    public static <A extends Comparable<A>> A min(final A comparable1, final A comparable2) {
+        return ObjectUtils.compare(comparable1, comparable2, true) < 0 ? comparable1 : comparable2;
+    }
+
+    private ComparableUtils() {
+        // empty
+    }
 }

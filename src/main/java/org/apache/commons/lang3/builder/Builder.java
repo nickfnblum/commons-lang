@@ -17,12 +17,10 @@
 package org.apache.commons.lang3.builder;
 
 /**
- * <p>
  * The Builder interface is designed to designate a class as a <em>builder</em>
  * object in the Builder design pattern. Builders are capable of creating and
  * configuring objects or results that normally take multiple steps to construct
  * or are very complex to derive.
- * </p>
  *
  * <p>
  * The builder interface defines a single method, {@link #build()}, that
@@ -38,8 +36,8 @@ package org.apache.commons.lang3.builder;
  *
  * <p>
  * Example Builder:
- * <pre><code>
- * class FontBuilder implements Builder&lt;Font&gt; {
+ * <pre>{@code
+ * class FontBuilder implements Builder<Font> {
  *     private Font font;
  *
  *     public FontBuilder(String fontName) {
@@ -62,18 +60,16 @@ package org.apache.commons.lang3.builder;
  *         return this.font;
  *     }
  * }
- * </code></pre>
+ * }</pre>
  *
  * Example Builder Usage:
- * <pre><code>
+ * <pre>{@code
  * Font bold14ptSansSerifFont = new FontBuilder(Font.SANS_SERIF).bold()
  *                                                              .size(14.0f)
  *                                                              .build();
- * </code></pre>
- *
+ * }</pre>
  *
  * @param <T> the type of object that the builder will construct or compute.
- *
  * @since 3.0
  */
 @FunctionalInterface

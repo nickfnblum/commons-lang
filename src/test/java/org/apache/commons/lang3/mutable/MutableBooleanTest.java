@@ -23,15 +23,15 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * JUnit tests.
  *
- * @since 2.2
  * @see MutableBoolean
  */
-public class MutableBooleanTest {
+public class MutableBooleanTest extends AbstractLangTest {
 
     @Test
     public void testCompareTo() {
@@ -55,7 +55,6 @@ public class MutableBooleanTest {
         assertThrows(NullPointerException.class, () -> new MutableBoolean(null));
     }
 
-    // ----------------------------------------------------------------
     @Test
     public void testConstructors() {
         assertFalse(new MutableBoolean().booleanValue());

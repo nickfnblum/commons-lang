@@ -19,14 +19,16 @@ package org.apache.commons.lang3.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test the MutableTriple class.
  */
-public class MutableTripleTest {
+public class MutableTripleTest extends AbstractLangTest {
 
     @Test
     public void testBasic() {
@@ -90,7 +92,19 @@ public class MutableTripleTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    public void testOfNonNull() {
+        assertThrows(NullPointerException.class, () -> MutableTriple.ofNonNull(null, null, null));
+        assertThrows(NullPointerException.class, () -> MutableTriple.ofNonNull(null, null, "z"));
+        assertThrows(NullPointerException.class, () -> MutableTriple.ofNonNull(null, "y", "z"));
+        assertThrows(NullPointerException.class, () -> MutableTriple.ofNonNull("x", null, null));
+        assertThrows(NullPointerException.class, () -> MutableTriple.ofNonNull("x", "y", null));
+        final MutableTriple<String, String, String> pair = MutableTriple.ofNonNull("x", "y", "z");
+        assertEquals("x", pair.left);
+        assertEquals("y", pair.middle);
+        assertEquals("z", pair.right);
+    }
+
+    @Test
     public void testSerialization() throws Exception {
         final MutableTriple<Integer, String, Boolean> origTriple = MutableTriple.of(0, "foo", Boolean.TRUE);
         final MutableTriple<Integer, String, Boolean> deserializedTriple = SerializationUtils.roundtrip(origTriple);

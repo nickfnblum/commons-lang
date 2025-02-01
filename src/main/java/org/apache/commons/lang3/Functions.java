@@ -19,6 +19,7 @@ package org.apache.commons.lang3;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -32,6 +33,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Streams.FailableStream;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.function.Failable;
 import org.apache.commons.lang3.function.FailableBooleanSupplier;
 
 /**
@@ -72,7 +75,7 @@ import org.apache.commons.lang3.function.FailableBooleanSupplier;
 public class Functions {
 
     /**
-     * A functional interface like {@link BiConsumer} that declares a {@code Throwable}.
+     * A functional interface like {@link BiConsumer} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -96,7 +99,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link BiFunction} that declares a {@code Throwable}.
+     * A functional interface like {@link BiFunction} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -122,7 +125,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link BiPredicate} that declares a {@code Throwable}.
+     * A functional interface like {@link BiPredicate} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -147,7 +150,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link java.util.concurrent.Callable} that declares a {@code Throwable}.
+     * A functional interface like {@link java.util.concurrent.Callable} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -169,7 +172,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link Consumer} that declares a {@code Throwable}.
+     * A functional interface like {@link Consumer} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -191,7 +194,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link Function} that declares a {@code Throwable}.
+     * A functional interface like {@link Function} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -215,7 +218,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link Predicate} that declares a {@code Throwable}.
+     * A functional interface like {@link Predicate} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -238,7 +241,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link Runnable} that declares a {@code Throwable}.
+     * A functional interface like {@link Runnable} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -258,7 +261,7 @@ public class Functions {
     }
 
     /**
-     * A functional interface like {@link Supplier} that declares a {@code Throwable}.
+     * A functional interface like {@link Supplier} that declares a {@link Throwable}.
      *
      * <p>TODO for 4.0: Move to org.apache.commons.lang3.function.</p>
      *
@@ -342,8 +345,8 @@ public class Functions {
      *
      * @param <O1> the type of the first argument of the consumers
      * @param <O2> the type of the second argument of the consumers
-     * @param consumer a failable {@code BiConsumer}
-     * @return a standard {@code BiConsumer}
+     * @param consumer a failable {@link BiConsumer}
+     * @return a standard {@link BiConsumer}
      * @since 3.10
      */
     public static <O1, O2> BiConsumer<O1, O2> asBiConsumer(final FailableBiConsumer<O1, O2, ?> consumer) {
@@ -356,8 +359,8 @@ public class Functions {
      * @param <O1> the type of the first argument of the input of the functions
      * @param <O2> the type of the second argument of the input of the functions
      * @param <O> the type of the output of the functions
-     * @param function a {@code FailableBiFunction}
-     * @return a standard {@code BiFunction}
+     * @param function a {@link FailableBiFunction}
+     * @return a standard {@link BiFunction}
      * @since 3.10
      */
     public static <O1, O2, O> BiFunction<O1, O2, O> asBiFunction(final FailableBiFunction<O1, O2, O, ?> function) {
@@ -369,8 +372,8 @@ public class Functions {
      *
      * @param <O1> the type of the first argument used by the predicates
      * @param <O2> the type of the second argument used by the predicates
-     * @param predicate a {@code FailableBiPredicate}
-     * @return a standard {@code BiPredicate}
+     * @param predicate a {@link FailableBiPredicate}
+     * @return a standard {@link BiPredicate}
      * @since 3.10
      */
     public static <O1, O2> BiPredicate<O1, O2> asBiPredicate(final FailableBiPredicate<O1, O2, ?> predicate) {
@@ -381,8 +384,8 @@ public class Functions {
      * Converts the given {@link FailableCallable} into a standard {@link Callable}.
      *
      * @param <O> the type used by the callables
-     * @param callable a {@code FailableCallable}
-     * @return a standard {@code Callable}
+     * @param callable a {@link FailableCallable}
+     * @return a standard {@link Callable}
      * @since 3.10
      */
     public static <O> Callable<O> asCallable(final FailableCallable<O, ?> callable) {
@@ -393,8 +396,8 @@ public class Functions {
      * Converts the given {@link FailableConsumer} into a standard {@link Consumer}.
      *
      * @param <I> the type used by the consumers
-     * @param consumer a {@code FailableConsumer}
-     * @return a standard {@code Consumer}
+     * @param consumer a {@link FailableConsumer}
+     * @return a standard {@link Consumer}
      * @since 3.10
      */
     public static <I> Consumer<I> asConsumer(final FailableConsumer<I, ?> consumer) {
@@ -407,7 +410,7 @@ public class Functions {
      * @param <I> the type of the input of the functions
      * @param <O> the type of the output of the functions
      * @param function a {code FailableFunction}
-     * @return a standard {@code Function}
+     * @return a standard {@link Function}
      * @since 3.10
      */
     public static <I, O> Function<I, O> asFunction(final FailableFunction<I, O, ?> function) {
@@ -418,8 +421,8 @@ public class Functions {
      * Converts the given {@link FailablePredicate} into a standard {@link Predicate}.
      *
      * @param <I> the type used by the predicates
-     * @param predicate a {@code FailablePredicate}
-     * @return a standard {@code Predicate}
+     * @param predicate a {@link FailablePredicate}
+     * @return a standard {@link Predicate}
      * @since 3.10
      */
     public static <I> Predicate<I> asPredicate(final FailablePredicate<I, ?> predicate) {
@@ -429,8 +432,8 @@ public class Functions {
     /**
      * Converts the given {@link FailableRunnable} into a standard {@link Runnable}.
      *
-     * @param runnable a {@code FailableRunnable}
-     * @return a standard {@code Runnable}
+     * @param runnable a {@link FailableRunnable}
+     * @return a standard {@link Runnable}
      * @since 3.10
      */
     public static Runnable asRunnable(final FailableRunnable<?> runnable) {
@@ -441,8 +444,8 @@ public class Functions {
      * Converts the given {@link FailableSupplier} into a standard {@link Supplier}.
      *
      * @param <O> the type supplied by the suppliers
-     * @param supplier a {@code FailableSupplier}
-     * @return a standard {@code Supplier}
+     * @param supplier a {@link FailableSupplier}
+     * @return a standard {@link Supplier}
      * @since 3.10
      */
     public static <O> Supplier<O> asSupplier(final FailableSupplier<O, ?> supplier) {
@@ -494,13 +497,11 @@ public class Functions {
     }
 
     /**
-     * <p>
      * Rethrows a {@link Throwable} as an unchecked exception. If the argument is already unchecked, namely a
-     * {@code RuntimeException} or {@code Error} then the argument will be rethrown without modification. If the
-     * exception is {@code IOException} then it will be wrapped into a {@code UncheckedIOException}. In every other
+     * {@link RuntimeException} or {@link Error} then the argument will be rethrown without modification. If the
+     * exception is {@link IOException} then it will be wrapped into a {@link UncheckedIOException}. In every other
      * cases the exception will be wrapped into a {@code
      * UndeclaredThrowableException}
-     * </p>
      *
      * <p>
      * Note that there is a declared return type for this method, even though it never returns. The reason for that is
@@ -516,17 +517,12 @@ public class Functions {
      * follow the method call, like a {@code return} statement from a value returning method.
      * </p>
      *
-     * @param throwable The throwable to rethrow ossibly wrapped into an unchecked exception
+     * @param throwable The throwable to rethrow possibly wrapped into an unchecked exception
      * @return Never returns anything, this method never terminates normally.
      */
     public static RuntimeException rethrow(final Throwable throwable) {
         Objects.requireNonNull(throwable, "throwable");
-        if (throwable instanceof RuntimeException) {
-            throw (RuntimeException) throwable;
-        }
-        if (throwable instanceof Error) {
-            throw (Error) throwable;
-        }
+        ExceptionUtils.throwUnchecked(throwable);
         if (throwable instanceof IOException) {
             throw new UncheckedIOException((IOException) throwable);
         }
@@ -612,7 +608,7 @@ public class Functions {
      * {@link AutoCloseable} interface. The method executes the {@code action}. The method guarantees, that <em>all</em>
      * the {@code resources} are being executed, in the given order, afterwards, and regardless of success, or failure.
      * If either the original action, or any of the resource action fails, then the <em>first</em> failure (AKA
-     * {@link Throwable} is rethrown. Example use:
+     * {@link Throwable}) is rethrown. Example use:
      *
      * <pre>
      * {@code
@@ -631,41 +627,9 @@ public class Functions {
     public static void tryWithResources(final FailableRunnable<? extends Throwable> action,
         final FailableConsumer<Throwable, ? extends Throwable> errorHandler,
         final FailableRunnable<? extends Throwable>... resources) {
-        final FailableConsumer<Throwable, ? extends Throwable> actualErrorHandler;
-        if (errorHandler == null) {
-            actualErrorHandler = Functions::rethrow;
-        } else {
-            actualErrorHandler = errorHandler;
-        }
-        if (resources != null) {
-            for (final FailableRunnable<? extends Throwable> failableRunnable : resources) {
-                Objects.requireNonNull(failableRunnable, "runnable");
-            }
-        }
-        Throwable th = null;
-        try {
-            action.run();
-        } catch (final Throwable t) {
-            th = t;
-        }
-        if (resources != null) {
-            for (final FailableRunnable<?> runnable : resources) {
-                try {
-                    runnable.run();
-                } catch (final Throwable t) {
-                    if (th == null) {
-                        th = t;
-                    }
-                }
-            }
-        }
-        if (th != null) {
-            try {
-                actualErrorHandler.accept(th);
-            } catch (final Throwable t) {
-                throw rethrow(t);
-            }
-        }
+        final org.apache.commons.lang3.function.FailableRunnable<?>[] fr = new org.apache.commons.lang3.function.FailableRunnable[resources.length];
+        Arrays.setAll(fr, i -> () -> resources[i].run());
+        Failable.tryWithResources(action::run, errorHandler != null ? errorHandler::accept : null, fr);
     }
 
     /**
@@ -673,7 +637,7 @@ public class Functions {
      * {@link AutoCloseable} interface. The method executes the {@code action}. The method guarantees, that <em>all</em>
      * the {@code resources} are being executed, in the given order, afterwards, and regardless of success, or failure.
      * If either the original action, or any of the resource action fails, then the <em>first</em> failure (AKA
-     * {@link Throwable} is rethrown. Example use:
+     * {@link Throwable}) is rethrown. Example use:
      *
      * <pre>
      * {@code
@@ -690,5 +654,12 @@ public class Functions {
     public static void tryWithResources(final FailableRunnable<? extends Throwable> action,
         final FailableRunnable<? extends Throwable>... resources) {
         tryWithResources(action, null, resources);
+    }
+
+    /**
+     * Constructs a new instance.
+     */
+    public Functions() {
+        // empty
     }
 }

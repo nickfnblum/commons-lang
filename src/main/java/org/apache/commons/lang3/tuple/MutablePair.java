@@ -17,15 +17,15 @@
 package org.apache.commons.lang3.tuple;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * <p>A mutable pair consisting of two {@code Object} elements.</p>
+ * A mutable pair consisting of two {@link Object} elements.
  *
  * <p>Not #ThreadSafe#</p>
  *
  * @param <L> the left element type
  * @param <R> the right element type
- *
  * @since 3.0
  */
 public class MutablePair<L, R> extends Pair<L, R> {
@@ -38,7 +38,7 @@ public class MutablePair<L, R> extends Pair<L, R> {
      *
      * @since 3.10.
      */
-    public static final MutablePair<?, ?>[] EMPTY_ARRAY = new MutablePair[0];
+    public static final MutablePair<?, ?>[] EMPTY_ARRAY = {};
 
     /** Serialization version */
     private static final long serialVersionUID = 4954918890077093841L;
@@ -49,7 +49,6 @@ public class MutablePair<L, R> extends Pair<L, R> {
      * @param <L> the left element type
      * @param <R> the right element type
      * @return the empty array singleton that can be assigned without compiler warning.
-     *
      * @since 3.10.
      */
     @SuppressWarnings("unchecked")
@@ -58,7 +57,7 @@ public class MutablePair<L, R> extends Pair<L, R> {
     }
 
     /**
-     * <p>Creates a mutable pair of two objects inferring the generic types.</p>
+     * Creates a mutable pair of two objects inferring the generic types.
      *
      * <p>This factory allows the pair to be created using inference to
      * obtain the generic types.</p>
@@ -74,15 +73,15 @@ public class MutablePair<L, R> extends Pair<L, R> {
     }
 
     /**
-     * <p>Creates a mutable pair from an existing pair.</p>
+     * Creates a mutable pair from a map entry.
      *
      * <p>This factory allows the pair to be created using inference to
      * obtain the generic types.</p>
      *
      * @param <L> the left element type
      * @param <R> the right element type
-     * @param pair the existing pair.
-     * @return a pair formed from the two parameters, not null
+     * @param pair the existing map entry.
+     * @return a pair formed from the map entry
      */
     public static <L, R> MutablePair<L, R> of(final Map.Entry<L, R> pair) {
         final L left;
@@ -95,6 +94,24 @@ public class MutablePair<L, R> extends Pair<L, R> {
             right = null;
         }
         return new MutablePair<>(left, right);
+    }
+
+    /**
+     * Creates a mutable pair of two non-null objects inferring the generic types.
+     *
+     * <p>This factory allows the pair to be created using inference to
+     * obtain the generic types.</p>
+     *
+     * @param <L> the left element type
+     * @param <R> the right element type
+     * @param left  the left element, may not be null
+     * @param right  the right element, may not be null
+     * @return a pair formed from the two parameters, not null
+     * @throws NullPointerException if any input is null
+     * @since 3.13.0
+     */
+    public static <L, R> MutablePair<L, R> ofNonNull(final L left, final R right) {
+        return of(Objects.requireNonNull(left, "left"), Objects.requireNonNull(right, "right"));
     }
 
     /** Left object */
@@ -120,7 +137,6 @@ public class MutablePair<L, R> extends Pair<L, R> {
         this.right = right;
     }
 
-    //-----------------------------------------------------------------------
     /**
      * {@inheritDoc}
      */

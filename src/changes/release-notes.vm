@@ -33,19 +33,17 @@ limitations under the License.
 
 
                         ${project.name}
-                            Version ${version}
-                           Release Notes
+                        Version ${version}
+                        Release Notes
 
 
-INTRODUCTION:
+The Apache Commons team is pleased to announce Apache Commons Lang Version ${version}.
 
-This document contains the release notes for the ${version} version of Apache Commons Lang.
-Commons Lang is a set of utility functions and reusable components that should be of use in any 
-Java environment.
+Commons Lang is a set of utility functions and reusable components that should be useful in any Java environment.
 
-Lang 3.9 and onwards now targets Java 8, making use of features that arrived with Java 8.
+Starting with Commons Lang 3.9, we target Java 8, using those features.
 
-For the advice on upgrading from 2.x to 3.x, see the following page: 
+For advice on upgrading from 2.x to 3.x, see:
 
     https://commons.apache.org/lang/article3_0.html
 
@@ -53,7 +51,7 @@ $introduction.replaceAll("(?<!\015)\012", "
 ").replaceAll("(?m)^ +","")
 
 ## N.B. the available variables are described here:
-## http://maven.apache.org/plugins/maven-changes-plugin/examples/using-a-custom-announcement-template.html
+## https://maven.apache.org/plugins/maven-changes-plugin/examples/using-a-custom-announcement-template.html
 ##
 ## Hack to improve layout: replace all pairs of spaces with a single new-line
 $release.description.replaceAll("  ", "
@@ -131,14 +129,16 @@ Removed:
 ## End of main loop
 #end
 
-Historical list of changes: ${project.url}changes-report.html
+Historical list of changes: ${project.url}changes.html
 
 For complete information on ${project.name}, including instructions on how to submit bug reports,
-patches, or suggestions for improvement, see the Apache ${project.name} website:
+patches, or suggestions for improvement, see the ${project.name} website:
 
 ${project.url}
 
 Download page: ${project.url}download_lang.cgi
 
 Have fun!
--Apache Commons Team
+Apache Commons Team
+
+-----------------------------------------------------------------------------

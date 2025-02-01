@@ -16,8 +16,10 @@
  */
 package org.apache.commons.lang3;
 
+import java.util.Objects;
+
 /**
- * <p>Operations on char primitives and Character objects.</p>
+ * Operations on char primitives and Character objects.
  *
  * <p>This class tries to handle {@code null} input gracefully.
  * An exception will not be thrown for a {@code null} input.
@@ -35,16 +37,16 @@ public class CharUtils {
     /**
      * Linefeed character LF ({@code '\n'}, Unicode 000a).
      *
-     * @see <a href="http://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.10.6">JLF: Escape Sequences
+     * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.10.6">JLF: Escape Sequences
      *      for Character and String Literals</a>
      * @since 2.2
      */
     public static final char LF = '\n';
 
     /**
-     * Carriage return characterf CR ('\r', Unicode 000d).
+     * Carriage return character CR ('\r', Unicode 000d).
      *
-     * @see <a href="http://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.10.6">JLF: Escape Sequences
+     * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.10.6">JLF: Escape Sequences
      *      for Character and String Literals</a>
      * @since 2.2
      */
@@ -58,69 +60,177 @@ public class CharUtils {
     public static final char NUL = '\0';
 
     static {
-        for (char c = 0; c < CHAR_STRING_ARRAY.length; c++) {
-            CHAR_STRING_ARRAY[c] = String.valueOf(c);
-        }
+        ArrayUtils.setAll(CHAR_STRING_ARRAY, i -> String.valueOf((char) i));
     }
 
     /**
-     * <p>{@code CharUtils} instances should NOT be constructed in standard programming.
-     * Instead, the class should be used as {@code CharUtils.toString('c');}.</p>
+     * Compares two {@code char} values numerically. This is the same functionality as provided in Java 7.
      *
-     * <p>This constructor is public to permit tools that require a JavaBean instance
-     * to operate.</p>
+     * @param x the first {@code char} to compare
+     * @param y the second {@code char} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         a value less than {@code 0} if {@code x < y}; and
+     *         a value greater than {@code 0} if {@code x > y}
+     * @since 3.4
      */
-    public CharUtils() {
+    public static int compare(final char x, final char y) {
+        return x - y;
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Converts the character to a Character.</p>
-     *
-     * <p>For ASCII 7 bit characters, this uses a cache that will return the
-     * same Character object each time.</p>
+     * Checks whether the character is ASCII 7 bit.
      *
      * <pre>
-     *   CharUtils.toCharacterObject(' ')  = ' '
-     *   CharUtils.toCharacterObject('A')  = 'A'
+     *   CharUtils.isAscii('a')  = true
+     *   CharUtils.isAscii('A')  = true
+     *   CharUtils.isAscii('3')  = true
+     *   CharUtils.isAscii('-')  = true
+     *   CharUtils.isAscii('\n') = true
+     *   CharUtils.isAscii('&copy;') = false
      * </pre>
      *
-     * @deprecated Java 5 introduced {@link Character#valueOf(char)} which caches chars 0 through 127.
-     * @param ch  the character to convert
-     * @return a Character of the specified character
+     * @param ch  the character to check
+     * @return true if less than 128
      */
-    @Deprecated
-    public static Character toCharacterObject(final char ch) {
-        return Character.valueOf(ch);
+    public static boolean isAscii(final char ch) {
+        return ch < 128;
     }
 
     /**
-     * <p>Converts the String to a Character using the first character, returning
-     * null for empty Strings.</p>
-     *
-     * <p>For ASCII 7 bit characters, this uses a cache that will return the
-     * same Character object each time.</p>
+     * Checks whether the character is ASCII 7 bit alphabetic.
      *
      * <pre>
-     *   CharUtils.toCharacterObject(null) = null
-     *   CharUtils.toCharacterObject("")   = null
-     *   CharUtils.toCharacterObject("A")  = 'A'
-     *   CharUtils.toCharacterObject("BA") = 'B'
+     *   CharUtils.isAsciiAlpha('a')  = true
+     *   CharUtils.isAsciiAlpha('A')  = true
+     *   CharUtils.isAsciiAlpha('3')  = false
+     *   CharUtils.isAsciiAlpha('-')  = false
+     *   CharUtils.isAsciiAlpha('\n') = false
+     *   CharUtils.isAsciiAlpha('&copy;') = false
      * </pre>
      *
-     * @param str  the character to convert
-     * @return the Character value of the first letter of the String
+     * @param ch  the character to check
+     * @return true if between 65 and 90 or 97 and 122 inclusive
      */
-    public static Character toCharacterObject(final String str) {
-        if (StringUtils.isEmpty(str)) {
-            return null;
-        }
-        return Character.valueOf(str.charAt(0));
+    public static boolean isAsciiAlpha(final char ch) {
+        return isAsciiAlphaUpper(ch) || isAsciiAlphaLower(ch);
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Converts the Character to a char throwing an exception for {@code null}.</p>
+     * Checks whether the character is ASCII 7 bit alphabetic lower case.
+     *
+     * <pre>
+     *   CharUtils.isAsciiAlphaLower('a')  = true
+     *   CharUtils.isAsciiAlphaLower('A')  = false
+     *   CharUtils.isAsciiAlphaLower('3')  = false
+     *   CharUtils.isAsciiAlphaLower('-')  = false
+     *   CharUtils.isAsciiAlphaLower('\n') = false
+     *   CharUtils.isAsciiAlphaLower('&copy;') = false
+     * </pre>
+     *
+     * @param ch  the character to check
+     * @return true if between 97 and 122 inclusive
+     */
+    public static boolean isAsciiAlphaLower(final char ch) {
+        return ch >= 'a' && ch <= 'z';
+    }
+
+    /**
+     * Checks whether the character is ASCII 7 bit numeric.
+     *
+     * <pre>
+     *   CharUtils.isAsciiAlphanumeric('a')  = true
+     *   CharUtils.isAsciiAlphanumeric('A')  = true
+     *   CharUtils.isAsciiAlphanumeric('3')  = true
+     *   CharUtils.isAsciiAlphanumeric('-')  = false
+     *   CharUtils.isAsciiAlphanumeric('\n') = false
+     *   CharUtils.isAsciiAlphanumeric('&copy;') = false
+     * </pre>
+     *
+     * @param ch  the character to check
+     * @return true if between 48 and 57 or 65 and 90 or 97 and 122 inclusive
+     */
+    public static boolean isAsciiAlphanumeric(final char ch) {
+        return isAsciiAlpha(ch) || isAsciiNumeric(ch);
+    }
+
+    /**
+     * Checks whether the character is ASCII 7 bit alphabetic upper case.
+     *
+     * <pre>
+     *   CharUtils.isAsciiAlphaUpper('a')  = false
+     *   CharUtils.isAsciiAlphaUpper('A')  = true
+     *   CharUtils.isAsciiAlphaUpper('3')  = false
+     *   CharUtils.isAsciiAlphaUpper('-')  = false
+     *   CharUtils.isAsciiAlphaUpper('\n') = false
+     *   CharUtils.isAsciiAlphaUpper('&copy;') = false
+     * </pre>
+     *
+     * @param ch  the character to check
+     * @return true if between 65 and 90 inclusive
+     */
+    public static boolean isAsciiAlphaUpper(final char ch) {
+        return ch >= 'A' && ch <= 'Z';
+    }
+
+    /**
+     * Checks whether the character is ASCII 7 bit control.
+     *
+     * <pre>
+     *   CharUtils.isAsciiControl('a')  = false
+     *   CharUtils.isAsciiControl('A')  = false
+     *   CharUtils.isAsciiControl('3')  = false
+     *   CharUtils.isAsciiControl('-')  = false
+     *   CharUtils.isAsciiControl('\n') = true
+     *   CharUtils.isAsciiControl('&copy;') = false
+     * </pre>
+     *
+     * @param ch  the character to check
+     * @return true if less than 32 or equals 127
+     */
+    public static boolean isAsciiControl(final char ch) {
+        return ch < 32 || ch == 127;
+    }
+
+    /**
+     * Checks whether the character is ASCII 7 bit numeric.
+     *
+     * <pre>
+     *   CharUtils.isAsciiNumeric('a')  = false
+     *   CharUtils.isAsciiNumeric('A')  = false
+     *   CharUtils.isAsciiNumeric('3')  = true
+     *   CharUtils.isAsciiNumeric('-')  = false
+     *   CharUtils.isAsciiNumeric('\n') = false
+     *   CharUtils.isAsciiNumeric('&copy;') = false
+     * </pre>
+     *
+     * @param ch  the character to check
+     * @return true if between 48 and 57 inclusive
+     */
+    public static boolean isAsciiNumeric(final char ch) {
+        return ch >= '0' && ch <= '9';
+    }
+
+    /**
+     * Checks whether the character is ASCII 7 bit printable.
+     *
+     * <pre>
+     *   CharUtils.isAsciiPrintable('a')  = true
+     *   CharUtils.isAsciiPrintable('A')  = true
+     *   CharUtils.isAsciiPrintable('3')  = true
+     *   CharUtils.isAsciiPrintable('-')  = true
+     *   CharUtils.isAsciiPrintable('\n') = false
+     *   CharUtils.isAsciiPrintable('&copy;') = false
+     * </pre>
+     *
+     * @param ch  the character to check
+     * @return true if between 32 and 126 inclusive
+     */
+    public static boolean isAsciiPrintable(final char ch) {
+        return ch >= 32 && ch < 127;
+    }
+
+    /**
+     * Converts the Character to a char throwing an exception for {@code null}.
      *
      * <pre>
      *   CharUtils.toChar(' ')  = ' '
@@ -133,12 +243,11 @@ public class CharUtils {
      * @throws NullPointerException if the Character is null
      */
     public static char toChar(final Character ch) {
-        Validate.notNull(ch, "ch");
-        return ch.charValue();
+        return Objects.requireNonNull(ch, "ch").charValue();
     }
 
     /**
-     * <p>Converts the Character to a char handling {@code null}.</p>
+     * Converts the Character to a char handling {@code null}.
      *
      * <pre>
      *   CharUtils.toChar(null, 'X') = 'X'
@@ -151,16 +260,12 @@ public class CharUtils {
      * @return the char value of the Character or the default if null
      */
     public static char toChar(final Character ch, final char defaultValue) {
-        if (ch == null) {
-            return defaultValue;
-        }
-        return ch.charValue();
+        return ch != null ? ch.charValue() : defaultValue;
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Converts the String to a char using the first character, throwing
-     * an exception on empty Strings.</p>
+     * Converts the String to a char using the first character, throwing
+     * an exception on empty Strings.
      *
      * <pre>
      *   CharUtils.toChar("A")  = 'A'
@@ -180,8 +285,8 @@ public class CharUtils {
     }
 
     /**
-     * <p>Converts the String to a char using the first character, defaulting
-     * the value on empty Strings.</p>
+     * Converts the String to a char using the first character, defaulting
+     * the value on empty Strings.
      *
      * <pre>
      *   CharUtils.toChar(null, 'X') = 'X'
@@ -195,16 +300,45 @@ public class CharUtils {
      * @return the char value of the first letter of the String or the default if null
      */
     public static char toChar(final String str, final char defaultValue) {
-        if (StringUtils.isEmpty(str)) {
-            return defaultValue;
-        }
-        return str.charAt(0);
+        return StringUtils.isEmpty(str) ? defaultValue : str.charAt(0);
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Converts the character to the Integer it represents, throwing an
-     * exception if the character is not numeric.</p>
+     * Delegates to {@link Character#valueOf(char)}.
+     *
+     * @param c the character to convert
+     * @return a {@code Character} representing {@code c}.
+     * @deprecated Use {@link Character#valueOf(char)}.
+     */
+    @Deprecated
+    public static Character toCharacterObject(final char c) {
+        return Character.valueOf(c);
+    }
+
+    /**
+     * Converts the String to a Character using the first character, returning
+     * null for empty Strings.
+     *
+     * <p>For ASCII 7 bit characters, this uses a cache that will return the
+     * same Character object each time.</p>
+     *
+     * <pre>
+     *   CharUtils.toCharacterObject(null) = null
+     *   CharUtils.toCharacterObject("")   = null
+     *   CharUtils.toCharacterObject("A")  = 'A'
+     *   CharUtils.toCharacterObject("BA") = 'B'
+     * </pre>
+     *
+     * @param str  the character to convert
+     * @return the Character value of the first letter of the String
+     */
+    public static Character toCharacterObject(final String str) {
+        return StringUtils.isEmpty(str) ? null : Character.valueOf(str.charAt(0));
+    }
+
+    /**
+     * Converts the character to the Integer it represents, throwing an
+     * exception if the character is not numeric.
      *
      * <p>This method converts the char '1' to the int 1 and so on.</p>
      *
@@ -225,8 +359,8 @@ public class CharUtils {
     }
 
     /**
-     * <p>Converts the character to the Integer it represents, throwing an
-     * exception if the character is not numeric.</p>
+     * Converts the character to the Integer it represents, throwing an
+     * exception if the character is not numeric.
      *
      * <p>This method converts the char '1' to the int 1 and so on.</p>
      *
@@ -240,15 +374,12 @@ public class CharUtils {
      * @return the int value of the character
      */
     public static int toIntValue(final char ch, final int defaultValue) {
-        if (!isAsciiNumeric(ch)) {
-            return defaultValue;
-        }
-        return ch - 48;
+        return isAsciiNumeric(ch) ? ch - 48 : defaultValue;
     }
 
     /**
-     * <p>Converts the character to the Integer it represents, throwing an
-     * exception if the character is not numeric.</p>
+     * Converts the character to the Integer it represents, throwing an
+     * exception if the character is not numeric.
      *
      * <p>This method converts the char '1' to the int 1 and so on.</p>
      *
@@ -264,13 +395,12 @@ public class CharUtils {
      * @throws IllegalArgumentException if the Character is not ASCII numeric
      */
     public static int toIntValue(final Character ch) {
-        Validate.notNull(ch, "ch");
-        return toIntValue(ch.charValue());
+        return toIntValue(toChar(ch));
     }
 
     /**
-     * <p>Converts the character to the Integer it represents, throwing an
-     * exception if the character is not numeric.</p>
+     * Converts the character to the Integer it represents, throwing an
+     * exception if the character is not numeric.
      *
      * <p>This method converts the char '1' to the int 1 and so on.</p>
      *
@@ -285,15 +415,11 @@ public class CharUtils {
      * @return the int value of the character
      */
     public static int toIntValue(final Character ch, final int defaultValue) {
-        if (ch == null) {
-            return defaultValue;
-        }
-        return toIntValue(ch.charValue(), defaultValue);
+        return ch != null ? toIntValue(ch.charValue(), defaultValue) : defaultValue;
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Converts the character to a String that contains the one character.</p>
+     * Converts the character to a String that contains the one character.
      *
      * <p>For ASCII 7 bit characters, this uses a cache that will return the
      * same String object each time.</p>
@@ -307,14 +433,14 @@ public class CharUtils {
      * @return a String containing the one specified character
      */
     public static String toString(final char ch) {
-        if (ch < 128) {
+        if (ch < CHAR_STRING_ARRAY.length) {
             return CHAR_STRING_ARRAY[ch];
         }
-        return new String(new char[] {ch});
+        return String.valueOf(ch);
     }
 
     /**
-     * <p>Converts the character to a String that contains the one character.</p>
+     * Converts the character to a String that contains the one character.
      *
      * <p>For ASCII 7 bit characters, this uses a cache that will return the
      * same String object each time.</p>
@@ -331,15 +457,11 @@ public class CharUtils {
      * @return a String containing the one specified character
      */
     public static String toString(final Character ch) {
-        if (ch == null) {
-            return null;
-        }
-        return toString(ch.charValue());
+        return ch != null ? toString(ch.charValue()) : null;
     }
 
-    //--------------------------------------------------------------------------
     /**
-     * <p>Converts the string to the Unicode format '\u0020'.</p>
+     * Converts the string to the Unicode format '\u0020'.
      *
      * <p>This format is the Java source code format.</p>
      *
@@ -353,14 +475,14 @@ public class CharUtils {
      */
     public static String unicodeEscaped(final char ch) {
         return "\\u" +
-            HEX_DIGITS[(ch >> 12) & 15] +
-            HEX_DIGITS[(ch >> 8) & 15] +
-            HEX_DIGITS[(ch >> 4) & 15] +
-            HEX_DIGITS[(ch) & 15];
+            HEX_DIGITS[ch >> 12 & 15] +
+            HEX_DIGITS[ch >> 8 & 15] +
+            HEX_DIGITS[ch >> 4 & 15] +
+            HEX_DIGITS[ch & 15];
     }
 
     /**
-     * <p>Converts the string to the Unicode format '\u0020'.</p>
+     * Converts the string to the Unicode format '\u0020'.
      *
      * <p>This format is the Java source code format.</p>
      *
@@ -376,176 +498,20 @@ public class CharUtils {
      * @return the escaped Unicode string, null if null input
      */
     public static String unicodeEscaped(final Character ch) {
-        if (ch == null) {
-            return null;
-        }
-        return unicodeEscaped(ch.charValue());
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     * <p>Checks whether the character is ASCII 7 bit.</p>
-     *
-     * <pre>
-     *   CharUtils.isAscii('a')  = true
-     *   CharUtils.isAscii('A')  = true
-     *   CharUtils.isAscii('3')  = true
-     *   CharUtils.isAscii('-')  = true
-     *   CharUtils.isAscii('\n') = true
-     *   CharUtils.isAscii('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if less than 128
-     */
-    public static boolean isAscii(final char ch) {
-        return ch < 128;
+        return ch != null ? unicodeEscaped(ch.charValue()) : null;
     }
 
     /**
-     * <p>Checks whether the character is ASCII 7 bit printable.</p>
+     * {@link CharUtils} instances should NOT be constructed in standard programming.
+     * Instead, the class should be used as {@code CharUtils.toString('c');}.
      *
-     * <pre>
-     *   CharUtils.isAsciiPrintable('a')  = true
-     *   CharUtils.isAsciiPrintable('A')  = true
-     *   CharUtils.isAsciiPrintable('3')  = true
-     *   CharUtils.isAsciiPrintable('-')  = true
-     *   CharUtils.isAsciiPrintable('\n') = false
-     *   CharUtils.isAsciiPrintable('&copy;') = false
-     * </pre>
+     * <p>This constructor is public to permit tools that require a JavaBean instance
+     * to operate.</p>
      *
-     * @param ch  the character to check
-     * @return true if between 32 and 126 inclusive
+     * @deprecated TODO Make private in 4.0.
      */
-    public static boolean isAsciiPrintable(final char ch) {
-        return ch >= 32 && ch < 127;
-    }
-
-    /**
-     * <p>Checks whether the character is ASCII 7 bit control.</p>
-     *
-     * <pre>
-     *   CharUtils.isAsciiControl('a')  = false
-     *   CharUtils.isAsciiControl('A')  = false
-     *   CharUtils.isAsciiControl('3')  = false
-     *   CharUtils.isAsciiControl('-')  = false
-     *   CharUtils.isAsciiControl('\n') = true
-     *   CharUtils.isAsciiControl('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if less than 32 or equals 127
-     */
-    public static boolean isAsciiControl(final char ch) {
-        return ch < 32 || ch == 127;
-    }
-
-    /**
-     * <p>Checks whether the character is ASCII 7 bit alphabetic.</p>
-     *
-     * <pre>
-     *   CharUtils.isAsciiAlpha('a')  = true
-     *   CharUtils.isAsciiAlpha('A')  = true
-     *   CharUtils.isAsciiAlpha('3')  = false
-     *   CharUtils.isAsciiAlpha('-')  = false
-     *   CharUtils.isAsciiAlpha('\n') = false
-     *   CharUtils.isAsciiAlpha('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if between 65 and 90 or 97 and 122 inclusive
-     */
-    public static boolean isAsciiAlpha(final char ch) {
-        return isAsciiAlphaUpper(ch) || isAsciiAlphaLower(ch);
-    }
-
-    /**
-     * <p>Checks whether the character is ASCII 7 bit alphabetic upper case.</p>
-     *
-     * <pre>
-     *   CharUtils.isAsciiAlphaUpper('a')  = false
-     *   CharUtils.isAsciiAlphaUpper('A')  = true
-     *   CharUtils.isAsciiAlphaUpper('3')  = false
-     *   CharUtils.isAsciiAlphaUpper('-')  = false
-     *   CharUtils.isAsciiAlphaUpper('\n') = false
-     *   CharUtils.isAsciiAlphaUpper('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if between 65 and 90 inclusive
-     */
-    public static boolean isAsciiAlphaUpper(final char ch) {
-        return ch >= 'A' && ch <= 'Z';
-    }
-
-    /**
-     * <p>Checks whether the character is ASCII 7 bit alphabetic lower case.</p>
-     *
-     * <pre>
-     *   CharUtils.isAsciiAlphaLower('a')  = true
-     *   CharUtils.isAsciiAlphaLower('A')  = false
-     *   CharUtils.isAsciiAlphaLower('3')  = false
-     *   CharUtils.isAsciiAlphaLower('-')  = false
-     *   CharUtils.isAsciiAlphaLower('\n') = false
-     *   CharUtils.isAsciiAlphaLower('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if between 97 and 122 inclusive
-     */
-    public static boolean isAsciiAlphaLower(final char ch) {
-        return ch >= 'a' && ch <= 'z';
-    }
-
-    /**
-     * <p>Checks whether the character is ASCII 7 bit numeric.</p>
-     *
-     * <pre>
-     *   CharUtils.isAsciiNumeric('a')  = false
-     *   CharUtils.isAsciiNumeric('A')  = false
-     *   CharUtils.isAsciiNumeric('3')  = true
-     *   CharUtils.isAsciiNumeric('-')  = false
-     *   CharUtils.isAsciiNumeric('\n') = false
-     *   CharUtils.isAsciiNumeric('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if between 48 and 57 inclusive
-     */
-    public static boolean isAsciiNumeric(final char ch) {
-        return ch >= '0' && ch <= '9';
-    }
-
-    /**
-     * <p>Checks whether the character is ASCII 7 bit numeric.</p>
-     *
-     * <pre>
-     *   CharUtils.isAsciiAlphanumeric('a')  = true
-     *   CharUtils.isAsciiAlphanumeric('A')  = true
-     *   CharUtils.isAsciiAlphanumeric('3')  = true
-     *   CharUtils.isAsciiAlphanumeric('-')  = false
-     *   CharUtils.isAsciiAlphanumeric('\n') = false
-     *   CharUtils.isAsciiAlphanumeric('&copy;') = false
-     * </pre>
-     *
-     * @param ch  the character to check
-     * @return true if between 48 and 57 or 65 and 90 or 97 and 122 inclusive
-     */
-    public static boolean isAsciiAlphanumeric(final char ch) {
-        return isAsciiAlpha(ch) || isAsciiNumeric(ch);
-    }
-
-    /**
-     * <p>Compares two {@code char} values numerically. This is the same functionality as provided in Java 7.</p>
-     *
-     * @param x the first {@code char} to compare
-     * @param y the second {@code char} to compare
-     * @return the value {@code 0} if {@code x == y};
-     *         a value less than {@code 0} if {@code x < y}; and
-     *         a value greater than {@code 0} if {@code x > y}
-     * @since 3.4
-     */
-    public static int compare(final char x, final char y) {
-        return x-y;
+    @Deprecated
+    public CharUtils() {
+        // empty
     }
 }

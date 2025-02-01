@@ -18,98 +18,15 @@ package org.apache.commons.lang3.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * Tests {@link org.apache.commons.lang3.builder.HashCodeBuilder} and
- * {@link org.apache.commons.lang3.builder.EqualsBuilderTest} to insure that equal
+ * {@link org.apache.commons.lang3.builder.EqualsBuilderTest} to ensure that equal
  * objects must have equal hash codes.
  */
-public class HashCodeBuilderAndEqualsBuilderTest {
-
-    //-----------------------------------------------------------------------
-
-    private void testInteger(final boolean testTransients) {
-        final Integer i1 = Integer.valueOf(12345);
-        final Integer i2 = Integer.valueOf(12345);
-        assertEqualsAndHashCodeContract(i1, i2, testTransients);
-    }
-
-    @Test
-    public void testInteger() {
-        testInteger(false);
-    }
-
-    @Test
-    public void testIntegerWithTransients() {
-        testInteger(true);
-    }
-
-    @Test
-    public void testFixture() {
-        testFixture(false);
-    }
-
-    @Test
-    public void testFixtureWithTransients() {
-        testFixture(true);
-    }
-
-    private void testFixture(final boolean testTransients) {
-        assertEqualsAndHashCodeContract(new TestFixture(2, 'c', "Test", (short) 2), new TestFixture(2, 'c', "Test", (short) 2), testTransients);
-        assertEqualsAndHashCodeContract(
-            new AllTransientFixture(2, 'c', "Test", (short) 2),
-            new AllTransientFixture(2, 'c', "Test", (short) 2),
-            testTransients);
-        assertEqualsAndHashCodeContract(
-            new SubTestFixture(2, 'c', "Test", (short) 2, "Same"),
-            new SubTestFixture(2, 'c', "Test", (short) 2, "Same"),
-            testTransients);
-        assertEqualsAndHashCodeContract(
-            new SubAllTransientFixture(2, 'c', "Test", (short) 2, "Same"),
-            new SubAllTransientFixture(2, 'c', "Test", (short) 2, "Same"),
-            testTransients);
-    }
-
-    /**
-     * Asserts that if {@code lhs} equals {@code rhs}
-     * then their hash codes MUST be identical.
-     *
-     * @param lhs The Left-Hand-Side of the equals test
-     * @param rhs The Right-Hand-Side of the equals test
-     * @param testTransients whether to test transient fields
-     */
-    private void assertEqualsAndHashCodeContract(final Object lhs, final Object rhs, final boolean testTransients) {
-        if (EqualsBuilder.reflectionEquals(lhs, rhs, testTransients)) {
-            // test a couple of times for consistency.
-            assertEquals(HashCodeBuilder.reflectionHashCode(lhs, testTransients), HashCodeBuilder.reflectionHashCode(rhs, testTransients));
-            assertEquals(HashCodeBuilder.reflectionHashCode(lhs, testTransients), HashCodeBuilder.reflectionHashCode(rhs, testTransients));
-            assertEquals(HashCodeBuilder.reflectionHashCode(lhs, testTransients), HashCodeBuilder.reflectionHashCode(rhs, testTransients));
-        }
-    }
-
-    static class TestFixture {
-        int i;
-        char c;
-        String string;
-        short s;
-
-        TestFixture(final int i, final char c, final String string, final short s) {
-            this.i = i;
-            this.c = c;
-            this.string = string;
-            this.s = s;
-        }
-    }
-
-    static class SubTestFixture extends TestFixture {
-        transient String tString;
-
-        SubTestFixture(final int i, final char c, final String string, final short s, final String tString) {
-            super(i, c, string, s);
-            this.tString = tString;
-        }
-    }
+public class HashCodeBuilderAndEqualsBuilderTest extends AbstractLangTest {
 
     static class AllTransientFixture {
         transient int i;
@@ -134,5 +51,96 @@ public class HashCodeBuilderAndEqualsBuilderTest {
         }
     }
 
+    static class SubTestFixture extends TestFixture {
+        transient String tString;
+
+        SubTestFixture(final int i, final char c, final String string, final short s, final String tString) {
+            super(i, c, string, s);
+            this.tString = tString;
+        }
+    }
+
+    static class TestFixture {
+        int i;
+        char c;
+        String string;
+        short s;
+
+        TestFixture(final int i, final char c, final String string, final short s) {
+            this.i = i;
+            this.c = c;
+            this.string = string;
+            this.s = s;
+        }
+    }
+
+    /**
+     * Asserts that if {@code lhs} equals {@code rhs}
+     * then their hash codes MUST be identical.
+     *
+     * @param lhs The Left-Hand-Side of the equals test
+     * @param rhs The Right-Hand-Side of the equals test
+     * @param testTransients whether to test transient fields
+     */
+    private void assertEqualsAndHashCodeContract(final Object lhs, final Object rhs, final boolean testTransients) {
+        if (EqualsBuilder.reflectionEquals(lhs, rhs, testTransients)) {
+            // test a couple of times for consistency.
+            assertEquals(HashCodeBuilder.reflectionHashCode(lhs, testTransients), HashCodeBuilder.reflectionHashCode(rhs, testTransients));
+            assertEquals(HashCodeBuilder.reflectionHashCode(lhs, testTransients), HashCodeBuilder.reflectionHashCode(rhs, testTransients));
+            assertEquals(HashCodeBuilder.reflectionHashCode(lhs, testTransients), HashCodeBuilder.reflectionHashCode(rhs, testTransients));
+        }
+    }
+
+    @Test
+    public void testFixture() {
+        testFixture(false);
+    }
+
+    private void testFixture(final boolean testTransients) {
+        assertEqualsAndHashCodeContract(new TestFixture(2, 'c', "Test", (short) 2), new TestFixture(2, 'c', "Test", (short) 2), testTransients);
+        assertEqualsAndHashCodeContract(
+            new AllTransientFixture(2, 'c', "Test", (short) 2),
+            new AllTransientFixture(2, 'c', "Test", (short) 2),
+            testTransients);
+        assertEqualsAndHashCodeContract(
+            new SubTestFixture(2, 'c', "Test", (short) 2, "Same"),
+            new SubTestFixture(2, 'c', "Test", (short) 2, "Same"),
+            testTransients);
+        assertEqualsAndHashCodeContract(
+            new SubAllTransientFixture(2, 'c', "Test", (short) 2, "Same"),
+            new SubAllTransientFixture(2, 'c', "Test", (short) 2, "Same"),
+            testTransients);
+
+    }
+
+    @Test
+    public void testFixtureWithTransients() {
+        testFixture(true);
+    }
+
+    @Test
+    public void testInteger() {
+        testInteger(false);
+    }
+
+    private void testInteger(final boolean testTransients) {
+        final Integer i1 = Integer.valueOf(12345);
+        final Integer i2 = Integer.valueOf(12345);
+        assertEqualsAndHashCodeContract(i1, i2, testTransients);
+    }
+
+    @Test
+    public void testIntegerWithTransients() {
+        testInteger(true);
+    }
+
+    @Test
+    public void testRetention() throws Exception {
+        // The following should not retain memory.
+        for (int i = 0; i < Integer.getInteger("testRecursive", 10_000); i++) {
+            final Class<?> clazz = TestClassBuilder.defineSimpleClass(getClass().getPackage().getName(), i);
+            assertEqualsAndHashCodeContract(clazz.newInstance(), clazz.newInstance(), false);
+        }
+    }
 
 }

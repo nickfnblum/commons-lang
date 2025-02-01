@@ -20,6 +20,7 @@ package org.apache.commons.lang3.builder;
 import java.util.LinkedList;
 import java.util.Random;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +33,41 @@ import org.junit.jupiter.api.Test;
  *
  * @see <a href="https://issues.apache.org/jira/browse/LANG-762">[LANG-762] Handle or document ReflectionToStringBuilder
  *      and ToStringBuilder for collections that are not thread safe</a>
- * @since 3.1
  */
-public class ReflectionToStringBuilderMutateInspectConcurrencyTest {
+public class ReflectionToStringBuilderMutateInspectConcurrencyTest extends AbstractLangTest {
 
-    class TestFixture {
+    final class InspectingClient implements Runnable {
+        private final TestFixture testFixture;
+
+        InspectingClient(final TestFixture testFixture) {
+            this.testFixture = testFixture;
+        }
+
+        @Override
+        public void run() {
+            ReflectionToStringBuilder.toString(testFixture);
+        }
+    }
+
+    final class MutatingClient implements Runnable {
+        private final TestFixture testFixture;
+        private final Random random = new Random();
+
+        MutatingClient(final TestFixture testFixture) {
+            this.testFixture = testFixture;
+        }
+
+        @Override
+        public void run() {
+            if (random.nextBoolean()) {
+                testFixture.add();
+            } else {
+                testFixture.delete();
+            }
+        }
+    }
+
+    final class TestFixture {
         private final LinkedList<Integer> listField = new LinkedList<>();
         private final Random random = new Random();
         private final int N = 100;
@@ -55,37 +86,6 @@ public class ReflectionToStringBuilderMutateInspectConcurrencyTest {
 
         public synchronized void delete() {
             listField.remove(Integer.valueOf(random.nextInt(N)));
-        }
-    }
-
-    class MutatingClient implements Runnable {
-        private final TestFixture testFixture;
-        private final Random random = new Random();
-
-        MutatingClient(final TestFixture testFixture) {
-            this.testFixture = testFixture;
-        }
-
-        @Override
-        public void run() {
-            if (random.nextBoolean()) {
-                testFixture.add();
-            } else {
-                testFixture.delete();
-            }
-        }
-    }
-
-    class InspectingClient implements Runnable {
-        private final TestFixture testFixture;
-
-        InspectingClient(final TestFixture testFixture) {
-            this.testFixture = testFixture;
-        }
-
-        @Override
-        public void run() {
-            ReflectionToStringBuilder.toString(testFixture);
         }
     }
 

@@ -18,6 +18,7 @@
 package org.apache.commons.lang3.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -29,18 +30,43 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
+import org.apache.commons.lang3.AbstractLangTest;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.function.FailableConsumer;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.Test;
 
 /**
- * @since 3.0
  */
-public class EventListenerSupportTest {
+public class EventListenerSupportTest extends AbstractLangTest {
+
+    private void addDeregisterListener(final EventListenerSupport<VetoableChangeListener> listenerSupport) {
+        listenerSupport.addListener(new VetoableChangeListener() {
+            @Override
+            public void vetoableChange(final PropertyChangeEvent e) {
+                listenerSupport.removeListener(this);
+            }
+        });
+    }
+
+    private VetoableChangeListener createListener(final List<VetoableChangeListener> calledListeners) {
+        return new VetoableChangeListener() {
+            @Override
+            public void vetoableChange(final PropertyChangeEvent e) {
+                calledListeners.add(this);
+            }
+        };
+    }
 
     @Test
     public void testAddListenerNoDuplicates() {
@@ -69,9 +95,13 @@ public class EventListenerSupportTest {
     }
 
     @Test
-    public void testRemoveNullListener() {
-        final EventListenerSupport<VetoableChangeListener> listenerSupport = EventListenerSupport.create(VetoableChangeListener.class);
-        assertThrows(NullPointerException.class, () -> listenerSupport.removeListener(null));
+    public void testCreateWithNonInterfaceParameter() {
+        assertThrows(IllegalArgumentException.class, () -> EventListenerSupport.create(String.class));
+    }
+
+    @Test
+    public void testCreateWithNullParameter() {
+        assertThrows(NullPointerException.class, () -> EventListenerSupport.create(null));
     }
 
     @Test
@@ -87,27 +117,6 @@ public class EventListenerSupportTest {
         assertEquals(calledListeners.size(), 2);
         assertSame(calledListeners.get(0), listener1);
         assertSame(calledListeners.get(1), listener2);
-    }
-
-    @Test
-    public void testCreateWithNonInterfaceParameter() {
-        assertThrows(IllegalArgumentException.class, () -> EventListenerSupport.create(String.class));
-    }
-
-    @Test
-    public void testCreateWithNullParameter() {
-        assertThrows(NullPointerException.class, () -> EventListenerSupport.create(null));
-    }
-
-    @Test
-    public void testRemoveListenerDuringEvent() throws PropertyVetoException {
-        final EventListenerSupport<VetoableChangeListener> listenerSupport = EventListenerSupport.create(VetoableChangeListener.class);
-        for (int i = 0; i < 10; ++i) {
-            addDeregisterListener(listenerSupport);
-        }
-        assertEquals(listenerSupport.getListenerCount(), 10);
-        listenerSupport.fire().vetoableChange(new PropertyChangeEvent(new Date(), "Day", 4, 5));
-        assertEquals(listenerSupport.getListenerCount(), 0);
     }
 
     @Test
@@ -134,18 +143,33 @@ public class EventListenerSupportTest {
     }
 
     @Test
+    public void testRemoveListenerDuringEvent() throws PropertyVetoException {
+        final EventListenerSupport<VetoableChangeListener> listenerSupport = EventListenerSupport.create(VetoableChangeListener.class);
+        for (int i = 0; i < 10; ++i) {
+            addDeregisterListener(listenerSupport);
+        }
+        assertEquals(listenerSupport.getListenerCount(), 10);
+        listenerSupport.fire().vetoableChange(new PropertyChangeEvent(new Date(), "Day", 4, 5));
+        assertEquals(listenerSupport.getListenerCount(), 0);
+    }
+
+    @Test
+    public void testRemoveNullListener() {
+        final EventListenerSupport<VetoableChangeListener> listenerSupport = EventListenerSupport.create(VetoableChangeListener.class);
+        assertThrows(NullPointerException.class, () -> listenerSupport.removeListener(null));
+    }
+
+    @Test
     public void testSerialization() throws IOException, ClassNotFoundException, PropertyVetoException {
         final EventListenerSupport<VetoableChangeListener> listenerSupport = EventListenerSupport.create(VetoableChangeListener.class);
-        listenerSupport.addListener(e -> {
-        });
+        listenerSupport.addListener(Function.identity()::apply);
         listenerSupport.addListener(EasyMock.createNiceMock(VetoableChangeListener.class));
 
         //serialize:
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-
-        objectOutputStream.writeObject(listenerSupport);
-        objectOutputStream.close();
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
+            objectOutputStream.writeObject(listenerSupport);
+        }
 
         //deserialize:
         @SuppressWarnings("unchecked")
@@ -174,22 +198,17 @@ public class EventListenerSupportTest {
     @Test
     public void testSubclassInvocationHandling() throws PropertyVetoException {
 
-        final
-        EventListenerSupport<VetoableChangeListener> eventListenerSupport = new EventListenerSupport<VetoableChangeListener>(
+        final EventListenerSupport<VetoableChangeListener> eventListenerSupport = new EventListenerSupport<VetoableChangeListener>(
                 VetoableChangeListener.class) {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected java.lang.reflect.InvocationHandler createInvocationHandler() {
                 return new ProxyInvocationHandler() {
-                    /**
-                     * {@inheritDoc}
-                     */
                     @Override
                     public Object invoke(final Object proxy, final Method method, final Object[] args)
-                            throws Throwable {
-                        return "vetoableChange".equals(method.getName())
-                                && "Hour".equals(((PropertyChangeEvent) args[0]).getPropertyName()) ? null
+                            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+                        return "vetoableChange".equals(method.getName()) && "Hour".equals(((PropertyChangeEvent) args[0]).getPropertyName()) ? null
                                 : super.invoke(proxy, method, args);
                     }
                 };
@@ -208,21 +227,56 @@ public class EventListenerSupportTest {
         EasyMock.verify(listener);
     }
 
-    private void addDeregisterListener(final EventListenerSupport<VetoableChangeListener> listenerSupport) {
-        listenerSupport.addListener(new VetoableChangeListener() {
-            @Override
-            public void vetoableChange(final PropertyChangeEvent e) {
-                listenerSupport.removeListener(this);
-            }
-        });
+    /**
+     * Tests that throwing an exception from a listener stops calling the remaining listeners.
+     */
+    @Test
+    public void testThrowingListener() {
+        final AtomicInteger count = new AtomicInteger();
+        final EventListenerSupport<VetoableChangeListener> listenerSupport = EventListenerSupport.create(VetoableChangeListener.class);
+        final int vetoLimit = 1;
+        final int listenerCount = 10;
+        for (int i = 0; i < listenerCount; ++i) {
+            listenerSupport.addListener(evt -> {
+                if (count.incrementAndGet() > vetoLimit) {
+                    throw new PropertyVetoException(count.toString(), evt);
+                }
+            });
+        }
+        assertEquals(listenerCount, listenerSupport.getListenerCount());
+        assertEquals(0, count.get());
+        final Exception e = assertThrows(UndeclaredThrowableException.class,
+                () -> listenerSupport.fire().vetoableChange(new PropertyChangeEvent(new Date(), "Day", 0, 1)));
+        final Throwable rootCause = ExceptionUtils.getRootCause(e);
+        assertInstanceOf(PropertyVetoException.class, rootCause);
+        assertEquals(vetoLimit + 1, count.get());
     }
 
-    private VetoableChangeListener createListener(final List<VetoableChangeListener> calledListeners) {
-        return new VetoableChangeListener() {
+    /**
+     * Tests that throwing an exception from a listener continues calling the remaining listeners.
+     */
+    @Test
+    public void testThrowingListenerContinues() throws PropertyVetoException {
+        final AtomicInteger count = new AtomicInteger();
+        final EventListenerSupport<VetoableChangeListener> listenerSupport = new EventListenerSupport<VetoableChangeListener>(VetoableChangeListener.class) {
             @Override
-            public void vetoableChange(final PropertyChangeEvent e) {
-                calledListeners.add(this);
+            protected InvocationHandler createInvocationHandler() {
+                return new ProxyInvocationHandler(FailableConsumer.nop());
             }
         };
+        final int vetoLimit = 1;
+        final int listenerCount = 10;
+        for (int i = 0; i < listenerCount; ++i) {
+            listenerSupport.addListener(evt -> {
+                if (count.incrementAndGet() > vetoLimit) {
+                    throw new PropertyVetoException(count.toString(), evt);
+                }
+            });
+        }
+        assertEquals(listenerCount, listenerSupport.getListenerCount());
+        assertEquals(0, count.get());
+        listenerSupport.fire().vetoableChange(new PropertyChangeEvent(new Date(), "Day", 0, 1));
+        assertEquals(listenerCount, count.get());
     }
+
 }

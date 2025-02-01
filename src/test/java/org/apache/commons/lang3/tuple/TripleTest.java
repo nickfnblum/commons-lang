@@ -17,18 +17,21 @@
 package org.apache.commons.lang3.tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Calendar;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test the Triple class.
  */
-public class TripleTest {
+public class TripleTest extends AbstractLangTest {
 
     @Test
     public void testComparable1() {
@@ -107,6 +110,19 @@ public class TripleTest {
     }
 
     @Test
+    public void testOfNonNull() {
+        assertThrows(NullPointerException.class, () -> Triple.ofNonNull(null, null, null));
+        assertThrows(NullPointerException.class, () -> Triple.ofNonNull(null, null, "z"));
+        assertThrows(NullPointerException.class, () -> Triple.ofNonNull(null, "y", "z"));
+        assertThrows(NullPointerException.class, () -> Triple.ofNonNull("x", null, null));
+        assertThrows(NullPointerException.class, () -> Triple.ofNonNull("x", "y", null));
+        final Triple<String, String, String> pair = Triple.ofNonNull("x", "y", "z");
+        assertEquals("x", pair.getLeft());
+        assertEquals("y", pair.getMiddle());
+        assertEquals("z", pair.getRight());
+    }
+
+    @Test
     public void testToString() {
         final Triple<String, String, String> triple = Triple.of("Key", "Something", "Value");
         assertEquals("(Key,Something,Value)", triple.toString());
@@ -123,15 +139,15 @@ public class TripleTest {
     @Test
     public void testTripleOf() {
         final Triple<Integer, String, Boolean> triple = Triple.of(0, "foo", Boolean.TRUE);
-        assertTrue(triple instanceof ImmutableTriple<?, ?, ?>);
+        assertInstanceOf(ImmutableTriple.class, triple);
         assertEquals(0, ((ImmutableTriple<Integer, String, Boolean>) triple).left.intValue());
         assertEquals("foo", ((ImmutableTriple<Integer, String, Boolean>) triple).middle);
         assertEquals(Boolean.TRUE, ((ImmutableTriple<Integer, String, Boolean>) triple).right);
         final Triple<Object, String, Long> triple2 = Triple.of(null, "bar", Long.valueOf(200L));
-        assertTrue(triple2 instanceof ImmutableTriple<?, ?, ?>);
+        assertInstanceOf(ImmutableTriple.class, triple2);
         assertNull(((ImmutableTriple<Object, String, Long>) triple2).left);
         assertEquals("bar", ((ImmutableTriple<Object, String, Long>) triple2).middle);
-        assertEquals(new Long(200L), ((ImmutableTriple<Object, String, Long>) triple2).right);
+        assertEquals(Long.valueOf(200L), ((ImmutableTriple<Object, String, Long>) triple2).right);
     }
 
 }

@@ -31,17 +31,23 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 
+import org.apache.commons.lang3.ThreadUtils.ThreadGroupPredicate;
+import org.apache.commons.lang3.ThreadUtils.ThreadPredicate;
+import org.apache.commons.lang3.function.Predicates;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests {@link org.apache.commons.lang3.ThreadUtils}.
+ * Tests {@link ThreadUtils}.
  */
-public class ThreadUtilsTest {
+public class ThreadUtilsTest extends AbstractLangTest {
 
-    private static class TestThread extends Thread {
+    private static final class TestThread extends Thread {
         private final CountDownLatch latch = new CountDownLatch(1);
 
         TestThread(final String name) {
@@ -56,7 +62,7 @@ public class ThreadUtilsTest {
         public void run() {
             latch.countDown();
             try {
-                synchronized(this) {
+                synchronized (this) {
                     this.wait();
                 }
             } catch (final InterruptedException e) {
@@ -95,7 +101,8 @@ public class ThreadUtilsTest {
         final ThreadGroup threadGroup6 = new ThreadGroup(threadGroup4, "thread_group_6__");
         final ThreadGroup threadGroup7 = new ThreadGroup(threadGroup4, "thread_group_7__");
         final ThreadGroup threadGroup7Doubled = new ThreadGroup(threadGroup4, "thread_group_7__");
-        final List<ThreadGroup> threadGroups = Arrays.asList(threadGroup1, threadGroup2, threadGroup3, threadGroup4, threadGroup5, threadGroup6, threadGroup7, threadGroup7Doubled);
+        final List<ThreadGroup> threadGroups = Arrays.asList(threadGroup1, threadGroup2, threadGroup3, threadGroup4, threadGroup5, threadGroup6, threadGroup7,
+            threadGroup7Doubled);
 
         final Thread t1 = new TestThread("thread1_X__");
         final Thread t2 = new TestThread(threadGroup1, "thread2_X__");
@@ -115,9 +122,9 @@ public class ThreadUtilsTest {
             for (final Thread thread : threads) {
                 thread.start();
             }
-            assertTrue(ThreadUtils.getAllThreadGroups().size() >= 7);
-            assertTrue(ThreadUtils.getAllThreads().size() >= 11);
-            assertTrue(ThreadUtils.findThreads(ThreadUtils.ALWAYS_TRUE_PREDICATE).size() >= 11);
+            assertTrue(ThreadUtils.getAllThreadGroups().size() >= 7, "getAllThreadGroups");
+            assertTrue(ThreadUtils.getAllThreads().size() >= 11, "getAllThreads");
+            assertTrue(ThreadUtils.findThreads(Predicates.truePredicate()).size() >= 11, "findThreads(ThreadUtils.truePredicate())");
             assertEquals(1, ThreadUtils.findThreadsByName(t4.getName(), threadGroup3.getName()).size());
             assertEquals(0, ThreadUtils.findThreadsByName(t4.getName(), threadGroup2.getName()).size());
             assertEquals(2, ThreadUtils.findThreadsByName(t11.getName(), threadGroup7.getName()).size());
@@ -142,6 +149,32 @@ public class ThreadUtilsTest {
         assertTrue(Modifier.isPublic(cons[0].getModifiers()));
         assertTrue(Modifier.isPublic(ThreadUtils.class.getModifiers()));
         assertFalse(Modifier.isFinal(ThreadUtils.class.getModifiers()));
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void testDepreacted() {
+        assertNotNull(ThreadUtils.ALWAYS_TRUE_PREDICATE);
+        ThreadPredicate tp = ThreadUtils.ALWAYS_TRUE_PREDICATE;
+        assertTrue(tp.test(null));
+        assertTrue(tp.test(new Thread()));
+        ThreadGroupPredicate tgp = ThreadUtils.ALWAYS_TRUE_PREDICATE;
+        assertTrue(tgp.test(null));
+        assertTrue(tgp.test(new ThreadGroup("")));
+    }
+
+    @Test
+    public void testGetAllThreadGroupsDoesNotReturnNull() {
+        // LANG-1706 getAllThreadGroups and findThreadGroups should not return null items
+        final Collection<ThreadGroup> threads = ThreadUtils.getAllThreadGroups();
+        assertEquals(0, threads.stream().filter(Objects::isNull).count());
+    }
+
+    @Test
+    public void testGetAllThreadsDoesNotReturnNull() {
+        // LANG-1706 getAllThreads and findThreads should not return null items
+        final Collection<Thread> threads = ThreadUtils.getAllThreads();
+        assertEquals(0, threads.stream().filter(Objects::isNull).count());
     }
 
     @Test
@@ -221,7 +254,8 @@ public class ThreadUtilsTest {
 
     @Test
     public void testThreadGroups() throws InterruptedException {
-        final ThreadGroup threadGroup = new ThreadGroup("thread_group_DDZZ99__");
+        final String threadGroupName = "thread_group_DDZZ99__for_testThreadGroups";
+        final ThreadGroup threadGroup = new ThreadGroup(threadGroupName);
         final Thread t1 = new TestThread(threadGroup, "thread1_XXOOPP__");
         final Thread t2 = new TestThread(threadGroup, "thread2_XXOOPP__");
 
@@ -229,11 +263,11 @@ public class ThreadUtilsTest {
             t1.start();
             t2.start();
             assertEquals(1, ThreadUtils.findThreadsByName("thread1_XXOOPP__").size());
-            assertEquals(1, ThreadUtils.findThreadsByName("thread1_XXOOPP__", "thread_group_DDZZ99__").size());
-            assertEquals(1, ThreadUtils.findThreadsByName("thread2_XXOOPP__", "thread_group_DDZZ99__").size());
+            assertEquals(1, ThreadUtils.findThreadsByName("thread1_XXOOPP__", threadGroupName).size());
+            assertEquals(1, ThreadUtils.findThreadsByName("thread2_XXOOPP__", threadGroupName).size());
             assertEquals(0, ThreadUtils.findThreadsByName("thread1_XXOOPP__", "non_existent_thread_group_JJHHZZ__").size());
-            assertEquals(0, ThreadUtils.findThreadsByName("non_existent_thread_BBDDWW__", "thread_group_DDZZ99__").size());
-            assertEquals(1, ThreadUtils.findThreadGroupsByName("thread_group_DDZZ99__").size());
+            assertEquals(0, ThreadUtils.findThreadsByName("non_existent_thread_BBDDWW__", threadGroupName).size());
+            assertEquals(1, ThreadUtils.findThreadGroupsByName(threadGroupName).size());
             assertEquals(0, ThreadUtils.findThreadGroupsByName("non_existent_thread_group_JJHHZZ__").size());
             assertNotNull(ThreadUtils.findThreadById(t1.getId(), threadGroup));
         } finally {
@@ -247,18 +281,19 @@ public class ThreadUtilsTest {
 
     @Test
     public void testThreadGroupsById() throws InterruptedException {
-        final ThreadGroup threadGroup = new ThreadGroup("thread_group_DDZZ99__");
+        final String threadGroupName = "thread_group_DDZZ99__for_testThreadGroupsById";
+        final ThreadGroup threadGroup = new ThreadGroup(threadGroupName);
         final Thread t1 = new TestThread(threadGroup, "thread1_XXOOPP__");
         final Thread t2 = new TestThread(threadGroup, "thread2_XXOOPP__");
-        final long nonExistingId = t1.getId()+t2.getId();
+        final long nonExistingId = t1.getId() + t2.getId();
 
         try {
             t1.start();
             t2.start();
-            assertSame(t1, ThreadUtils.findThreadById(t1.getId(), "thread_group_DDZZ99__"));
-            assertSame(t2, ThreadUtils.findThreadById(t2.getId(), "thread_group_DDZZ99__"));
+            assertSame(t1, ThreadUtils.findThreadById(t1.getId(), threadGroupName));
+            assertSame(t2, ThreadUtils.findThreadById(t2.getId(), threadGroupName));
             assertNull(ThreadUtils.findThreadById(nonExistingId, "non_existent_thread_group_JJHHZZ__"));
-            assertNull(ThreadUtils.findThreadById(nonExistingId, "thread_group_DDZZ99__"));
+            assertNull(ThreadUtils.findThreadById(nonExistingId, threadGroupName));
         } finally {
             t1.interrupt();
             t2.interrupt();
@@ -270,20 +305,20 @@ public class ThreadUtilsTest {
 
     @Test
     public void testThreadGroupsByIdFail() {
-        assertThrows(NullPointerException.class,
-                () -> ThreadUtils.findThreadById(Thread.currentThread().getId(), (String) null));
-    }
-
-
-    @Test
-    public void testThreadgroupsNullParent() {
-        assertThrows(NullPointerException.class,
-                () -> ThreadUtils.findThreadGroups(null, true, ThreadUtils.ALWAYS_TRUE_PREDICATE));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadById(Thread.currentThread().getId(), (String) null));
     }
 
     @Test
-    public void testThreadgroupsNullPredicate() {
-        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadGroups(null));
+    public void testThreadGroupsNullParent() {
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadGroups(null, true, Predicates.truePredicate()));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadGroups(null, false, Predicates.truePredicate()));
+    }
+
+    @Test
+    public void testThreadGroupsNullPredicate() {
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadGroups((ThreadGroupPredicate) null));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadGroups((Predicate<ThreadGroup>) null));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreadGroups((Predicate) null));
     }
 
     @Test
@@ -346,7 +381,6 @@ public class ThreadUtilsTest {
         }
     }
 
-
     @Test
     public void testThreadsByIdWrongGroup() throws InterruptedException {
         final Thread t1 = new TestThread("thread1_XXOOLL__");
@@ -364,7 +398,9 @@ public class ThreadUtilsTest {
 
     @Test
     public void testThreadsNullPredicate() {
-        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreads(null));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreads((ThreadPredicate) null));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreads((Predicate<Thread>) null));
+        assertThrows(NullPointerException.class, () -> ThreadUtils.findThreads((Predicate) null));
     }
 
     @Test
@@ -383,4 +419,5 @@ public class ThreadUtilsTest {
             alsot1.join();
         }
     }
+
 }

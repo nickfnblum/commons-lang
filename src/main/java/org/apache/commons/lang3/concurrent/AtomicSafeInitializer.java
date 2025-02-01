@@ -18,12 +18,14 @@ package org.apache.commons.lang3.concurrent;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.function.FailableSupplier;
+
 /**
- * <p>
- * A specialized {@code ConcurrentInitializer} implementation which is similar
+ * A specialized {@link ConcurrentInitializer} implementation which is similar
  * to {@link AtomicInitializer}, but ensures that the {@link #initialize()}
  * method is called only once.
- * </p>
+ *
  * <p>
  * As {@link AtomicInitializer} this class is based on atomic variables, so it
  * can create an object under concurrent access without synchronization.
@@ -42,7 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * {@link LazyInitializer}. It is a &quot;save&quot; implementation of the lazy
  * initializer pattern. Comparing both classes in terms of efficiency is
  * difficult because which one is faster depends on multiple factors. Because
- * {@code AtomicSafeInitializer} does not use synchronization at all it probably
+ * {@link AtomicSafeInitializer} does not use synchronization at all it probably
  * outruns {@link LazyInitializer}, at least under low or moderate concurrent
  * access. Developers should run their own benchmarks on the expected target
  * platform to decide which implementation is suitable for their specific use
@@ -52,14 +54,67 @@ import java.util.concurrent.atomic.AtomicReference;
  * @since 3.0
  * @param <T> the type of the object managed by this initializer class
  */
-public abstract class AtomicSafeInitializer<T> implements
-        ConcurrentInitializer<T> {
+public class AtomicSafeInitializer<T> extends AbstractConcurrentInitializer<T, ConcurrentException> {
+
+    /**
+     * Builds a new instance.
+     *
+     * @param <T> The type of results supplied by this builder.
+     * @param <I> The type of the initializer managed by this builder.
+     * @since 3.14.0
+     */
+    public static class Builder<I extends AtomicSafeInitializer<T>, T> extends AbstractBuilder<I, T, Builder<I, T>, ConcurrentException> {
+
+        /**
+         * Constructs a new instance.
+         */
+        public Builder() {
+            // empty
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public I get() {
+            return (I) new AtomicSafeInitializer(getInitializer(), getCloser());
+        }
+
+    }
+
+    private static final Object NO_INIT = new Object();
+
+    /**
+     * Creates a new builder.
+     *
+     * @param <T> the type of object to build.
+     * @return a new builder.
+     * @since 3.14.0
+     */
+    public static <T> Builder<AtomicSafeInitializer<T>, T> builder() {
+        return new Builder<>();
+    }
+
     /** A guard which ensures that initialize() is called only once. */
-    private final AtomicReference<AtomicSafeInitializer<T>> factory =
-            new AtomicReference<>();
+    private final AtomicReference<AtomicSafeInitializer<T>> factory = new AtomicReference<>();
 
     /** Holds the reference to the managed object. */
-    private final AtomicReference<T> reference = new AtomicReference<>();
+    private final AtomicReference<T> reference = new AtomicReference<>(getNoInit());
+
+    /**
+     * Constructs a new instance.
+     */
+    public AtomicSafeInitializer() {
+        // empty
+    }
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param initializer the initializer supplier called by {@link #initialize()}.
+     * @param closer the closer consumer called by {@link #close()}.
+     */
+    private AtomicSafeInitializer(final FailableSupplier<T, ConcurrentException> initializer, final FailableConsumer<T, ConcurrentException> closer) {
+        super(initializer, closer);
+    }
 
     /**
      * Gets (and initialize, if not initialized yet) the required object
@@ -72,7 +127,7 @@ public abstract class AtomicSafeInitializer<T> implements
     public final T get() throws ConcurrentException {
         T result;
 
-        while ((result = reference.get()) == null) {
+        while ((result = reference.get()) == getNoInit()) {
             if (factory.compareAndSet(null, this)) {
                 reference.set(initialize());
             }
@@ -81,16 +136,28 @@ public abstract class AtomicSafeInitializer<T> implements
         return result;
     }
 
+    /** Gets the internal no-init object cast for this instance. */
+    @SuppressWarnings("unchecked")
+    private T getNoInit() {
+        return (T) NO_INIT;
+    }
+
     /**
-     * Creates and initializes the object managed by this
-     * {@code AtomicInitializer}. This method is called by {@link #get()} when
-     * the managed object is not available yet. An implementation can focus on
-     * the creation of the object. No synchronization is needed, as this is
-     * already handled by {@code get()}. This method is guaranteed to be called
-     * only once.
-     *
-     * @return the managed data object
-     * @throws ConcurrentException if an error occurs during object creation
+     * {@inheritDoc}
      */
-    protected abstract T initialize() throws ConcurrentException;
+    @Override
+    protected ConcurrentException getTypedException(final Exception e) {
+        return new ConcurrentException(e);
+    }
+
+    /**
+     * Tests whether this instance is initialized. Once initialized, always returns true.
+     *
+     * @return whether this instance is initialized. Once initialized, always returns true.
+     * @since 3.14.0
+     */
+    @Override
+    public boolean isInitialized() {
+        return reference.get() != NO_INIT;
+    }
 }

@@ -24,6 +24,7 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.function.TriFunction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,13 +37,13 @@ import org.junit.jupiter.params.provider.MethodSource;
  * <li>https://bugs.openjdk.java.net/browse/JDK-8248655</li>
  * </ul>
  */
-public class Java15BugFastDateParserTest {
+public class Java15BugFastDateParserTest extends AbstractLangTest {
 
     /** @see org.apache.commons.lang3.time.FastDateParserTest#dateParserParameters() */
     private static final String DATE_PARSER_PARAMETERS = "org.apache.commons.lang3.time.FastDateParserTest#dateParserParameters()";
 
     @Test
-    public void java15BuggyLocaleTest() throws ParseException {
+    public void testJava15BuggyLocaleTest() throws ParseException {
         final String buggyLocaleName = "ff_LR_#Adlm";
         Locale buggyLocale = null;
         for (final Locale locale : Locale.getAvailableLocales()) {
@@ -58,7 +59,7 @@ public class Java15BugFastDateParserTest {
     }
 
     @Test
-    public void java15BuggyLocaleTestAll() throws ParseException {
+    public void testJava15BuggyLocaleTestAll() throws ParseException {
         for (final Locale locale : Locale.getAvailableLocales()) {
             testSingleLocale(locale);
         }
@@ -67,7 +68,7 @@ public class Java15BugFastDateParserTest {
     private void testLocales(final TriFunction<String, TimeZone, Locale, DateParser> dbProvider, final String format,
         final boolean eraBC) throws Exception {
 
-        final Calendar cal = Calendar.getInstance(FastDateParserTest.GMT);
+        final Calendar cal = Calendar.getInstance(TimeZones.GMT);
         cal.clear();
         cal.set(2003, Calendar.FEBRUARY, 10);
         if (eraBC) {
@@ -144,7 +145,7 @@ public class Java15BugFastDateParserTest {
     }
 
     private void testSingleLocale(final Locale locale) throws ParseException {
-        final Calendar cal = Calendar.getInstance(FastDateParserTest.GMT);
+        final Calendar cal = Calendar.getInstance(TimeZones.GMT);
         cal.clear();
         cal.set(2003, Calendar.FEBRUARY, 10);
         final SimpleDateFormat sdf = new SimpleDateFormat(FastDateParserTest.LONG_FORMAT, locale);

@@ -17,6 +17,7 @@
 package org.apache.commons.lang3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -44,7 +45,13 @@ import org.apache.commons.lang3.Functions.FailableSupplier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class FunctionsTest {
+/**
+ * Tests Functions.
+ *
+ * @deprecated this test can be removed once the deprecated source class {@link org.apache.commons.lang3.Functions} is removed.
+ */
+@Deprecated
+public class FunctionsTest extends AbstractLangTest {
 
     public static class CloseableObject {
         private boolean closed;
@@ -227,42 +234,42 @@ public class FunctionsTest {
 
         public void testDouble(final double i) throws Throwable {
             test(throwable);
-            acceptedPrimitiveObject1 = (P) ((Double) i);
+            acceptedPrimitiveObject1 = (P) (Double) i;
         }
 
         public double testDoubleDouble(final double i, final double j) throws Throwable {
             test(throwable);
-            acceptedPrimitiveObject1 = (P) ((Double) i);
-            acceptedPrimitiveObject2 = (P) ((Double) j);
+            acceptedPrimitiveObject1 = (P) (Double) i;
+            acceptedPrimitiveObject2 = (P) (Double) j;
             return 3d;
         }
 
         public void testInt(final int i) throws Throwable {
             test(throwable);
-            acceptedPrimitiveObject1 = (P) ((Integer) i);
+            acceptedPrimitiveObject1 = (P) (Integer) i;
         }
 
         public void testLong(final long i) throws Throwable {
             test(throwable);
-            acceptedPrimitiveObject1 = (P) ((Long) i);
+            acceptedPrimitiveObject1 = (P) (Long) i;
         }
 
         public void testObjDouble(final T object, final double i) throws Throwable {
             test(throwable);
             acceptedObject = object;
-            acceptedPrimitiveObject1 = (P) ((Double) i);
+            acceptedPrimitiveObject1 = (P) (Double) i;
         }
 
         public void testObjInt(final T object, final int i) throws Throwable {
             test(throwable);
             acceptedObject = object;
-            acceptedPrimitiveObject1 = (P) ((Integer) i);
+            acceptedPrimitiveObject1 = (P) (Integer) i;
         }
 
         public void testObjLong(final T object, final long i) throws Throwable {
             test(throwable);
             acceptedObject = object;
-            acceptedPrimitiveObject1 = (P) ((Long) i);
+            acceptedPrimitiveObject1 = (P) (Long) i;
         }
     }
 
@@ -543,7 +550,7 @@ public class FunctionsTest {
         final UndeclaredThrowableException e = assertThrows(UndeclaredThrowableException.class, callable::call);
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
         final FailureOnOddInvocations instance;
         try {
@@ -585,7 +592,7 @@ public class FunctionsTest {
         final UndeclaredThrowableException e = assertThrows(UndeclaredThrowableException.class, runnable::run);
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
 
         // Even invocations, should not throw an exception
@@ -600,7 +607,7 @@ public class FunctionsTest {
         final UndeclaredThrowableException e = assertThrows(UndeclaredThrowableException.class, supplier::get);
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
         assertNotNull(supplier.get());
     }
@@ -669,7 +676,7 @@ public class FunctionsTest {
             () -> predicate.test(null, null));
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
         final boolean instance = predicate.test(null, null);
         assertNotNull(instance);
@@ -682,7 +689,7 @@ public class FunctionsTest {
             () -> Functions.run(FailureOnOddInvocations::new));
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
         final FailureOnOddInvocations instance = Functions.call(FailureOnOddInvocations::new);
         assertNotNull(instance);
@@ -729,7 +736,7 @@ public class FunctionsTest {
             () -> Functions.run(FailureOnOddInvocations::new));
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
         final FailureOnOddInvocations instance = Functions.call(FailureOnOddInvocations::new);
         assertNotNull(instance);
@@ -771,7 +778,7 @@ public class FunctionsTest {
             () -> predicate.test(null));
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
         final boolean instance = predicate.test(null);
         assertNotNull(instance);
@@ -784,7 +791,7 @@ public class FunctionsTest {
             () -> Functions.run(FailureOnOddInvocations::new));
         final Throwable cause = e.getCause();
         assertNotNull(cause);
-        assertTrue(cause instanceof SomeException);
+        assertInstanceOf(SomeException.class, cause);
         assertEquals("Odd Invocation: 1", cause.getMessage());
 
         // Even invocations, should not throw an exception

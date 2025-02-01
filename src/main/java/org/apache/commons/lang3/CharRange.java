@@ -19,9 +19,10 @@ package org.apache.commons.lang3;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
- * <p>A contiguous range of characters, optionally negated.</p>
+ * A contiguous range of characters, optionally negated.
  *
  * <p>Instances are immutable.</p>
  *
@@ -33,247 +34,10 @@ import java.util.NoSuchElementException;
 final class CharRange implements Iterable<Character>, Serializable {
 
     /**
-     * Required for serialization support. Lang version 2.0.
-     *
-     * @see java.io.Serializable
-     */
-    private static final long serialVersionUID = 8270183163158333422L;
-
-    /** The first character, inclusive, in the range. */
-    private final char start;
-    /** The last character, inclusive, in the range. */
-    private final char end;
-    /** True if the range is everything except the characters specified. */
-    private final boolean negated;
-
-    /** Cached toString. */
-    private transient String iToString;
-
-    /** Empty array. */
-    static final CharRange[] EMPTY_ARRAY = new CharRange[0];
-
-    /**
-     * <p>Constructs a {@code CharRange} over a set of characters,
-     * optionally negating the range.</p>
-     *
-     * <p>A negated range includes everything except that defined by the
-     * start and end characters.</p>
-     *
-     * <p>If start and end are in the wrong order, they are reversed.
-     * Thus {@code a-e} is the same as {@code e-a}.</p>
-     *
-     * @param start  first character, inclusive, in this range
-     * @param end  last character, inclusive, in this range
-     * @param negated  true to express everything except the range
-     */
-    private CharRange(char start, char end, final boolean negated) {
-        if (start > end) {
-            final char temp = start;
-            start = end;
-            end = temp;
-        }
-
-        this.start = start;
-        this.end = end;
-        this.negated = negated;
-    }
-
-    /**
-     * <p>Constructs a {@code CharRange} over a single character.</p>
-     *
-     * @param ch  only character in this range
-     * @return the new CharRange object
-     * @since 2.5
-     */
-    public static CharRange is(final char ch) {
-        return new CharRange(ch, ch, false);
-    }
-
-    /**
-     * <p>Constructs a negated {@code CharRange} over a single character.</p>
-     *
-     * <p>A negated range includes everything except that defined by the
-     * single character.</p>
-     *
-     * @param ch  only character in this range
-     * @return the new CharRange object
-     * @since 2.5
-     */
-    public static CharRange isNot(final char ch) {
-        return new CharRange(ch, ch, true);
-    }
-
-    /**
-     * <p>Constructs a {@code CharRange} over a set of characters.</p>
-     *
-     * <p>If start and end are in the wrong order, they are reversed.
-     * Thus {@code a-e} is the same as {@code e-a}.</p>
-     *
-     * @param start  first character, inclusive, in this range
-     * @param end  last character, inclusive, in this range
-     * @return the new CharRange object
-     * @since 2.5
-     */
-    public static CharRange isIn(final char start, final char end) {
-        return new CharRange(start, end, false);
-    }
-
-    /**
-     * <p>Constructs a negated {@code CharRange} over a set of characters.</p>
-     *
-     * <p>A negated range includes everything except that defined by the
-     * start and end characters.</p>
-     *
-     * <p>If start and end are in the wrong order, they are reversed.
-     * Thus {@code a-e} is the same as {@code e-a}.</p>
-     *
-     * @param start  first character, inclusive, in this range
-     * @param end  last character, inclusive, in this range
-     * @return the new CharRange object
-     * @since 2.5
-     */
-    public static CharRange isNotIn(final char start, final char end) {
-        return new CharRange(start, end, true);
-    }
-
-    // Accessors
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Gets the start character for this character range.</p>
-     *
-     * @return the start char (inclusive)
-     */
-    public char getStart() {
-        return this.start;
-    }
-
-    /**
-     * <p>Gets the end character for this character range.</p>
-     *
-     * @return the end char (inclusive)
-     */
-    public char getEnd() {
-        return this.end;
-    }
-
-    /**
-     * <p>Is this {@code CharRange} negated.</p>
-     *
-     * <p>A negated range includes everything except that defined by the
-     * start and end characters.</p>
-     *
-     * @return {@code true} if negated
-     */
-    public boolean isNegated() {
-        return negated;
-    }
-
-    // Contains
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Is the character specified contained in this range.</p>
-     *
-     * @param ch  the character to check
-     * @return {@code true} if this range contains the input character
-     */
-    public boolean contains(final char ch) {
-        return (ch >= start && ch <= end) != negated;
-    }
-
-    /**
-     * <p>Are all the characters of the passed in range contained in
-     * this range.</p>
-     *
-     * @param range  the range to check against
-     * @return {@code true} if this range entirely contains the input range
-     * @throws IllegalArgumentException if {@code null} input
-     */
-    public boolean contains(final CharRange range) {
-        Validate.notNull(range, "range");
-        if (negated) {
-            if (range.negated) {
-                return start >= range.start && end <= range.end;
-            }
-            return range.end < start || range.start > end;
-        }
-        if (range.negated) {
-            return start == 0 && end == Character.MAX_VALUE;
-        }
-        return start <= range.start && end >= range.end;
-    }
-
-    // Basics
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Compares two CharRange objects, returning true if they represent
-     * exactly the same range of characters defined in the same way.</p>
-     *
-     * @param obj  the object to compare to
-     * @return true if equal
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof CharRange)) {
-            return false;
-        }
-        final CharRange other = (CharRange) obj;
-        return start == other.start && end == other.end && negated == other.negated;
-    }
-
-    /**
-     * <p>Gets a hashCode compatible with the equals method.</p>
-     *
-     * @return a suitable hashCode
-     */
-    @Override
-    public int hashCode() {
-        return 83 + start + 7 * end + (negated ? 1 : 0);
-    }
-
-    /**
-     * <p>Gets a string representation of the character range.</p>
-     *
-     * @return string representation of this range
-     */
-    @Override
-    public String toString() {
-        if (iToString == null) {
-            final StringBuilder buf = new StringBuilder(4);
-            if (isNegated()) {
-                buf.append('^');
-            }
-            buf.append(start);
-            if (start != end) {
-                buf.append('-');
-                buf.append(end);
-            }
-            iToString = buf.toString();
-        }
-        return iToString;
-    }
-
-    // Expansions
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Returns an iterator which can be used to walk through the characters described by this range.</p>
-     *
-     * <p>#NotThreadSafe# the iterator is not thread-safe</p>
-     * @return an iterator to the chars represented by this range
-     * @since 2.5
-     */
-    @Override
-    public Iterator<Character> iterator() {
-        return new CharacterIterator(this);
-    }
-
-    /**
      * Character {@link Iterator}.
      * <p>#NotThreadSafe#</p>
      */
-    private static class CharacterIterator implements Iterator<Character> {
+    private static final class CharacterIterator implements Iterator<Character> {
         /** The current character */
         private char current;
 
@@ -306,6 +70,31 @@ final class CharRange implements Iterable<Character>, Serializable {
         }
 
         /**
+         * Has the iterator not reached the end character yet?
+         *
+         * @return {@code true} if the iterator has yet to reach the character date
+         */
+        @Override
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        /**
+         * Returns the next character in the iteration
+         *
+         * @return {@link Character} for the next character
+         */
+        @Override
+        public Character next() {
+            if (!hasNext) {
+                throw new NoSuchElementException();
+            }
+            final char cur = current;
+            prepareNext();
+            return Character.valueOf(cur);
+        }
+
+        /**
          * Prepares the next character in the range.
          */
         private void prepareNext() {
@@ -329,31 +118,6 @@ final class CharRange implements Iterable<Character>, Serializable {
         }
 
         /**
-         * Has the iterator not reached the end character yet?
-         *
-         * @return {@code true} if the iterator has yet to reach the character date
-         */
-        @Override
-        public boolean hasNext() {
-            return hasNext;
-        }
-
-        /**
-         * Returns the next character in the iteration
-         *
-         * @return {@code Character} for the next character
-         */
-        @Override
-        public Character next() {
-            if (!hasNext) {
-                throw new NoSuchElementException();
-            }
-            final char cur = current;
-            prepareNext();
-            return Character.valueOf(cur);
-        }
-
-        /**
          * Always throws UnsupportedOperationException.
          *
          * @throws UnsupportedOperationException Always thrown.
@@ -363,5 +127,239 @@ final class CharRange implements Iterable<Character>, Serializable {
         public void remove() {
             throw new UnsupportedOperationException();
         }
+    }
+
+    /**
+     * Required for serialization support. Lang version 2.0.
+     *
+     * @see java.io.Serializable
+     */
+    private static final long serialVersionUID = 8270183163158333422L;
+
+    /** Empty array. */
+    static final CharRange[] EMPTY_ARRAY = {};
+
+    /**
+     * Constructs a {@link CharRange} over a single character.
+     *
+     * @param ch  only character in this range
+     * @return the new CharRange object
+     * @since 2.5
+     */
+    public static CharRange is(final char ch) {
+        return new CharRange(ch, ch, false);
+    }
+
+    /**
+     * Constructs a {@link CharRange} over a set of characters.
+     *
+     * <p>If start and end are in the wrong order, they are reversed.
+     * Thus {@code a-e} is the same as {@code e-a}.</p>
+     *
+     * @param start  first character, inclusive, in this range
+     * @param end  last character, inclusive, in this range
+     * @return the new CharRange object
+     * @since 2.5
+     */
+    public static CharRange isIn(final char start, final char end) {
+        return new CharRange(start, end, false);
+    }
+
+    /**
+     * Constructs a negated {@link CharRange} over a single character.
+     *
+     * <p>A negated range includes everything except that defined by the
+     * single character.</p>
+     *
+     * @param ch  only character in this range
+     * @return the new CharRange object
+     * @since 2.5
+     */
+    public static CharRange isNot(final char ch) {
+        return new CharRange(ch, ch, true);
+    }
+
+    /**
+     * Constructs a negated {@link CharRange} over a set of characters.
+     *
+     * <p>A negated range includes everything except that defined by the
+     * start and end characters.</p>
+     *
+     * <p>If start and end are in the wrong order, they are reversed.
+     * Thus {@code a-e} is the same as {@code e-a}.</p>
+     *
+     * @param start  first character, inclusive, in this range
+     * @param end  last character, inclusive, in this range
+     * @return the new CharRange object
+     * @since 2.5
+     */
+    public static CharRange isNotIn(final char start, final char end) {
+        return new CharRange(start, end, true);
+    }
+
+    /** The first character, inclusive, in the range. */
+    private final char start;
+
+    /** The last character, inclusive, in the range. */
+    private final char end;
+
+    /** True if the range is everything except the characters specified. */
+    private final boolean negated;
+
+    /** Cached toString. */
+    private transient String iToString;
+
+    /**
+     * Constructs a {@link CharRange} over a set of characters,
+     * optionally negating the range.
+     *
+     * <p>A negated range includes everything except that defined by the
+     * start and end characters.</p>
+     *
+     * <p>If start and end are in the wrong order, they are reversed.
+     * Thus {@code a-e} is the same as {@code e-a}.</p>
+     *
+     * @param start  first character, inclusive, in this range
+     * @param end  last character, inclusive, in this range
+     * @param negated  true to express everything except the range
+     */
+    private CharRange(char start, char end, final boolean negated) {
+        if (start > end) {
+            final char temp = start;
+            start = end;
+            end = temp;
+        }
+
+        this.start = start;
+        this.end = end;
+        this.negated = negated;
+    }
+
+    // Contains
+    /**
+     * Is the character specified contained in this range.
+     *
+     * @param ch  the character to check
+     * @return {@code true} if this range contains the input character
+     */
+    public boolean contains(final char ch) {
+        return (ch >= start && ch <= end) != negated;
+    }
+
+    /**
+     * Are all the characters of the passed in range contained in
+     * this range.
+     *
+     * @param range  the range to check against
+     * @return {@code true} if this range entirely contains the input range
+     * @throws NullPointerException if {@code null} input
+     */
+    public boolean contains(final CharRange range) {
+        Objects.requireNonNull(range, "range");
+        if (negated) {
+            if (range.negated) {
+                return start >= range.start && end <= range.end;
+            }
+            return range.end < start || range.start > end;
+        }
+        if (range.negated) {
+            return start == 0 && end == Character.MAX_VALUE;
+        }
+        return start <= range.start && end >= range.end;
+    }
+
+    // Basics
+    /**
+     * Compares two CharRange objects, returning true if they represent
+     * exactly the same range of characters defined in the same way.
+     *
+     * @param obj  the object to compare to
+     * @return true if equal
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof CharRange)) {
+            return false;
+        }
+        final CharRange other = (CharRange) obj;
+        return start == other.start && end == other.end && negated == other.negated;
+    }
+
+    /**
+     * Gets the end character for this character range.
+     *
+     * @return the end char (inclusive)
+     */
+    public char getEnd() {
+        return this.end;
+    }
+
+    // Accessors
+    /**
+     * Gets the start character for this character range.
+     *
+     * @return the start char (inclusive)
+     */
+    public char getStart() {
+        return this.start;
+    }
+
+    /**
+     * Gets a hashCode compatible with the equals method.
+     *
+     * @return a suitable hashCode
+     */
+    @Override
+    public int hashCode() {
+        return 83 + start + 7 * end + (negated ? 1 : 0);
+    }
+
+    /**
+     * Is this {@link CharRange} negated.
+     *
+     * <p>A negated range includes everything except that defined by the
+     * start and end characters.</p>
+     *
+     * @return {@code true} if negated
+     */
+    public boolean isNegated() {
+        return negated;
+    }
+
+    /**
+     * Returns an iterator which can be used to walk through the characters described by this range.
+     *
+     * <p>#NotThreadSafe# the iterator is not thread-safe</p>
+     * @return an iterator to the chars represented by this range
+     * @since 2.5
+     */
+    @Override
+    public Iterator<Character> iterator() {
+        return new CharacterIterator(this);
+    }
+
+    /**
+     * Gets a string representation of the character range.
+     *
+     * @return string representation of this range
+     */
+    @Override
+    public String toString() {
+        if (iToString == null) {
+            final StringBuilder buf = new StringBuilder(4);
+            if (isNegated()) {
+                buf.append('^');
+            }
+            buf.append(start);
+            if (start != end) {
+                buf.append('-');
+                buf.append(end);
+            }
+            iToString = buf.toString();
+        }
+        return iToString;
     }
 }

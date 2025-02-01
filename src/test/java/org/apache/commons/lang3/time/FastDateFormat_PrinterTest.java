@@ -20,9 +20,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * Unit tests for the print methods of FastDateFormat
- *
- * @since 3.2
+ * Tests for the print methods of FastDateFormat
  */
 public class FastDateFormat_PrinterTest extends FastDatePrinterTest {
 

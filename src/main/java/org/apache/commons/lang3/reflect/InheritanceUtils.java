@@ -19,25 +19,14 @@ package org.apache.commons.lang3.reflect;
 import org.apache.commons.lang3.BooleanUtils;
 
 /**
- * <p>Utility methods focusing on inheritance.</p>
+ * Utility methods focusing on inheritance.
  *
  * @since 3.2
  */
 public class InheritanceUtils {
 
     /**
-     * <p>{@link InheritanceUtils} instances should NOT be constructed in standard programming.
-     * Instead, the class should be used as
-     * {@code MethodUtils.getAccessibleMethod(method)}.</p>
-     *
-     * <p>This constructor is {@code public} to permit tools that require a JavaBean
-     * instance to operate.</p>
-     */
-    public InheritanceUtils() {
-    }
-
-    /**
-     * <p>Returns the number of inheritance hops between two classes.</p>
+     * Returns the number of inheritance hops between two classes.
      *
      * @param child the child class, may be {@code null}
      * @param parent the parent class, may be {@code null}
@@ -62,5 +51,20 @@ public class InheritanceUtils {
         }
         d += distance(cParent, parent);
         return d > 0 ? d + 1 : -1;
+    }
+
+    /**
+     * {@link InheritanceUtils} instances should NOT be constructed in standard programming.
+     * Instead, the class should be used as
+     * {@code MethodUtils.getAccessibleMethod(method)}.
+     *
+     * <p>This constructor is {@code public} to permit tools that require a JavaBean
+     * instance to operate.</p>
+     *
+     * @deprecated TODO Make private in 4.0.
+     */
+    @Deprecated
+    public InheritanceUtils() {
+        // empty
     }
 }

@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -36,11 +37,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 /**
  * Compare FastDateParser with SimpleDateFormat
  */
-public class FastDateParserSDFTest {
+public class FastDateParserSDFTest extends AbstractLangTest {
 
     private static final TimeZone timeZone = TimeZone.getDefault();
 
     public static Stream<Arguments> data() {
+        // @formatter:off
         return Stream.of(
                 // General Time zone tests
                 Arguments.of("z yyyy", "GMT 2010",       Locale.UK, true), // no offset specified, but this is allowed as a TimeZone name
@@ -53,62 +55,63 @@ public class FastDateParserSDFTest {
                 Arguments.of("z yyyy", "-12:34 2010",    Locale.UK, false),
                 Arguments.of("z yyyy", "-123 2010",      Locale.UK, false),
                 // year tests
-                Arguments.of( "MM/dd/yyyy", "01/11/12",  Locale.UK, true),
-                Arguments.of( "MM/dd/yy", "01/11/12",    Locale.UK, true),
+                Arguments.of("MM/dd/yyyy", "01/11/12",  Locale.UK, true),
+                Arguments.of("MM/dd/yy", "01/11/12",    Locale.UK, true),
 
                 // LANG-1089
-                Arguments.of( "HH", "00",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "00",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "00",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "00",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "00",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "00",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "00",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "00",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "01",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "01",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "01",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "01",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "01",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "01",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "01",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "01",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "11",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "11",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "11",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "11",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "11",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "11",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "11",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "11",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "12",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "12",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "12",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "12",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "12",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "12",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "12",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "12",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "13",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "13",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "13",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "13",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "13",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "13",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "13",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "13",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "23",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "23",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "23",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "23",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "23",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "23",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "23",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "23",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "24",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "24",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "24",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "24",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "24",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "24",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "24",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "24",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "25",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "25",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "25",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "25",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "25",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "25",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "25",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "25",    Locale.UK, true), // Hour in day (1-24), i.e. midnight is 24, not 0
 
-                Arguments.of( "HH", "48",    Locale.UK, true), // Hour in day (0-23)
-                Arguments.of( "KK", "48",    Locale.UK, true), // Hour in am/pm (0-11)
-                Arguments.of( "hh", "48",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
-                Arguments.of( "kk", "48",    Locale.UK, true)  // Hour in day (1-24), i.e. midnight is 24, not 0
+                Arguments.of("HH", "48",    Locale.UK, true), // Hour in day (0-23)
+                Arguments.of("KK", "48",    Locale.UK, true), // Hour in am/pm (0-11)
+                Arguments.of("hh", "48",    Locale.UK, true), // Hour in am/pm (1-12), i.e. midday/midnight is 12, not 0
+                Arguments.of("kk", "48",    Locale.UK, true)  // Hour in day (1-24), i.e. midnight is 24, not 0
         );
+        // @formatter:on
     }
 
     private void checkParse(final String formattedDate, final String format, final Locale locale, final boolean valid) {
         final SimpleDateFormat sdf = new SimpleDateFormat(format, locale);
         sdf.setTimeZone(timeZone);
         final DateParser fdf = new FastDateParser(format, timeZone, locale);
-        Date expectedTime=null;
+        Date expectedTime = null;
         Class<?> sdfE = null;
         try {
             expectedTime = sdf.parse(formattedDate);
@@ -135,9 +138,9 @@ public class FastDateParserSDFTest {
             fdfE = e.getClass();
         }
         if (valid) {
-            assertEquals(expectedTime, actualTime, locale.toString()+" "+formattedDate +"\n");
+            assertEquals(expectedTime, actualTime, locale + " " + formattedDate + "\n");
         } else {
-            assertEquals(sdfE, fdfE, locale.toString()+" "+formattedDate + " expected same Exception ");
+            assertEquals(sdfE, fdfE, locale + " " + formattedDate + " expected same Exception ");
         }
     }
 
@@ -172,11 +175,10 @@ public class FastDateParserSDFTest {
             final int endIndex = fdfP.getIndex();
             final int length = formattedDate.length();
             assertEquals(length, endIndex, "Expected FDF to parse full string " + fdfP);
-            assertEquals(expectedTime, actualTime, locale.toString()+" "+formattedDate +"\n");
+            assertEquals(expectedTime, actualTime, locale + " " + formattedDate + "\n");
         } else {
             assertNotEquals(-1, fdferrorIndex, "Test data error: expected FDF parse to fail, but got " + actualTime);
-            assertTrue(sdferrorIndex - fdferrorIndex <= 4,
-                    "FDF error index ("+ fdferrorIndex + ") should approximate SDF index (" + sdferrorIndex + ")");
+            assertTrue(sdferrorIndex - fdferrorIndex <= 4, "FDF error index (" + fdferrorIndex + ") should approximate SDF index (" + sdferrorIndex + ")");
         }
     }
 

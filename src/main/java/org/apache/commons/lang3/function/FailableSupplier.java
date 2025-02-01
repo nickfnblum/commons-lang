@@ -20,14 +20,41 @@ package org.apache.commons.lang3.function;
 import java.util.function.Supplier;
 
 /**
- * A functional interface like {@link Supplier} that declares a {@code Throwable}.
+ * A functional interface like {@link Supplier} that declares a {@link Throwable}.
  *
- * @param <R> Return type.
- * @param <E> Thrown exception.
+ * @param <T> The type of results supplied by this supplier.
+ * @param <E> The kind of thrown exception or error.
  * @since 3.11
  */
 @FunctionalInterface
-public interface FailableSupplier<R, E extends Throwable> {
+public interface FailableSupplier<T, E extends Throwable> {
+
+    /**
+     * Returns the singleton supplier that always returns null.
+     * <p>
+     * This supplier never throws an exception.
+     * </p>
+     *
+     * @since 3.14.0
+     */
+    @SuppressWarnings("rawtypes")
+    FailableSupplier NUL = () -> null;
+
+    /**
+     * Returns the singleton supplier that always returns null.
+     * <p>
+     * This supplier never throws an exception.
+     * </p>
+     *
+     * @param <T> Supplied type.
+     * @param <E> The kind of thrown exception or error.
+     * @return The NUL singleton.
+     * @since 3.14.0
+     */
+    @SuppressWarnings("unchecked")
+    static <T, E extends Exception> FailableSupplier<T, E> nul() {
+        return NUL;
+    }
 
     /**
      * Supplies an object
@@ -35,5 +62,5 @@ public interface FailableSupplier<R, E extends Throwable> {
      * @return a result
      * @throws E if the supplier fails
      */
-    R get() throws E;
+    T get() throws E;
 }

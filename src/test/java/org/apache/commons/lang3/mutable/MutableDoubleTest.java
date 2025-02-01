@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,7 +29,7 @@ import org.junit.jupiter.api.Test;
  *
  * @see MutableDouble
  */
-public class MutableDoubleTest {
+public class MutableDoubleTest extends AbstractLangTest {
 
     @Test
     public void testAddAndGetValueObject() {
@@ -84,7 +85,6 @@ public class MutableDoubleTest {
         assertThrows(NullPointerException.class, () -> new MutableDouble((Number) null));
     }
 
-    // ----------------------------------------------------------------
     @Test
     public void testConstructors() {
         assertEquals(0d, new MutableDouble().doubleValue(), 0.0001d);
@@ -240,10 +240,10 @@ public class MutableDoubleTest {
         final MutableDouble mutNum = new MutableDouble(1.7);
         assertEquals(1.7F, mutNum.floatValue());
         assertEquals(1.7, mutNum.doubleValue());
-        assertEquals( (byte) 1, mutNum.byteValue() );
-        assertEquals( (short) 1, mutNum.shortValue() );
-        assertEquals( 1, mutNum.intValue() );
-        assertEquals( 1L, mutNum.longValue() );
+        assertEquals((byte) 1, mutNum.byteValue());
+        assertEquals((short) 1, mutNum.shortValue());
+        assertEquals(1, mutNum.intValue());
+        assertEquals(1L, mutNum.longValue());
     }
 
     @Test

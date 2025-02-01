@@ -16,8 +16,10 @@
  */
 package org.apache.commons.lang3;
 
+import org.apache.commons.lang3.stream.Streams;
+
 /**
- * <p>Operations on {@code CharSet} instances.</p>
+ * Operations on {@link CharSet} instances.
  *
  * <p>This class handles {@code null} input gracefully.
  * An exception will not be thrown for a {@code null} input.
@@ -30,8 +32,8 @@ package org.apache.commons.lang3;
 public class CharSetUtils {
 
     /**
-     * <p>Takes an argument in set-syntax, see evaluateSet,
-     * and identifies whether any of the characters are present in the specified string.</p>
+     * Takes an argument in set-syntax, see evaluateSet,
+     * and identifies whether any of the characters are present in the specified string.
      *
      * <pre>
      * CharSetUtils.containsAny(null, *)        = false
@@ -42,7 +44,7 @@ public class CharSetUtils {
      * CharSetUtils.containsAny("hello", "a-d") = false
      * </pre>
      *
-     * @see CharSet#getInstance(java.lang.String...) for set-syntax.
+     * @see CharSet#getInstance(String...) for set-syntax.
      * @param str  String to look for characters in, may be null
      * @param set  String[] set of characters to identify, may be null
      * @return whether or not the characters in the set are in the primary string
@@ -62,8 +64,8 @@ public class CharSetUtils {
     }
 
     /**
-     * <p>Takes an argument in set-syntax, see evaluateSet,
-     * and returns the number of characters present in the specified string.</p>
+     * Takes an argument in set-syntax, see evaluateSet,
+     * and returns the number of characters present in the specified string.
      *
      * <pre>
      * CharSetUtils.count(null, *)        = 0
@@ -74,7 +76,7 @@ public class CharSetUtils {
      * CharSetUtils.count("hello", "a-e") = 1
      * </pre>
      *
-     * @see CharSet#getInstance(java.lang.String...) for set-syntax.
+     * @see CharSet#getInstance(String...) for set-syntax.
      * @param str  String to count characters in, may be null
      * @param set  String[] set of characters to count, may be null
      * @return the character count, zero if null string input
@@ -101,19 +103,12 @@ public class CharSetUtils {
      * @return whether or not the String is empty
      */
     private static boolean deepEmpty(final String[] strings) {
-        if (strings != null) {
-            for (final String s : strings) {
-                if (StringUtils.isNotEmpty(s)) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return Streams.of(strings).allMatch(StringUtils::isEmpty);
     }
 
     /**
-     * <p>Takes an argument in set-syntax, see evaluateSet,
-     * and deletes any of characters present in the specified string.</p>
+     * Takes an argument in set-syntax, see evaluateSet,
+     * and deletes any of characters present in the specified string.
      *
      * <pre>
      * CharSetUtils.delete(null, *)        = null
@@ -124,7 +119,7 @@ public class CharSetUtils {
      * CharSetUtils.delete("hello", "le")  = "ho"
      * </pre>
      *
-     * @see CharSet#getInstance(java.lang.String...) for set-syntax.
+     * @see CharSet#getInstance(String...) for set-syntax.
      * @param str  String to delete characters from, may be null
      * @param set  String[] set of characters to delete, may be null
      * @return the modified String, {@code null} if null string input
@@ -137,8 +132,8 @@ public class CharSetUtils {
     }
 
     /**
-     * <p>Takes an argument in set-syntax, see evaluateSet,
-     * and keeps any of characters present in the specified string.</p>
+     * Takes an argument in set-syntax, see evaluateSet,
+     * and keeps any of characters present in the specified string.
      *
      * <pre>
      * CharSetUtils.keep(null, *)        = null
@@ -149,7 +144,7 @@ public class CharSetUtils {
      * CharSetUtils.keep("hello", "le")  = "ell"
      * </pre>
      *
-     * @see CharSet#getInstance(java.lang.String...) for set-syntax.
+     * @see CharSet#getInstance(String...) for set-syntax.
      * @param str  String to keep characters from, may be null
      * @param set  String[] set of characters to keep, may be null
      * @return the modified String, {@code null} if null string input
@@ -166,7 +161,7 @@ public class CharSetUtils {
     }
 
     /**
-     * Implementation of delete and keep
+     * Implements delete and keep.
      *
      * @param str String to modify characters within
      * @param set String[] set of characters to modify
@@ -186,8 +181,8 @@ public class CharSetUtils {
     }
 
     /**
-     * <p>Squeezes any repetitions of a character that is mentioned in the
-     * supplied set.</p>
+     * Squeezes any repetitions of a character that is mentioned in the
+     * supplied set.
      *
      * <pre>
      * CharSetUtils.squeeze(null, *)        = null
@@ -198,7 +193,7 @@ public class CharSetUtils {
      * CharSetUtils.squeeze("hello", "a-e") = "hello"
      * </pre>
      *
-     * @see CharSet#getInstance(java.lang.String...) for set-syntax.
+     * @see CharSet#getInstance(String...) for set-syntax.
      * @param str  the string to squeeze, may be null
      * @param set  the character set to use for manipulation, may be null
      * @return the modified String, {@code null} if null string input
@@ -212,7 +207,7 @@ public class CharSetUtils {
         final char[] chrs = str.toCharArray();
         final int sz = chrs.length;
         char lastChar = chrs[0];
-        char ch = ' ';
+        char ch;
         Character inChars = null;
         Character notInChars = null;
         buffer.append(lastChar);
@@ -237,12 +232,15 @@ public class CharSetUtils {
     }
 
     /**
-     * <p>CharSetUtils instances should NOT be constructed in standard programming.
-     * Instead, the class should be used as {@code CharSetUtils.evaluateSet(null);}.</p>
+     * CharSetUtils instances should NOT be constructed in standard programming.
+     * Instead, the class should be used as {@code CharSetUtils.evaluateSet(null);}.
      *
      * <p>This constructor is public to permit tools that require a JavaBean instance
      * to operate.</p>
+     *
+     * @deprecated TODO Make private in 4.0.
      */
+    @Deprecated
     public CharSetUtils() {
     }
 }

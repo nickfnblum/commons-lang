@@ -17,36 +17,36 @@
 package org.apache.commons.lang3.test;
 
 /**
- * Allows for testing an exception that is not visible to
- * {@link org.apache.commons.lang3.exception.ExceptionUtils}
+ * Allows for testing an exception that is not visible to {@link org.apache.commons.lang3.exception.ExceptionUtils}
  */
 public class NotVisibleExceptionFactory {
 
-  private NotVisibleExceptionFactory() {}
+    private static final class NotVisibleException extends Exception {
 
-  /**
-   * Create a new Exception whose getCause method returns the
-   * provided cause.
-   * @param cause the cause of the exception
-   * @return a new {@link Exception}
-   */
-  public static Exception createException(final Throwable cause) {
-    return new NotVisibleException(cause);
-  }
+        private static final long serialVersionUID = 1L; // avoid warning
 
-  private static class NotVisibleException extends Exception {
+        private final Throwable cause;
 
-    private static final long serialVersionUID = 1L; // avoid warning
+        private NotVisibleException(final Throwable cause) {
+            this.cause = cause;
+        }
 
-    private final Throwable cause;
-
-    private NotVisibleException(final Throwable cause) {
-      this.cause = cause;
+        @Override
+        public synchronized Throwable getCause() {
+            return cause;
+        }
     }
 
-    @Override
-    public Throwable getCause() {
-      return cause;
+    /**
+     * Create a new Exception whose getCause method returns the provided cause.
+     *
+     * @param cause the cause of the exception
+     * @return a new {@link Exception}
+     */
+    public static Exception createException(final Throwable cause) {
+        return new NotVisibleException(cause);
     }
-  }
+
+    private NotVisibleExceptionFactory() {
+    }
 }

@@ -24,12 +24,12 @@ import java.util.EnumSet;
 
 /**
  * Translate XML numeric entities of the form &amp;#[xX]?\d+;? to
- * the specific codepoint.
+ * the specific code point.
  *
  * Note that the semicolon is optional.
  *
  * @since 3.0
- * @deprecated as of 3.6, use commons-text
+ * @deprecated As of 3.6, use Apache Commons Text
  * <a href="https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/translate/NumericEntityUnescaper.html">
  * NumericEntityUnescaper</a> instead
  */
@@ -116,9 +116,9 @@ public class NumericEntityUnescaper extends CharSequenceTranslator {
 
             int end = start;
             // Note that this supports character codes without a ; on the end
-            while (end < seqEnd && ( input.charAt(end) >= '0' && input.charAt(end) <= '9' ||
+            while (end < seqEnd && (input.charAt(end) >= '0' && input.charAt(end) <= '9' ||
                                     input.charAt(end) >= 'a' && input.charAt(end) <= 'f' ||
-                                    input.charAt(end) >= 'A' && input.charAt(end) <= 'F' ) ) {
+                                    input.charAt(end) >= 'A' && input.charAt(end) <= 'F')) {
                 end++;
             }
 
@@ -140,7 +140,7 @@ public class NumericEntityUnescaper extends CharSequenceTranslator {
                 } else {
                     entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 10);
                 }
-            } catch(final NumberFormatException nfe) {
+            } catch (final NumberFormatException nfe) {
                 return 0;
             }
 

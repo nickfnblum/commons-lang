@@ -23,27 +23,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link org.apache.commons.lang3.text.translate.UnicodeUnpairedSurrogateRemover}.
+ * Tests for {@link org.apache.commons.lang3.text.translate.UnicodeUnpairedSurrogateRemover}.
  */
 @Deprecated
-public class UnicodeUnpairedSurrogateRemoverTest {
+public class UnicodeUnpairedSurrogateRemoverTest extends AbstractLangTest {
     final UnicodeUnpairedSurrogateRemover subject = new UnicodeUnpairedSurrogateRemover();
     final CharArrayWriter writer = new CharArrayWriter(); // nothing is ever written to it
-
-    @Test
-    public void testValidCharacters() throws IOException {
-        assertFalse(subject.translate(0xd7ff, writer));
-        assertFalse(subject.translate(0xe000, writer));
-        assertEquals(0, writer.size());
-    }
 
     @Test
     public void testInvalidCharacters() throws IOException {
         assertTrue(subject.translate(0xd800, writer));
         assertTrue(subject.translate(0xdfff, writer));
+        assertEquals(0, writer.size());
+    }
+
+    @Test
+    public void testValidCharacters() throws IOException {
+        assertFalse(subject.translate(0xd7ff, writer));
+        assertFalse(subject.translate(0xe000, writer));
         assertEquals(0, writer.size());
     }
 }

@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -29,19 +30,20 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test the Pair class.
  */
-public class ImmutablePairTest {
+public class ImmutablePairTest extends AbstractLangTest {
 
     @Test
     public void testBasic() {
         ImmutablePair<Integer, String> oldPair = new ImmutablePair<>(0, "foo");
         ImmutablePair<Integer, String> nowPair;
-        for (int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             nowPair = ImmutablePair.of(oldPair);
             assertEquals(0, nowPair.left.intValue());
             assertEquals(0, nowPair.getLeft().intValue());
@@ -53,7 +55,7 @@ public class ImmutablePairTest {
 
         ImmutablePair<Object, String> oldPair2 = new ImmutablePair<>(null, "bar");
         ImmutablePair<Object, String> nowPair2;
-        for (int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             nowPair2 = ImmutablePair.of(oldPair2);
             assertNull(nowPair2.left);
             assertNull(nowPair2.getLeft());
@@ -155,6 +157,16 @@ public class ImmutablePairTest {
     }
 
     @Test
+    public void testOfNonNull() {
+        assertThrows(NullPointerException.class, () -> ImmutablePair.ofNonNull(null, null));
+        assertThrows(NullPointerException.class, () -> ImmutablePair.ofNonNull(null, "x"));
+        assertThrows(NullPointerException.class, () -> ImmutablePair.ofNonNull("x", null));
+        final ImmutablePair<String, String> pair = ImmutablePair.ofNonNull("x", "y");
+        assertEquals("x", pair.left);
+        assertEquals("y", pair.right);
+    }
+
+    @Test
     public void testPairOfMapEntry() {
         final HashMap<Integer, String> map = new HashMap<>();
         map.put(0, "foo");
@@ -182,7 +194,6 @@ public class ImmutablePairTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testSerialization() throws Exception {
         final ImmutablePair<Integer, String> origPair = ImmutablePair.of(0, "foo");
         final ImmutablePair<Integer, String> deserializedPair = SerializationUtils.roundtrip(origPair);
@@ -208,6 +219,13 @@ public class ImmutablePairTest {
     public void testToStringRight() {
         final Pair<String, String> pair = ImmutablePair.right("Value");
         assertEquals("(null,Value)", pair.toString());
+    }
+
+    @Test
+    public void testUnsupportedOperation() {
+        final ImmutablePair<Integer, String> pair = new ImmutablePair<>(0, "foo");
+        assertThrows(UnsupportedOperationException.class, () -> pair.setValue("any"));
+
     }
 
     @Test

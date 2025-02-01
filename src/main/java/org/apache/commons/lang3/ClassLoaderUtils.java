@@ -17,8 +17,10 @@
 
 package org.apache.commons.lang3;
 
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Helps work with {@link ClassLoader}.
@@ -26,6 +28,32 @@ import java.util.Arrays;
  * @since 3.10
  */
 public class ClassLoaderUtils {
+
+    private static final URL[] EMPTY_URL_ARRAY = {};
+
+    /**
+     * Gets the system class loader's URLs, if any.
+     *
+     * @return the system class loader's URLs, if any.
+     * @since 3.13.0
+     */
+    public static URL[] getSystemURLs() {
+        return getURLs(ClassLoader.getSystemClassLoader());
+    }
+
+    /**
+     * Gets the current thread's context class loader's URLs, if any.
+     *
+     * @return the current thread's context class loader's URLs, if any.
+     * @since 3.13.0
+     */
+    public static URL[] getThreadURLs() {
+        return getURLs(Thread.currentThread().getContextClassLoader());
+    }
+
+    private static URL[] getURLs(final ClassLoader cl) {
+        return cl instanceof URLClassLoader ? ((URLClassLoader) cl).getURLs() : EMPTY_URL_ARRAY;
+    }
 
     /**
      * Converts the given class loader to a String calling {@link #toString(URLClassLoader)}.
@@ -37,17 +65,26 @@ public class ClassLoaderUtils {
         if (classLoader instanceof URLClassLoader) {
             return toString((URLClassLoader) classLoader);
         }
-        return classLoader.toString();
+        return Objects.toString(classLoader);
     }
 
     /**
-     * Converts the given URLClassLoader to a String in the format
-     * {@code "URLClassLoader.toString() + [URL1, URL2, ...]"}.
+     * Converts the given URLClassLoader to a String in the format {@code "URLClassLoader.toString() + [URL1, URL2, ...]"}.
      *
      * @param classLoader to URLClassLoader to convert.
      * @return the formatted string.
      */
     public static String toString(final URLClassLoader classLoader) {
-        return classLoader + Arrays.toString(classLoader.getURLs());
+        return classLoader != null ? classLoader + Arrays.toString(classLoader.getURLs()) : "null";
+    }
+
+    /**
+     * Make private in 4.0.
+     *
+     * @deprecated TODO Make private in 4.0.
+     */
+    @Deprecated
+    public ClassLoaderUtils() {
+        // empty
     }
 }

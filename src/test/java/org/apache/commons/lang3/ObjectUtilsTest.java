@@ -19,6 +19,7 @@ package org.apache.commons.lang3;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,20 +42,24 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.exception.CloneFailedException;
+import org.apache.commons.lang3.function.Suppliers;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.text.StrBuilder;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests {@link org.apache.commons.lang3.ObjectUtils}.
+ * Tests {@link ObjectUtils}.
  */
 @SuppressWarnings("deprecation") // deliberate use of deprecated code
-public class ObjectUtilsTest {
+public class ObjectUtilsTest extends AbstractLangTest {
+
     static final class CharSequenceComparator implements Comparator<CharSequence> {
 
         @Override
@@ -63,6 +68,7 @@ public class ObjectUtilsTest {
         }
 
     }
+
     /**
      * String that is cloneable.
      */
@@ -77,6 +83,7 @@ public class ObjectUtilsTest {
             return (CloneableString) super.clone();
         }
     }
+
     static final class NonComparableCharSequence implements CharSequence {
         final String value;
 
@@ -110,6 +117,7 @@ public class ObjectUtilsTest {
             return value;
         }
     }
+
     /**
      * String that is not cloneable.
      */
@@ -119,9 +127,12 @@ public class ObjectUtilsTest {
             super(s);
         }
     }
+
+    private static final Supplier<?> NULL_SUPPLIER = null;
+
     private static final String FOO = "foo";
     private static final String BAR = "bar";
-    private static final String[] NON_EMPTY_ARRAY = new String[] { FOO, BAR, };
+    private static final String[] NON_EMPTY_ARRAY = { FOO, BAR, };
 
     private static final List<String> NON_EMPTY_LIST = Arrays.asList(NON_EMPTY_ARRAY);
 
@@ -197,6 +208,43 @@ public class ObjectUtilsTest {
     }
 
     /**
+     * Test for {@link ObjectUtils#isArray(Object)}.
+     */
+    @Test
+    public void testArray() {
+        assertFalse(ObjectUtils.isArray(null));
+        assertFalse(ObjectUtils.isArray(""));
+        assertFalse(ObjectUtils.isArray("abg"));
+        assertFalse(ObjectUtils.isArray(123));
+        assertTrue(ObjectUtils.isArray(NON_EMPTY_ARRAY));
+        assertTrue(ObjectUtils.isArray(new int[]{1, 2, 3}));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_BOOLEAN_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_BOOLEAN_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_BOOLEAN_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_BYTE_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_BYTE_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_CHAR_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_CHARACTER_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_CLASS_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_DOUBLE_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_DOUBLE_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_FIELD_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_FLOAT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_FLOAT_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_INT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_INTEGER_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_LONG_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_LONG_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_METHOD_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_SHORT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_SHORT_OBJECT_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_STRING_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_THROWABLE_ARRAY));
+        assertTrue(ObjectUtils.isArray(ArrayUtils.EMPTY_TYPE_ARRAY));
+    }
+
+    /**
      * Tests {@link ObjectUtils#clone(Object)} with a cloneable object.
      */
     @Test
@@ -239,6 +287,8 @@ public class ObjectUtilsTest {
     public void testCloneOfUncloneable() {
         final UncloneableString string = new UncloneableString("apache");
         final CloneFailedException e = assertThrows(CloneFailedException.class, () -> ObjectUtils.clone(string));
+        assertNotNull(e);
+        assertNotNull(e.getCause());
         assertEquals(NoSuchMethodException.class, e.getCause().getClass());
     }
 
@@ -363,7 +413,6 @@ public class ObjectUtilsTest {
                 "CONST_SHORT(32768): IllegalArgumentException should have been thrown.");
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testConstructor() {
         assertNotNull(new ObjectUtils());
@@ -374,7 +423,6 @@ public class ObjectUtilsTest {
         assertFalse(Modifier.isFinal(ObjectUtils.class.getModifiers()));
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testDefaultIfNull() {
         final Object o = FOO;
@@ -396,13 +444,12 @@ public class ObjectUtilsTest {
         assertEquals(1, callsCounter.getValue());
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testEquals() {
         assertTrue(ObjectUtils.equals(null, null), "ObjectUtils.equals(null, null) returned false");
-        assertTrue(!ObjectUtils.equals(FOO, null), "ObjectUtils.equals(\"foo\", null) returned true");
-        assertTrue(!ObjectUtils.equals(null, BAR), "ObjectUtils.equals(null, \"bar\") returned true");
-        assertTrue(!ObjectUtils.equals(FOO, BAR), "ObjectUtils.equals(\"foo\", \"bar\") returned true");
+        assertFalse(ObjectUtils.equals(FOO, null), "ObjectUtils.equals(\"foo\", null) returned true");
+        assertFalse(ObjectUtils.equals(null, BAR), "ObjectUtils.equals(null, \"bar\") returned true");
+        assertFalse(ObjectUtils.equals(FOO, BAR), "ObjectUtils.equals(\"foo\", \"bar\") returned true");
         assertTrue(ObjectUtils.equals(FOO, FOO), "ObjectUtils.equals(\"foo\", \"foo\") returned false");
     }
 
@@ -425,16 +472,26 @@ public class ObjectUtilsTest {
     }
 
     @Test
+    public void testGetClass() {
+        final String[] newArray = ArrayUtils.EMPTY_STRING_ARRAY;
+        // No type-cast required.
+        final Class<String[]> cls = ObjectUtils.getClass(newArray);
+        assertEquals(String[].class, cls);
+        assertNull(ObjectUtils.getClass(null));
+    }
+
+    @Test
     public void testGetFirstNonNull() {
-        // first non null
-        assertEquals("", ObjectUtils.getFirstNonNull(() -> null, () -> ""));
+        // first non-null
+        assertEquals("", ObjectUtils.getFirstNonNull(null, () -> ""));
+        assertEquals("", ObjectUtils.getFirstNonNull(Suppliers.nul(), () -> ""));
         // first encountered value is used
-        assertEquals("1", ObjectUtils.getFirstNonNull(() -> null, () -> "1", () -> "2", () -> null));
-        assertEquals("123", ObjectUtils.getFirstNonNull(() -> "123", () -> null, () -> "456"));
+        assertEquals("1", ObjectUtils.getFirstNonNull(Suppliers.nul(), () -> "1", () -> "2", Suppliers.nul()));
+        assertEquals("123", ObjectUtils.getFirstNonNull(() -> "123", Suppliers.nul(), () -> "456"));
         // don't evaluate suppliers after first value is found
-        assertEquals("123", ObjectUtils.getFirstNonNull(() -> null, () -> "123", () -> fail("Supplier after first non-null value should not be evaluated")));
+        assertEquals("123", ObjectUtils.getFirstNonNull(Suppliers.nul(), () -> "123", () -> fail("Supplier after first non-null value should not be evaluated")));
         // supplier returning null and null supplier both result in null
-        assertNull(ObjectUtils.getFirstNonNull(null, () -> null));
+        assertNull(ObjectUtils.getFirstNonNull(null, Suppliers.nul()));
         // Explicitly pass in an empty array of Object type to ensure compiler doesn't complain of unchecked generic array creation
         assertNull(ObjectUtils.getFirstNonNull());
         // supplier is null
@@ -442,8 +499,8 @@ public class ObjectUtilsTest {
         // varargs array itself is null
         assertNull(ObjectUtils.getFirstNonNull((Supplier<Object>[]) null));
         // test different types
-        assertEquals(1, ObjectUtils.getFirstNonNull(() -> null, () -> 1));
-        assertEquals(Boolean.TRUE, ObjectUtils.getFirstNonNull(() -> null, () -> Boolean.TRUE));
+        assertEquals(1, ObjectUtils.getFirstNonNull(Suppliers.nul(), () -> 1));
+        assertEquals(Boolean.TRUE, ObjectUtils.getFirstNonNull(Suppliers.nul(), () -> Boolean.TRUE));
     }
 
     @Test
@@ -453,8 +510,17 @@ public class ObjectUtilsTest {
     }
 
     @Test
+    public void testHashCodeHex() {
+        final Integer i = Integer.valueOf(90);
+        assertEquals(Integer.toHexString(Objects.hashCode(i)), ObjectUtils.hashCodeHex(i));
+        final Integer zero = Integer.valueOf(0);
+        assertEquals(Integer.toHexString(Objects.hashCode(zero)), ObjectUtils.hashCodeHex(zero));
+        assertEquals(Integer.toHexString(Objects.hashCode(null)), ObjectUtils.hashCodeHex(null));
+    }
+
+    @Test
     public void testHashCodeMulti_multiple_emptyArray() {
-        final Object[] array = new Object[0];
+        final Object[] array = {};
         assertEquals(1, ObjectUtils.hashCodeMulti(array));
     }
 
@@ -480,6 +546,15 @@ public class ObjectUtilsTest {
     }
 
     @Test
+    public void testIdentityHashCodeHex() {
+        final Integer i = Integer.valueOf(90);
+        assertEquals(Integer.toHexString(System.identityHashCode(i)), ObjectUtils.identityHashCodeHex(i));
+        final Integer zero = Integer.valueOf(0);
+        assertEquals(Integer.toHexString(System.identityHashCode(zero)), ObjectUtils.identityHashCodeHex(zero));
+        assertEquals(Integer.toHexString(System.identityHashCode(null)), ObjectUtils.identityHashCodeHex(null));
+    }
+
+    @Test
     public void testIdentityToStringAppendable() throws IOException {
         final Integer i = Integer.valueOf(121);
         final String expected = "java.lang.Integer@" + Integer.toHexString(System.identityHashCode(i));
@@ -492,7 +567,7 @@ public class ObjectUtilsTest {
 
         assertThrows(
                 NullPointerException.class,
-                () -> ObjectUtils.identityToString((Appendable) (new StringBuilder()), null));
+                () -> ObjectUtils.identityToString((Appendable) new StringBuilder(), null));
     }
 
     @Test
@@ -572,7 +647,6 @@ public class ObjectUtilsTest {
         assertThrows(NullPointerException.class, () -> ObjectUtils.identityToString(new StringBuilder(), null));
     }
 
-    //-----------------------------------------------------------------------
     @Test
     public void testIsEmpty() {
         assertTrue(ObjectUtils.isEmpty(null));
@@ -581,6 +655,8 @@ public class ObjectUtilsTest {
         assertTrue(ObjectUtils.isEmpty(Collections.emptyList()));
         assertTrue(ObjectUtils.isEmpty(Collections.emptySet()));
         assertTrue(ObjectUtils.isEmpty(Collections.emptyMap()));
+        assertTrue(ObjectUtils.isEmpty(Optional.empty()));
+        assertTrue(ObjectUtils.isEmpty(Optional.ofNullable(null)));
 
         assertFalse(ObjectUtils.isEmpty("  "));
         assertFalse(ObjectUtils.isEmpty("ab"));
@@ -588,6 +664,8 @@ public class ObjectUtilsTest {
         assertFalse(ObjectUtils.isEmpty(NON_EMPTY_LIST));
         assertFalse(ObjectUtils.isEmpty(NON_EMPTY_SET));
         assertFalse(ObjectUtils.isEmpty(NON_EMPTY_MAP));
+        assertFalse(ObjectUtils.isEmpty(Optional.of(new Object())));
+        assertFalse(ObjectUtils.isEmpty(Optional.ofNullable(new Object())));
     }
 
     @Test
@@ -598,6 +676,8 @@ public class ObjectUtilsTest {
         assertFalse(ObjectUtils.isNotEmpty(Collections.emptyList()));
         assertFalse(ObjectUtils.isNotEmpty(Collections.emptySet()));
         assertFalse(ObjectUtils.isNotEmpty(Collections.emptyMap()));
+        assertFalse(ObjectUtils.isNotEmpty(Optional.empty()));
+        assertFalse(ObjectUtils.isNotEmpty(Optional.ofNullable(null)));
 
         assertTrue(ObjectUtils.isNotEmpty("  "));
         assertTrue(ObjectUtils.isNotEmpty("ab"));
@@ -605,6 +685,8 @@ public class ObjectUtilsTest {
         assertTrue(ObjectUtils.isNotEmpty(NON_EMPTY_LIST));
         assertTrue(ObjectUtils.isNotEmpty(NON_EMPTY_SET));
         assertTrue(ObjectUtils.isNotEmpty(NON_EMPTY_MAP));
+        assertTrue(ObjectUtils.isNotEmpty(Optional.of(new Object())));
+        assertTrue(ObjectUtils.isNotEmpty(Optional.ofNullable(new Object())));
     }
 
     @Test
@@ -614,23 +696,23 @@ public class ObjectUtilsTest {
         final Date nonNullComparable2 = calendar.getTime();
         final String[] nullArray = null;
 
-        calendar.set( Calendar.YEAR, calendar.get( Calendar.YEAR ) -1 );
+        calendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR) - 1);
         final Date minComparable = calendar.getTime();
 
-        assertNotSame( nonNullComparable1, nonNullComparable2 );
+        assertNotSame(nonNullComparable1, nonNullComparable2);
 
-        assertNull(ObjectUtils.max( (String) null ) );
-        assertNull(ObjectUtils.max( nullArray ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( null, nonNullComparable1 ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( nonNullComparable1, null ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( null, nonNullComparable1, null ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( nonNullComparable1, nonNullComparable2 ) );
-        assertSame( nonNullComparable2, ObjectUtils.max( nonNullComparable2, nonNullComparable1 ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( nonNullComparable1, minComparable ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( minComparable, nonNullComparable1 ) );
-        assertSame( nonNullComparable1, ObjectUtils.max( null, minComparable, null, nonNullComparable1 ) );
+        assertNull(ObjectUtils.max((String) null));
+        assertNull(ObjectUtils.max(nullArray));
+        assertSame(nonNullComparable1, ObjectUtils.max(null, nonNullComparable1));
+        assertSame(nonNullComparable1, ObjectUtils.max(nonNullComparable1, null));
+        assertSame(nonNullComparable1, ObjectUtils.max(null, nonNullComparable1, null));
+        assertSame(nonNullComparable1, ObjectUtils.max(nonNullComparable1, nonNullComparable2));
+        assertSame(nonNullComparable2, ObjectUtils.max(nonNullComparable2, nonNullComparable1));
+        assertSame(nonNullComparable1, ObjectUtils.max(nonNullComparable1, minComparable));
+        assertSame(nonNullComparable1, ObjectUtils.max(minComparable, nonNullComparable1));
+        assertSame(nonNullComparable1, ObjectUtils.max(null, minComparable, null, nonNullComparable1));
 
-        assertNull( ObjectUtils.max(null, null) );
+        assertNull(ObjectUtils.max(null, null));
     }
 
     @Test
@@ -667,23 +749,23 @@ public class ObjectUtilsTest {
         final Date nonNullComparable2 = calendar.getTime();
         final String[] nullArray = null;
 
-        calendar.set( Calendar.YEAR, calendar.get( Calendar.YEAR ) -1 );
+        calendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR) - 1);
         final Date minComparable = calendar.getTime();
 
-        assertNotSame( nonNullComparable1, nonNullComparable2 );
+        assertNotSame(nonNullComparable1, nonNullComparable2);
 
-        assertNull(ObjectUtils.min( (String) null ) );
-        assertNull(ObjectUtils.min( nullArray ) );
-        assertSame( nonNullComparable1, ObjectUtils.min( null, nonNullComparable1 ) );
-        assertSame( nonNullComparable1, ObjectUtils.min( nonNullComparable1, null ) );
-        assertSame( nonNullComparable1, ObjectUtils.min( null, nonNullComparable1, null ) );
-        assertSame( nonNullComparable1, ObjectUtils.min( nonNullComparable1, nonNullComparable2 ) );
-        assertSame( nonNullComparable2, ObjectUtils.min( nonNullComparable2, nonNullComparable1 ) );
-        assertSame( minComparable, ObjectUtils.min( nonNullComparable1, minComparable ) );
-        assertSame( minComparable, ObjectUtils.min( minComparable, nonNullComparable1 ) );
-        assertSame( minComparable, ObjectUtils.min( null, nonNullComparable1, null, minComparable ) );
+        assertNull(ObjectUtils.min((String) null));
+        assertNull(ObjectUtils.min(nullArray));
+        assertSame(nonNullComparable1, ObjectUtils.min(null, nonNullComparable1));
+        assertSame(nonNullComparable1, ObjectUtils.min(nonNullComparable1, null));
+        assertSame(nonNullComparable1, ObjectUtils.min(null, nonNullComparable1, null));
+        assertSame(nonNullComparable1, ObjectUtils.min(nonNullComparable1, nonNullComparable2));
+        assertSame(nonNullComparable2, ObjectUtils.min(nonNullComparable2, nonNullComparable1));
+        assertSame(minComparable, ObjectUtils.min(nonNullComparable1, minComparable));
+        assertSame(minComparable, ObjectUtils.min(minComparable, nonNullComparable1));
+        assertSame(minComparable, ObjectUtils.min(null, nonNullComparable1, null, minComparable));
 
-        assertNull( ObjectUtils.min(null, null) );
+        assertNull(ObjectUtils.min(null, null));
     }
 
     @Test
@@ -711,7 +793,7 @@ public class ObjectUtilsTest {
     public void testNull() {
         assertNotNull(ObjectUtils.NULL);
         // 1 Check that NULL really is a Null i.e. the definition has not been changed
-        assertTrue(ObjectUtils.NULL instanceof ObjectUtils.Null);
+        assertInstanceOf(ObjectUtils.Null.class, ObjectUtils.NULL);
         assertSame(ObjectUtils.NULL, SerializationUtils.clone(ObjectUtils.NULL));
     }
 
@@ -740,8 +822,9 @@ public class ObjectUtilsTest {
     @Test
     public void testPossibleCloneOfUncloneable() {
         final UncloneableString string = new UncloneableString("apache");
-        final CloneFailedException e = assertThrows(CloneFailedException.class,
-                () -> ObjectUtils.cloneIfPossible(string));
+        final CloneFailedException e = assertThrows(CloneFailedException.class, () -> ObjectUtils.cloneIfPossible(string));
+        assertNotNull(e);
+        assertNotNull(e.getCause());
         assertEquals(NoSuchMethodException.class, e.getCause().getClass());
     }
 
@@ -759,23 +842,35 @@ public class ObjectUtilsTest {
 
     @Test
     public void testToString_Object() {
-        assertEquals("", ObjectUtils.toString(null) );
-        assertEquals(Boolean.TRUE.toString(), ObjectUtils.toString(Boolean.TRUE) );
+        assertEquals("", ObjectUtils.toString(null));
+        assertEquals(Boolean.TRUE.toString(), ObjectUtils.toString(Boolean.TRUE));
     }
 
     @Test
-    public void testToString_ObjectString() {
-        assertEquals(BAR, ObjectUtils.toString(null, BAR) );
-        assertEquals(Boolean.TRUE.toString(), ObjectUtils.toString(Boolean.TRUE, BAR) );
+    public void testToString_Object_String() {
+        assertEquals(BAR, ObjectUtils.toString(null, BAR));
+        assertEquals(Boolean.TRUE.toString(), ObjectUtils.toString(Boolean.TRUE, BAR));
     }
 
     @Test
-    public void testToString_SupplierString() {
-        assertEquals(null, ObjectUtils.toString(null, (Supplier<String>) null));
-        assertEquals(null, ObjectUtils.toString(null, () -> null));
+    public void testToString_String_Supplier() {
+        assertNull(ObjectUtils.toString(null, (Supplier<String>) null));
+        assertNull(ObjectUtils.toString(null, Suppliers.nul()));
         // Pretend computing BAR is expensive.
         assertEquals(BAR, ObjectUtils.toString(null, () -> BAR));
         assertEquals(Boolean.TRUE.toString(), ObjectUtils.toString(Boolean.TRUE, () -> BAR));
+    }
+
+    @Test
+    public void testToString_Supplier_Supplier() {
+        assertNull(ObjectUtils.toString(NULL_SUPPLIER, (Supplier<String>) null));
+        assertNull(ObjectUtils.toString(Suppliers.nul(), (Supplier<String>) null));
+        assertNull(ObjectUtils.toString(NULL_SUPPLIER, Suppliers.nul()));
+        assertNull(ObjectUtils.toString(Suppliers.nul(), Suppliers.nul()));
+        // Pretend computing BAR is expensive.
+        assertEquals(BAR, ObjectUtils.toString(NULL_SUPPLIER, () -> BAR));
+        assertEquals(BAR, ObjectUtils.toString(Suppliers.nul(), () -> BAR));
+        assertEquals(Boolean.TRUE.toString(), ObjectUtils.toString(() -> Boolean.TRUE, () -> BAR));
     }
 
     @Test

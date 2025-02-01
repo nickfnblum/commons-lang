@@ -17,6 +17,9 @@
 
 package org.apache.commons.lang3;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,7 +30,19 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests {@link ClassLoaderUtils}.
  */
-public class ClassLoaderUtilsTest {
+public class ClassLoaderUtilsTest extends AbstractLangTest {
+
+    @Test
+    public void testGetSystemURLs() {
+        // TODO How to better test considering this test may be called from an IDE and Maven?
+        assertNotNull(ClassLoaderUtils.getSystemURLs());
+    }
+
+    @Test
+    public void testGetThreadURLs() {
+        // TODO How to better test considering this test may be called from an IDE and Maven?
+        assertNotNull(ClassLoaderUtils.getThreadURLs());
+    }
 
     @Test
     public void testToString_ClassLoader() throws IOException {
@@ -37,14 +52,15 @@ public class ClassLoaderUtilsTest {
             final ClassLoader classLoader = urlClassLoader;
             Assertions.assertEquals(String.format("%s[%s]", classLoader, url), ClassLoaderUtils.toString(classLoader));
         }
+        assertEquals("null", ClassLoaderUtils.toString((ClassLoader) null));
     }
 
     @Test
     public void testToString_URLClassLoader() throws IOException {
         final URL url = new URL("http://localhost");
         try (URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { url })) {
-            Assertions.assertEquals(String.format("%s[%s]", urlClassLoader, url),
-                    ClassLoaderUtils.toString(urlClassLoader));
+            Assertions.assertEquals(String.format("%s[%s]", urlClassLoader, url), ClassLoaderUtils.toString(urlClassLoader));
         }
+        assertEquals("null", ClassLoaderUtils.toString((URLClassLoader) null));
     }
 }

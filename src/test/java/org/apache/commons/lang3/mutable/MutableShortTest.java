@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.Test;
  *
  * @see MutableShort
  */
-public class MutableShortTest {
+public class MutableShortTest extends AbstractLangTest {
 
     @Test
     public void testAddAndGetValueObject() {
@@ -73,7 +74,6 @@ public class MutableShortTest {
         assertThrows(NullPointerException.class, () -> mutNum.compareTo(null));
     }
 
-    // ----------------------------------------------------------------
     @Test
     public void testConstructors() {
         assertEquals((short) 0, new MutableShort().shortValue());
@@ -216,13 +216,13 @@ public class MutableShortTest {
 
     @Test
     public void testPrimitiveValues() {
-        final MutableShort mutNum = new MutableShort( (short) 1 );
+        final MutableShort mutNum = new MutableShort((short) 1);
         assertEquals(1.0F, mutNum.floatValue());
         assertEquals(1.0, mutNum.doubleValue());
-        assertEquals( (byte) 1, mutNum.byteValue() );
-        assertEquals( (short) 1, mutNum.shortValue() );
-        assertEquals( 1, mutNum.intValue() );
-        assertEquals( 1L, mutNum.longValue() );
+        assertEquals((byte) 1, mutNum.byteValue());
+        assertEquals((short) 1, mutNum.shortValue());
+        assertEquals(1, mutNum.intValue());
+        assertEquals(1L, mutNum.longValue());
     }
 
     @Test

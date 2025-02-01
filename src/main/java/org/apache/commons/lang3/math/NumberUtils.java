@@ -20,12 +20,13 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 /**
- * <p>Provides extra functionality for Java Number classes.</p>
+ * Provides extra functionality for Java Number classes.
  *
  * @since 2.0
  */
@@ -84,553 +85,209 @@ public class NumberUtils {
      */
     public static final Long LONG_INT_MIN_VALUE = Long.valueOf(Integer.MIN_VALUE);
 
-
     /**
-     * <p>{@code NumberUtils} instances should NOT be constructed in standard programming.
-     * Instead, the class should be used as {@code NumberUtils.toInt("6");}.</p>
+     * Compares two {@code byte} values numerically. This is the same functionality as provided in Java 7.
      *
-     * <p>This constructor is public to permit tools that require a JavaBean instance
-     * to operate.</p>
+     * @param x the first {@code byte} to compare
+     * @param y the second {@code byte} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         a value less than {@code 0} if {@code x < y}; and
+     *         a value greater than {@code 0} if {@code x > y}
+     * @since 3.4
      */
-    public NumberUtils() {
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Convert a {@code String} to an {@code int}, returning
-     * {@code zero} if the conversion fails.</p>
-     *
-     * <p>If the string is {@code null}, {@code zero} is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toInt(null) = 0
-     *   NumberUtils.toInt("")   = 0
-     *   NumberUtils.toInt("1")  = 1
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @return the int represented by the string, or {@code zero} if
-     *  conversion fails
-     * @since 2.1
-     */
-    public static int toInt(final String str) {
-        return toInt(str, 0);
+    public static int compare(final byte x, final byte y) {
+        return x - y;
     }
 
     /**
-     * <p>Convert a {@code String} to an {@code int}, returning a
-     * default value if the conversion fails.</p>
+     * Compares two {@code int} values numerically. This is the same functionality as provided in Java 7.
      *
-     * <p>If the string is {@code null}, the default value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toInt(null, 1) = 1
-     *   NumberUtils.toInt("", 1)   = 1
-     *   NumberUtils.toInt("1", 0)  = 1
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @param defaultValue  the default value
-     * @return the int represented by the string, or the default if conversion fails
-     * @since 2.1
+     * @param x the first {@code int} to compare
+     * @param y the second {@code int} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         a value less than {@code 0} if {@code x < y}; and
+     *         a value greater than {@code 0} if {@code x > y}
+     * @since 3.4
      */
-    public static int toInt(final String str, final int defaultValue) {
+    public static int compare(final int x, final int y) {
+        if (x == y) {
+            return 0;
+        }
+        return x < y ? -1 : 1;
+    }
+
+    /**
+     * Compares to {@code long} values numerically. This is the same functionality as provided in Java 7.
+     *
+     * @param x the first {@code long} to compare
+     * @param y the second {@code long} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         a value less than {@code 0} if {@code x < y}; and
+     *         a value greater than {@code 0} if {@code x > y}
+     * @since 3.4
+     */
+    public static int compare(final long x, final long y) {
+        if (x == y) {
+            return 0;
+        }
+        return x < y ? -1 : 1;
+    }
+
+    /**
+     * Compares to {@code short} values numerically. This is the same functionality as provided in Java 7.
+     *
+     * @param x the first {@code short} to compare
+     * @param y the second {@code short} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         a value less than {@code 0} if {@code x < y}; and
+     *         a value greater than {@code 0} if {@code x > y}
+     * @since 3.4
+     */
+    public static int compare(final short x, final short y) {
+        if (x == y) {
+            return 0;
+        }
+        return x < y ? -1 : 1;
+    }
+
+    /**
+     * Creates a {@link BigDecimal} from a {@link String}.
+     *
+     * <p>Returns {@code null} if the string is {@code null}.</p>
+     *
+     * @param str  a {@link String} to convert, may be null
+     * @return converted {@link BigDecimal} (or null if the input is null)
+     * @throws NumberFormatException if the value cannot be converted
+     */
+    public static BigDecimal createBigDecimal(final String str) {
         if (str == null) {
-            return defaultValue;
+            return null;
         }
-        try {
-            return Integer.parseInt(str);
-        } catch (final NumberFormatException nfe) {
-            return defaultValue;
+        // handle JDK1.3.1 bug where "" throws IndexOutOfBoundsException
+        if (StringUtils.isBlank(str)) {
+            throw new NumberFormatException("A blank string is not a valid number");
         }
+        return new BigDecimal(str);
     }
 
     /**
-     * <p>Convert a {@code String} to a {@code long}, returning
-     * {@code zero} if the conversion fails.</p>
+     * Creates a {@link BigInteger} from a {@link String}.
      *
-     * <p>If the string is {@code null}, {@code zero} is returned.</p>
+     * Handles hexadecimal (0x or #) and octal (0) notations.
      *
-     * <pre>
-     *   NumberUtils.toLong(null) = 0L
-     *   NumberUtils.toLong("")   = 0L
-     *   NumberUtils.toLong("1")  = 1L
-     * </pre>
+     * <p>Returns {@code null} if the string is {@code null}.</p>
      *
-     * @param str  the string to convert, may be null
-     * @return the long represented by the string, or {@code 0} if
-     *  conversion fails
-     * @since 2.1
+     * @param str  a {@link String} to convert, may be null
+     * @return converted {@link BigInteger} (or null if the input is null)
+     * @throws NumberFormatException if the value cannot be converted
+     * @since 3.2
      */
-    public static long toLong(final String str) {
-        return toLong(str, 0L);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code long}, returning a
-     * default value if the conversion fails.</p>
-     *
-     * <p>If the string is {@code null}, the default value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toLong(null, 1L) = 1L
-     *   NumberUtils.toLong("", 1L)   = 1L
-     *   NumberUtils.toLong("1", 0L)  = 1L
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @param defaultValue  the default value
-     * @return the long represented by the string, or the default if conversion fails
-     * @since 2.1
-     */
-    public static long toLong(final String str, final long defaultValue) {
+    public static BigInteger createBigInteger(final String str) {
         if (str == null) {
-            return defaultValue;
+            return null;
         }
-        try {
-            return Long.parseLong(str);
-        } catch (final NumberFormatException nfe) {
-            return defaultValue;
+        if (str.isEmpty()) {
+            throw new NumberFormatException("An empty string is not a valid number");
         }
+        int pos = 0; // offset within string
+        int radix = 10;
+        boolean negate = false; // need to negate later?
+        final char char0 = str.charAt(0);
+        if (char0 == '-') {
+            negate = true;
+            pos = 1;
+        } else if (char0 == '+') {
+            pos = 1;
+        }
+        if (str.startsWith("0x", pos) || str.startsWith("0X", pos)) { // hex
+            radix = 16;
+            pos += 2;
+        } else if (str.startsWith("#", pos)) { // alternative hex (allowed by Long/Integer)
+            radix = 16;
+            pos++;
+        } else if (str.startsWith("0", pos) && str.length() > pos + 1) { // octal; so long as there are additional digits
+            radix = 8;
+            pos++;
+        } // default is to treat as decimal
+
+        final BigInteger value = new BigInteger(str.substring(pos), radix);
+        return negate ? value.negate() : value;
     }
 
     /**
-     * <p>Convert a {@code String} to a {@code float}, returning
-     * {@code 0.0f} if the conversion fails.</p>
+     * Creates a {@link Double} from a {@link String}.
      *
-     * <p>If the string {@code str} is {@code null},
-     * {@code 0.0f} is returned.</p>
+     * <p>Returns {@code null} if the string is {@code null}.</p>
      *
-     * <pre>
-     *   NumberUtils.toFloat(null)   = 0.0f
-     *   NumberUtils.toFloat("")     = 0.0f
-     *   NumberUtils.toFloat("1.5")  = 1.5f
-     * </pre>
-     *
-     * @param str the string to convert, may be {@code null}
-     * @return the float represented by the string, or {@code 0.0f}
-     *  if conversion fails
-     * @since 2.1
+     * @param str  a {@link String} to convert, may be null
+     * @return converted {@link Double} (or null if the input is null)
+     * @throws NumberFormatException if the value cannot be converted
      */
-    public static float toFloat(final String str) {
-        return toFloat(str, 0.0f);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code float}, returning a
-     * default value if the conversion fails.</p>
-     *
-     * <p>If the string {@code str} is {@code null}, the default
-     * value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toFloat(null, 1.1f)   = 1.0f
-     *   NumberUtils.toFloat("", 1.1f)     = 1.1f
-     *   NumberUtils.toFloat("1.5", 0.0f)  = 1.5f
-     * </pre>
-     *
-     * @param str the string to convert, may be {@code null}
-     * @param defaultValue the default value
-     * @return the float represented by the string, or defaultValue
-     *  if conversion fails
-     * @since 2.1
-     */
-    public static float toFloat(final String str, final float defaultValue) {
-      if (str == null) {
-          return defaultValue;
-      }
-      try {
-          return Float.parseFloat(str);
-      } catch (final NumberFormatException nfe) {
-          return defaultValue;
-      }
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code double}, returning
-     * {@code 0.0d} if the conversion fails.</p>
-     *
-     * <p>If the string {@code str} is {@code null},
-     * {@code 0.0d} is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toDouble(null)   = 0.0d
-     *   NumberUtils.toDouble("")     = 0.0d
-     *   NumberUtils.toDouble("1.5")  = 1.5d
-     * </pre>
-     *
-     * @param str the string to convert, may be {@code null}
-     * @return the double represented by the string, or {@code 0.0d}
-     *  if conversion fails
-     * @since 2.1
-     */
-    public static double toDouble(final String str) {
-        return toDouble(str, 0.0d);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code double}, returning a
-     * default value if the conversion fails.</p>
-     *
-     * <p>If the string {@code str} is {@code null}, the default
-     * value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toDouble(null, 1.1d)   = 1.1d
-     *   NumberUtils.toDouble("", 1.1d)     = 1.1d
-     *   NumberUtils.toDouble("1.5", 0.0d)  = 1.5d
-     * </pre>
-     *
-     * @param str the string to convert, may be {@code null}
-     * @param defaultValue the default value
-     * @return the double represented by the string, or defaultValue
-     *  if conversion fails
-     * @since 2.1
-     */
-    public static double toDouble(final String str, final double defaultValue) {
-      if (str == null) {
-          return defaultValue;
-      }
-      try {
-          return Double.parseDouble(str);
-      } catch (final NumberFormatException nfe) {
-          return defaultValue;
-      }
-    }
-
-    /**
-     * <p>Convert a {@code BigDecimal} to a {@code double}.</p>
-     *
-     * <p>If the {@code BigDecimal} {@code value} is
-     * {@code null}, then the specified default value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toDouble(null)                     = 0.0d
-     *   NumberUtils.toDouble(BigDecimal.valudOf(8.5d)) = 8.5d
-     * </pre>
-     *
-     * @param value the {@code BigDecimal} to convert, may be {@code null}.
-     * @return the double represented by the {@code BigDecimal} or
-     *  {@code 0.0d} if the {@code BigDecimal} is {@code null}.
-     * @since 3.8
-     */
-    public static double toDouble(final BigDecimal value) {
-        return toDouble(value, 0.0d);
-    }
-
-    /**
-     * <p>Convert a {@code BigDecimal} to a {@code double}.</p>
-     *
-     * <p>If the {@code BigDecimal} {@code value} is
-     * {@code null}, then the specified default value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toDouble(null, 1.1d)                     = 1.1d
-     *   NumberUtils.toDouble(BigDecimal.valudOf(8.5d), 1.1d) = 8.5d
-     * </pre>
-     *
-     * @param value the {@code BigDecimal} to convert, may be {@code null}.
-     * @param defaultValue the default value
-     * @return the double represented by the {@code BigDecimal} or the
-     *  defaultValue if the {@code BigDecimal} is {@code null}.
-     * @since 3.8
-     */
-    public static double toDouble(final BigDecimal value, final double defaultValue) {
-        return value == null ? defaultValue : value.doubleValue();
-    }
-
-     //-----------------------------------------------------------------------
-     /**
-     * <p>Convert a {@code String} to a {@code byte}, returning
-     * {@code zero} if the conversion fails.</p>
-     *
-     * <p>If the string is {@code null}, {@code zero} is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toByte(null) = 0
-     *   NumberUtils.toByte("")   = 0
-     *   NumberUtils.toByte("1")  = 1
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @return the byte represented by the string, or {@code zero} if
-     *  conversion fails
-     * @since 2.5
-     */
-    public static byte toByte(final String str) {
-        return toByte(str, (byte) 0);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code byte}, returning a
-     * default value if the conversion fails.</p>
-     *
-     * <p>If the string is {@code null}, the default value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toByte(null, 1) = 1
-     *   NumberUtils.toByte("", 1)   = 1
-     *   NumberUtils.toByte("1", 0)  = 1
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @param defaultValue  the default value
-     * @return the byte represented by the string, or the default if conversion fails
-     * @since 2.5
-     */
-    public static byte toByte(final String str, final byte defaultValue) {
+    public static Double createDouble(final String str) {
         if (str == null) {
-            return defaultValue;
+            return null;
         }
-        try {
-            return Byte.parseByte(str);
-        } catch (final NumberFormatException nfe) {
-            return defaultValue;
-        }
+        return Double.valueOf(str);
     }
 
     /**
-     * <p>Convert a {@code String} to a {@code short}, returning
-     * {@code zero} if the conversion fails.</p>
+     * Creates a {@link Float} from a {@link String}.
      *
-     * <p>If the string is {@code null}, {@code zero} is returned.</p>
+     * <p>Returns {@code null} if the string is {@code null}.</p>
      *
-     * <pre>
-     *   NumberUtils.toShort(null) = 0
-     *   NumberUtils.toShort("")   = 0
-     *   NumberUtils.toShort("1")  = 1
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @return the short represented by the string, or {@code zero} if
-     *  conversion fails
-     * @since 2.5
+     * @param str  a {@link String} to convert, may be null
+     * @return converted {@link Float} (or null if the input is null)
+     * @throws NumberFormatException if the value cannot be converted
      */
-    public static short toShort(final String str) {
-        return toShort(str, (short) 0);
-    }
-
-    /**
-     * <p>Convert a {@code String} to an {@code short}, returning a
-     * default value if the conversion fails.</p>
-     *
-     * <p>If the string is {@code null}, the default value is returned.</p>
-     *
-     * <pre>
-     *   NumberUtils.toShort(null, 1) = 1
-     *   NumberUtils.toShort("", 1)   = 1
-     *   NumberUtils.toShort("1", 0)  = 1
-     * </pre>
-     *
-     * @param str  the string to convert, may be null
-     * @param defaultValue  the default value
-     * @return the short represented by the string, or the default if conversion fails
-     * @since 2.5
-     */
-    public static short toShort(final String str, final short defaultValue) {
+    public static Float createFloat(final String str) {
         if (str == null) {
-            return defaultValue;
+            return null;
         }
-        try {
-            return Short.parseShort(str);
-        } catch (final NumberFormatException nfe) {
-            return defaultValue;
+        return Float.valueOf(str);
+    }
+
+    /**
+     * Creates an {@link Integer} from a {@link String}.
+     *
+     * Handles hexadecimal (0xhhhh) and octal (0dddd) notations.
+     * N.B. a leading zero means octal; spaces are not trimmed.
+     *
+     * <p>Returns {@code null} if the string is {@code null}.</p>
+     *
+     * @param str  a {@link String} to convert, may be null
+     * @return converted {@link Integer} (or null if the input is null)
+     * @throws NumberFormatException if the value cannot be converted
+     */
+    public static Integer createInteger(final String str) {
+        if (str == null) {
+            return null;
         }
+        // decode() handles 0xAABD and 0777 (hex and octal) as well.
+        return Integer.decode(str);
     }
 
     /**
-     * Convert a {@code BigDecimal} to a {@code BigDecimal} with a scale of
-     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
-     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
+     * Creates a {@link Long} from a {@link String}.
      *
-     * <p>Note, the scale of a {@code BigDecimal} is the number of digits to the right of the
-     * decimal point.</p>
+     * Handles hexadecimal (0Xhhhh) and octal (0ddd) notations.
+     * N.B. a leading zero means octal; spaces are not trimmed.
      *
-     * @param value the {@code BigDecimal} to convert, may be null.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
+     * <p>Returns {@code null} if the string is {@code null}.</p>
+     *
+     * @param str  a {@link String} to convert, may be null
+     * @return converted {@link Long} (or null if the input is null)
+     * @throws NumberFormatException if the value cannot be converted
+     * @since 3.1
      */
-    public static BigDecimal toScaledBigDecimal(final BigDecimal value) {
-        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
-    }
-
-    /**
-     * Convert a {@code BigDecimal} to a {@code BigDecimal} whose scale is the
-     * specified value with a {@code RoundingMode} applied. If the input {@code value}
-     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
-     *
-     * @param value the {@code BigDecimal} to convert, may be null.
-     * @param scale the number of digits to the right of the decimal point.
-     * @param roundingMode a rounding behavior for numerical operations capable of
-     *  discarding precision.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final BigDecimal value, final int scale, final RoundingMode roundingMode) {
-        if (value == null) {
-            return BigDecimal.ZERO;
+    public static Long createLong(final String str) {
+        if (str == null) {
+            return null;
         }
-        return value.setScale(
-            scale,
-            (roundingMode == null) ? RoundingMode.HALF_EVEN : roundingMode
-        );
+        return Long.decode(str);
     }
 
     /**
-     * Convert a {@code Float} to a {@code BigDecimal} with a scale of
-     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
-     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
-     *
-     * <p>Note, the scale of a {@code BigDecimal} is the number of digits to the right of the
-     * decimal point.</p>
-     *
-     * @param value the {@code Float} to convert, may be null.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final Float value) {
-        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
-    }
-
-    /**
-     * Convert a {@code Float} to a {@code BigDecimal} whose scale is the
-     * specified value with a {@code RoundingMode} applied. If the input {@code value}
-     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
-     *
-     * @param value the {@code Float} to convert, may be null.
-     * @param scale the number of digits to the right of the decimal point.
-     * @param roundingMode a rounding behavior for numerical operations capable of
-     *  discarding precision.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final Float value, final int scale, final RoundingMode roundingMode) {
-        if (value == null) {
-            return BigDecimal.ZERO;
-        }
-        return toScaledBigDecimal(
-            BigDecimal.valueOf(value),
-            scale,
-            roundingMode
-        );
-    }
-
-    /**
-     * Convert a {@code Double} to a {@code BigDecimal} with a scale of
-     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
-     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
-     *
-     * <p>Note, the scale of a {@code BigDecimal} is the number of digits to the right of the
-     * decimal point.</p>
-     *
-     * @param value the {@code Double} to convert, may be null.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final Double value) {
-        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
-    }
-
-    /**
-     * Convert a {@code Double} to a {@code BigDecimal} whose scale is the
-     * specified value with a {@code RoundingMode} applied. If the input {@code value}
-     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
-     *
-     * @param value the {@code Double} to convert, may be null.
-     * @param scale the number of digits to the right of the decimal point.
-     * @param roundingMode a rounding behavior for numerical operations capable of
-     *  discarding precision.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final Double value, final int scale, final RoundingMode roundingMode) {
-        if (value == null) {
-            return BigDecimal.ZERO;
-        }
-        return toScaledBigDecimal(
-            BigDecimal.valueOf(value),
-            scale,
-            roundingMode
-        );
-    }
-
-    /**
-     * Convert a {@code String} to a {@code BigDecimal} with a scale of
-     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
-     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
-     *
-     * <p>Note, the scale of a {@code BigDecimal} is the number of digits to the right of the
-     * decimal point.</p>
-     *
-     * @param value the {@code String} to convert, may be null.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final String value) {
-        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
-    }
-
-    /**
-     * Convert a {@code String} to a {@code BigDecimal} whose scale is the
-     * specified value with a {@code RoundingMode} applied. If the input {@code value}
-     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
-     *
-     * @param value the {@code String} to convert, may be null.
-     * @param scale the number of digits to the right of the decimal point.
-     * @param roundingMode a rounding behavior for numerical operations capable of
-     *  discarding precision.
-     * @return the scaled, with appropriate rounding, {@code BigDecimal}.
-     * @since 3.8
-     */
-    public static BigDecimal toScaledBigDecimal(final String value, final int scale, final RoundingMode roundingMode) {
-        if (value == null) {
-            return BigDecimal.ZERO;
-        }
-        return toScaledBigDecimal(
-            createBigDecimal(value),
-            scale,
-            roundingMode
-        );
-    }
-
-    //-----------------------------------------------------------------------
-    // must handle Long, Float, Integer, Float, Short,
-    //                  BigDecimal, BigInteger and Byte
-    // useful methods:
-    // Byte.decode(String)
-    // Byte.valueOf(String, int radix)
-    // Byte.valueOf(String)
-    // Double.valueOf(String)
-    // Float.valueOf(String)
-    // Float.valueOf(String)
-    // Integer.valueOf(String, int radix)
-    // Integer.valueOf(String)
-    // Integer.decode(String)
-    // Integer.getInteger(String)
-    // Integer.getInteger(String, int val)
-    // Integer.getInteger(String, Integer val)
-    // Integer.valueOf(String)
-    // Double.valueOf(String)
-    // new Byte(String)
-    // Long.valueOf(String)
-    // Long.getLong(String)
-    // Long.getLong(String, int)
-    // Long.getLong(String, Integer)
-    // Long.valueOf(String, int)
-    // Long.valueOf(String)
-    // Short.valueOf(String)
-    // Short.decode(String)
-    // Short.valueOf(String, int)
-    // Short.valueOf(String)
-    // new BigDecimal(String)
-    // new BigInteger(String)
-    // new BigInteger(String, int radix)
-    // Possible inputs:
-    // 45 45.5 45E7 4.5E7 Hex Oct Binary xxxF xxxD xxxf xxxd
-    // plus minus everything. Prolly more. A lot are not separable.
-
-    /**
-     * <p>Turns a string value into a java.lang.Number.</p>
+     * Creates a {@link Number} from a {@link String}.
      *
      * <p>If the string starts with {@code 0x} or {@code -0x} (lower or upper case) or {@code #} or {@code -#}, it
      * will be interpreted as a hexadecimal Integer - or Long, if the number of digits after the
@@ -642,9 +299,9 @@ public class NumberUtils {
      * until one is found that can represent the value.</p>
      *
      * <p>If a type specifier is not found, it will check for a decimal point
-     * and then try successively larger types from {@code Integer} to
-     * {@code BigInteger} and from {@code Float} to
-     * {@code BigDecimal}.</p>
+     * and then try successively larger types from {@link Integer} to
+     * {@link BigInteger} and from {@link Float} to
+     * {@link BigDecimal}.</p>
      *
      * <p>
      * Integral values with a leading {@code 0} will be interpreted as octal; the returned number will
@@ -668,11 +325,11 @@ public class NumberUtils {
             throw new NumberFormatException("A blank string is not a valid number");
         }
         // Need to deal with all possible hex prefixes here
-        final String[] hex_prefixes = {"0x", "0X", "#"};
+        final String[] hexPrefixes = {"0x", "0X", "#"};
         final int length = str.length();
         final int offset = str.charAt(0) == '+' || str.charAt(0) == '-' ? 1 : 0;
         int pfxLen = 0;
-        for (final String pfx : hex_prefixes) {
+        for (final String pfx : hexPrefixes) {
             if (str.startsWith(pfx, offset)) {
                 pfxLen += pfx.length() + offset;
                 break;
@@ -709,7 +366,7 @@ public class NumberUtils {
         final boolean requestType = !Character.isDigit(lastChar) && lastChar != '.';
         if (decPos > -1) { // there is a decimal point
             if (expPos > -1) { // there is an exponent
-                if (expPos < decPos || expPos > length) { // prevents double exponent causing IOOBE
+                if (expPos <= decPos || expPos > length) { // prevents double exponent causing IOOBE
                     throw new NumberFormatException(str + " is not a valid number.");
                 }
                 dec = str.substring(decPos + 1, expPos);
@@ -736,7 +393,7 @@ public class NumberUtils {
             } else {
                 exp = null;
             }
-            //Requesting a specific type..
+            //Requesting a specific type.
             final String numeric = str.substring(0, length - 1);
             switch (lastChar) {
                 case 'l' :
@@ -746,7 +403,7 @@ public class NumberUtils {
                         && (!numeric.isEmpty() && numeric.charAt(0) == '-' && isDigits(numeric.substring(1)) || isDigits(numeric))) {
                         try {
                             return createLong(numeric);
-                        } catch (final NumberFormatException nfe) { // NOPMD
+                        } catch (final NumberFormatException ignored) {
                             // Too big for a long
                         }
                         return createBigInteger(numeric);
@@ -763,7 +420,7 @@ public class NumberUtils {
                             return f;
                         }
 
-                    } catch (final NumberFormatException nfe) { // NOPMD
+                    } catch (final NumberFormatException ignored) {
                         // ignore the bad number
                     }
                     //$FALL-THROUGH$
@@ -774,12 +431,12 @@ public class NumberUtils {
                         if (!(d.isInfinite() || d.doubleValue() == 0.0D && !isZero(mant, dec))) {
                             return d;
                         }
-                    } catch (final NumberFormatException nfe) { // NOPMD
+                    } catch (final NumberFormatException ignored) {
                         // ignore the bad number
                     }
                     try {
                         return createBigDecimal(numeric);
-                    } catch (final NumberFormatException e) { // NOPMD
+                    } catch (final NumberFormatException ignored) {
                         // ignore the bad number
                     }
                     //$FALL-THROUGH$
@@ -799,12 +456,12 @@ public class NumberUtils {
             //Must be an Integer, Long, Biginteger
             try {
                 return createInteger(str);
-            } catch (final NumberFormatException nfe) { // NOPMD
+            } catch (final NumberFormatException ignored) {
                 // ignore the bad number
             }
             try {
                 return createLong(str);
-            } catch (final NumberFormatException nfe) { // NOPMD
+            } catch (final NumberFormatException ignored) {
                 // ignore the bad number
             }
             return createBigInteger(str);
@@ -826,56 +483,30 @@ public class NumberUtils {
                 }
                 return b;
             }
-        } catch (final NumberFormatException nfe) { // NOPMD
+        } catch (final NumberFormatException ignored) {
             // ignore the bad number
         }
         return createBigDecimal(str);
     }
 
-    /**
-     * <p>Utility method for {@link #createNumber(java.lang.String)}.</p>
+     /**
+     * Utility method for {@link #createNumber(String)}.
      *
      * <p>Returns mantissa of the given number.</p>
      *
      * @param str the string representation of the number
      * @param stopPos the position of the exponent or decimal point
      * @return mantissa of the given number
+     * @throws NumberFormatException if no mantissa can be retrieved
      */
     private static String getMantissa(final String str, final int stopPos) {
-        final char firstChar = str.charAt(0);
-        final boolean hasSign = firstChar == '-' || firstChar == '+';
-
-        return hasSign ? str.substring(1, stopPos) : str.substring(0, stopPos);
-    }
-
-    /**
-     * Utility method for {@link #createNumber(java.lang.String)}.
-     *
-     * <p>This will check if the magnitude of the number is zero by checking if there
-     * are only zeros before and after the decimal place.</p>
-     *
-     * <p>Note: It is <strong>assumed</strong> that the input string has been converted
-     * to either a Float or Double with a value of zero when this method is called.
-     * This eliminates invalid input for example {@code ".", ".D", ".e0"}.</p>
-     *
-     * <p>Thus the method only requires checking if both arguments are null, empty or
-     * contain only zeros.</p>
-     *
-     * <p>Given {@code s = mant + "." + dec}:</p>
-     * <ul>
-     * <li>{@code true} if s is {@code "0.0"}
-     * <li>{@code true} if s is {@code "0."}
-     * <li>{@code true} if s is {@code ".0"}
-     * <li>{@code false} otherwise (this assumes {@code "."} is not possible)
-     * </ul>
-     *
-     * @param mant the mantissa decimal digits before the decimal point (sign must be removed; never null)
-     * @param dec the decimal digits after the decimal point (exponent and type specifier removed;
-     *            can be null)
-     * @return true if the magnitude is zero
-     */
-    private static boolean isZero(final String mant, String dec) {
-        return isAllZeros(mant) && isAllZeros(dec);
+         final char firstChar = str.charAt(0);
+         final boolean hasSign = firstChar == '-' || firstChar == '+';
+         final int length = str.length();
+         if (length <= (hasSign ? 1 : 0) || length < stopPos) {
+             throw new NumberFormatException(str + " is not a valid number.");
+         }
+         return hasSign ? str.substring(1, stopPos) : str.substring(0, stopPos);
     }
 
     /**
@@ -898,686 +529,8 @@ public class NumberUtils {
         return true;
     }
 
-    //-----------------------------------------------------------------------
     /**
-     * <p>Convert a {@code String} to a {@code Float}.</p>
-     *
-     * <p>Returns {@code null} if the string is {@code null}.</p>
-     *
-     * @param str  a {@code String} to convert, may be null
-     * @return converted {@code Float} (or null if the input is null)
-     * @throws NumberFormatException if the value cannot be converted
-     */
-    public static Float createFloat(final String str) {
-        if (str == null) {
-            return null;
-        }
-        return Float.valueOf(str);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code Double}.</p>
-     *
-     * <p>Returns {@code null} if the string is {@code null}.</p>
-     *
-     * @param str  a {@code String} to convert, may be null
-     * @return converted {@code Double} (or null if the input is null)
-     * @throws NumberFormatException if the value cannot be converted
-     */
-    public static Double createDouble(final String str) {
-        if (str == null) {
-            return null;
-        }
-        return Double.valueOf(str);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code Integer}, handling
-     * hex (0xhhhh) and octal (0dddd) notations.
-     * N.B. a leading zero means octal; spaces are not trimmed.</p>
-     *
-     * <p>Returns {@code null} if the string is {@code null}.</p>
-     *
-     * @param str  a {@code String} to convert, may be null
-     * @return converted {@code Integer} (or null if the input is null)
-     * @throws NumberFormatException if the value cannot be converted
-     */
-    public static Integer createInteger(final String str) {
-        if (str == null) {
-            return null;
-        }
-        // decode() handles 0xAABD and 0777 (hex and octal) as well.
-        return Integer.decode(str);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code Long};
-     * since 3.1 it handles hex (0Xhhhh) and octal (0ddd) notations.
-     * N.B. a leading zero means octal; spaces are not trimmed.</p>
-     *
-     * <p>Returns {@code null} if the string is {@code null}.</p>
-     *
-     * @param str  a {@code String} to convert, may be null
-     * @return converted {@code Long} (or null if the input is null)
-     * @throws NumberFormatException if the value cannot be converted
-     */
-    public static Long createLong(final String str) {
-        if (str == null) {
-            return null;
-        }
-        return Long.decode(str);
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code BigInteger};
-     * since 3.2 it handles hex (0x or #) and octal (0) notations.</p>
-     *
-     * <p>Returns {@code null} if the string is {@code null}.</p>
-     *
-     * @param str  a {@code String} to convert, may be null
-     * @return converted {@code BigInteger} (or null if the input is null)
-     * @throws NumberFormatException if the value cannot be converted
-     */
-    public static BigInteger createBigInteger(final String str) {
-        if (str == null) {
-            return null;
-        }
-        if (str.isEmpty()) {
-            throw new NumberFormatException("An empty string is not a valid number");
-        }
-        int pos = 0; // offset within string
-        int radix = 10;
-        boolean negate = false; // need to negate later?
-        final char char0 = str.charAt(0);
-        if (char0 == '-') {
-            negate = true;
-            pos = 1;
-        } else if (char0 == '+') {
-            pos = 1;
-        }
-        if (str.startsWith("0x", pos) || str.startsWith("0X", pos)) { // hex
-            radix = 16;
-            pos += 2;
-        } else if (str.startsWith("#", pos)) { // alternative hex (allowed by Long/Integer)
-            radix = 16;
-            pos++;
-        } else if (str.startsWith("0", pos) && str.length() > pos + 1) { // octal; so long as there are additional digits
-            radix = 8;
-            pos++;
-        } // default is to treat as decimal
-
-        final BigInteger value = new BigInteger(str.substring(pos), radix);
-        return negate ? value.negate() : value;
-    }
-
-    /**
-     * <p>Convert a {@code String} to a {@code BigDecimal}.</p>
-     *
-     * <p>Returns {@code null} if the string is {@code null}.</p>
-     *
-     * @param str  a {@code String} to convert, may be null
-     * @return converted {@code BigDecimal} (or null if the input is null)
-     * @throws NumberFormatException if the value cannot be converted
-     */
-    public static BigDecimal createBigDecimal(final String str) {
-        if (str == null) {
-            return null;
-        }
-        // handle JDK1.3.1 bug where "" throws IndexOutOfBoundsException
-        if (StringUtils.isBlank(str)) {
-            throw new NumberFormatException("A blank string is not a valid number");
-        }
-        return new BigDecimal(str);
-    }
-
-    // Min in array
-    //--------------------------------------------------------------------
-    /**
-     * <p>Returns the minimum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the minimum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from min(long[]) to min(long...)
-     */
-    public static long min(final long... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns min
-        long min = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] < min) {
-                min = array[i];
-            }
-        }
-
-        return min;
-    }
-
-    /**
-     * <p>Returns the minimum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the minimum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from min(int[]) to min(int...)
-     */
-    public static int min(final int... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns min
-        int min = array[0];
-        for (int j = 1; j < array.length; j++) {
-            if (array[j] < min) {
-                min = array[j];
-            }
-        }
-
-        return min;
-    }
-
-    /**
-     * <p>Returns the minimum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the minimum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from min(short[]) to min(short...)
-     */
-    public static short min(final short... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns min
-        short min = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] < min) {
-                min = array[i];
-            }
-        }
-
-        return min;
-    }
-
-    /**
-     * <p>Returns the minimum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the minimum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from min(byte[]) to min(byte...)
-     */
-    public static byte min(final byte... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns min
-        byte min = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] < min) {
-                min = array[i];
-            }
-        }
-
-        return min;
-    }
-
-     /**
-     * <p>Returns the minimum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the minimum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @see IEEE754rUtils#min(double[]) IEEE754rUtils for a version of this method that handles NaN differently
-     * @since 3.4 Changed signature from min(double[]) to min(double...)
-     */
-    public static double min(final double... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns min
-        double min = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (Double.isNaN(array[i])) {
-                return Double.NaN;
-            }
-            if (array[i] < min) {
-                min = array[i];
-            }
-        }
-
-        return min;
-    }
-
-    /**
-     * <p>Returns the minimum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the minimum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @see IEEE754rUtils#min(float[]) IEEE754rUtils for a version of this method that handles NaN differently
-     * @since 3.4 Changed signature from min(float[]) to min(float...)
-     */
-    public static float min(final float... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns min
-        float min = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (Float.isNaN(array[i])) {
-                return Float.NaN;
-            }
-            if (array[i] < min) {
-                min = array[i];
-            }
-        }
-
-        return min;
-    }
-
-    // Max in array
-    //--------------------------------------------------------------------
-    /**
-     * <p>Returns the maximum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the maximum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from max(long[]) to max(long...)
-     */
-    public static long max(final long... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns max
-        long max = array[0];
-        for (int j = 1; j < array.length; j++) {
-            if (array[j] > max) {
-                max = array[j];
-            }
-        }
-
-        return max;
-    }
-
-    /**
-     * <p>Returns the maximum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the maximum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from max(int[]) to max(int...)
-     */
-    public static int max(final int... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns max
-        int max = array[0];
-        for (int j = 1; j < array.length; j++) {
-            if (array[j] > max) {
-                max = array[j];
-            }
-        }
-
-        return max;
-    }
-
-    /**
-     * <p>Returns the maximum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the maximum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from max(short[]) to max(short...)
-     */
-    public static short max(final short... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns max
-        short max = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] > max) {
-                max = array[i];
-            }
-        }
-
-        return max;
-    }
-
-    /**
-     * <p>Returns the maximum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the maximum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @since 3.4 Changed signature from max(byte[]) to max(byte...)
-     */
-    public static byte max(final byte... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns max
-        byte max = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] > max) {
-                max = array[i];
-            }
-        }
-
-        return max;
-    }
-
-    /**
-     * <p>Returns the maximum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the maximum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @see IEEE754rUtils#max(double[]) IEEE754rUtils for a version of this method that handles NaN differently
-     * @since 3.4 Changed signature from max(double[]) to max(double...)
-     */
-    public static double max(final double... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns max
-        double max = array[0];
-        for (int j = 1; j < array.length; j++) {
-            if (Double.isNaN(array[j])) {
-                return Double.NaN;
-            }
-            if (array[j] > max) {
-                max = array[j];
-            }
-        }
-
-        return max;
-    }
-
-    /**
-     * <p>Returns the maximum value in an array.</p>
-     *
-     * @param array  an array, must not be null or empty
-     * @return the maximum value in the array
-     * @throws IllegalArgumentException if {@code array} is {@code null}
-     * @throws IllegalArgumentException if {@code array} is empty
-     * @see IEEE754rUtils#max(float[]) IEEE754rUtils for a version of this method that handles NaN differently
-     * @since 3.4 Changed signature from max(float[]) to max(float...)
-     */
-    public static float max(final float... array) {
-        // Validates input
-        validateArray(array);
-
-        // Finds and returns max
-        float max = array[0];
-        for (int j = 1; j < array.length; j++) {
-            if (Float.isNaN(array[j])) {
-                return Float.NaN;
-            }
-            if (array[j] > max) {
-                max = array[j];
-            }
-        }
-
-        return max;
-    }
-
-    /**
-     * Checks if the specified array is neither null nor empty.
-     *
-     * @param array  the array to check
-     * @throws IllegalArgumentException if {@code array} is either {@code null} or empty
-     */
-    private static void validateArray(final Object array) {
-        Validate.notNull(array, "array");
-        Validate.isTrue(Array.getLength(array) != 0, "Array cannot be empty.");
-    }
-
-    // 3 param min
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Gets the minimum of three {@code long} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the smallest of the values
-     */
-    public static long min(long a, final long b, final long c) {
-        if (b < a) {
-            a = b;
-        }
-        if (c < a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the minimum of three {@code int} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the smallest of the values
-     */
-    public static int min(int a, final int b, final int c) {
-        if (b < a) {
-            a = b;
-        }
-        if (c < a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the minimum of three {@code short} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the smallest of the values
-     */
-    public static short min(short a, final short b, final short c) {
-        if (b < a) {
-            a = b;
-        }
-        if (c < a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the minimum of three {@code byte} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the smallest of the values
-     */
-    public static byte min(byte a, final byte b, final byte c) {
-        if (b < a) {
-            a = b;
-        }
-        if (c < a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the minimum of three {@code double} values.</p>
-     *
-     * <p>If any value is {@code NaN}, {@code NaN} is
-     * returned. Infinity is handled.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the smallest of the values
-     * @see IEEE754rUtils#min(double, double, double) for a version of this method that handles NaN differently
-     */
-    public static double min(final double a, final double b, final double c) {
-        return Math.min(Math.min(a, b), c);
-    }
-
-    /**
-     * <p>Gets the minimum of three {@code float} values.</p>
-     *
-     * <p>If any value is {@code NaN}, {@code NaN} is
-     * returned. Infinity is handled.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the smallest of the values
-     * @see IEEE754rUtils#min(float, float, float) for a version of this method that handles NaN differently
-     */
-    public static float min(final float a, final float b, final float c) {
-        return Math.min(Math.min(a, b), c);
-    }
-
-    // 3 param max
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Gets the maximum of three {@code long} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the largest of the values
-     */
-    public static long max(long a, final long b, final long c) {
-        if (b > a) {
-            a = b;
-        }
-        if (c > a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the maximum of three {@code int} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the largest of the values
-     */
-    public static int max(int a, final int b, final int c) {
-        if (b > a) {
-            a = b;
-        }
-        if (c > a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the maximum of three {@code short} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the largest of the values
-     */
-    public static short max(short a, final short b, final short c) {
-        if (b > a) {
-            a = b;
-        }
-        if (c > a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the maximum of three {@code byte} values.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the largest of the values
-     */
-    public static byte max(byte a, final byte b, final byte c) {
-        if (b > a) {
-            a = b;
-        }
-        if (c > a) {
-            a = c;
-        }
-        return a;
-    }
-
-    /**
-     * <p>Gets the maximum of three {@code double} values.</p>
-     *
-     * <p>If any value is {@code NaN}, {@code NaN} is
-     * returned. Infinity is handled.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the largest of the values
-     * @see IEEE754rUtils#max(double, double, double) for a version of this method that handles NaN differently
-     */
-    public static double max(final double a, final double b, final double c) {
-        return Math.max(Math.max(a, b), c);
-    }
-
-    /**
-     * <p>Gets the maximum of three {@code float} values.</p>
-     *
-     * <p>If any value is {@code NaN}, {@code NaN} is
-     * returned. Infinity is handled.</p>
-     *
-     * @param a  value 1
-     * @param b  value 2
-     * @param c  value 3
-     * @return  the largest of the values
-     * @see IEEE754rUtils#max(float, float, float) for a version of this method that handles NaN differently
-     */
-    public static float max(final float a, final float b, final float c) {
-        return Math.max(Math.max(a, b), c);
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * <p>Checks whether the {@code String} contains only
-     * digit characters.</p>
-     *
-     * <p>{@code Null} and empty String will return
-     * {@code false}.</p>
-     *
-     * @param str  the {@code String} to check
-     * @return {@code true} if str contains only Unicode numeric
-     */
-    public static boolean isDigits(final String str) {
-        return StringUtils.isNumeric(str);
-    }
-
-    /**
-     * <p>Checks whether the String a valid Java number.</p>
+     * Checks whether the String is a valid Java number.
      *
      * <p>Valid numbers include hexadecimal marked with the {@code 0x} or
      * {@code 0X} qualifier, octal numbers, scientific notation and
@@ -1588,43 +541,13 @@ public class NumberUtils {
      * {@code false}, since {@code 9} is not a valid octal value.
      * However, numbers beginning with {@code 0.} are treated as decimal.</p>
      *
-     * <p>{@code null} and empty/blank {@code String} will return
+     * <p>{@code null} and empty/blank {@link String} will return
      * {@code false}.</p>
      *
      * <p>Note, {@link #createNumber(String)} should return a number for every
      * input resulting in {@code true}.</p>
      *
-     * @param str  the {@code String} to check
-     * @return {@code true} if the string is a correctly formatted number
-     * @since 3.3 the code supports hex {@code 0Xhhh} an
-     *        octal {@code 0ddd} validation
-     * @deprecated This feature will be removed in Lang 4.0,
-     *             use {@link NumberUtils#isCreatable(String)} instead
-     */
-    @Deprecated
-    public static boolean isNumber(final String str) {
-        return isCreatable(str);
-    }
-
-    /**
-     * <p>Checks whether the String a valid Java number.</p>
-     *
-     * <p>Valid numbers include hexadecimal marked with the {@code 0x} or
-     * {@code 0X} qualifier, octal numbers, scientific notation and
-     * numbers marked with a type qualifier (e.g. 123L).</p>
-     *
-     * <p>Non-hexadecimal strings beginning with a leading zero are
-     * treated as octal values. Thus the string {@code 09} will return
-     * {@code false}, since {@code 9} is not a valid octal value.
-     * However, numbers beginning with {@code 0.} are treated as decimal.</p>
-     *
-     * <p>{@code null} and empty/blank {@code String} will return
-     * {@code false}.</p>
-     *
-     * <p>Note, {@link #createNumber(String)} should return a number for every
-     * input resulting in {@code true}.</p>
-     *
-     * @param str  the {@code String} to check
+     * @param str  the {@link String} to check
      * @return {@code true} if the string is a correctly formatted number
      * @since 3.5
      */
@@ -1667,7 +590,7 @@ public class NumberUtils {
                    return true;
                }
         }
-        sz--; // don't want to loop to the last char, check it afterwords
+        sz--; // don't want to loop to the last char, check it afterwards
               // for type qualifiers
         int i = start;
         // loop to the next to last char or to the last char if we need another digit to
@@ -1743,7 +666,51 @@ public class NumberUtils {
     }
 
     /**
-     * <p>Checks whether the given String is a parsable number.</p>
+     * Checks whether the {@link String} contains only
+     * digit characters.
+     *
+     * <p>{@code null} and empty String will return
+     * {@code false}.</p>
+     *
+     * @param str  the {@link String} to check
+     * @return {@code true} if str contains only Unicode numeric
+     */
+    public static boolean isDigits(final String str) {
+        return StringUtils.isNumeric(str);
+    }
+
+    /**
+     * Checks whether the String is a valid Java number.
+     *
+     * <p>Valid numbers include hexadecimal marked with the {@code 0x} or
+     * {@code 0X} qualifier, octal numbers, scientific notation and
+     * numbers marked with a type qualifier (e.g. 123L).</p>
+     *
+     * <p>Non-hexadecimal strings beginning with a leading zero are
+     * treated as octal values. Thus the string {@code 09} will return
+     * {@code false}, since {@code 9} is not a valid octal value.
+     * However, numbers beginning with {@code 0.} are treated as decimal.</p>
+     *
+     * <p>{@code null} and empty/blank {@link String} will return
+     * {@code false}.</p>
+     *
+     * <p>Note, {@link #createNumber(String)} should return a number for every
+     * input resulting in {@code true}.</p>
+     *
+     * @param str  the {@link String} to check
+     * @return {@code true} if the string is a correctly formatted number
+     * @since 3.3 the code supports hexadecimal {@code 0Xhhh} an
+     *        octal {@code 0ddd} validation
+     * @deprecated This feature will be removed in Lang 4,
+     *             use {@link NumberUtils#isCreatable(String)} instead
+     */
+    @Deprecated
+    public static boolean isNumber(final String str) {
+        return isCreatable(str);
+    }
+
+    /**
+     * Checks whether the given String is a parsable number.
      *
      * <p>Parsable numbers include those Strings understood by {@link Integer#parseInt(String)},
      * {@link Long#parseLong(String)}, {@link Float#parseFloat(String)} or
@@ -1753,7 +720,7 @@ public class NumberUtils {
      * <p>Hexadecimal and scientific notations are <strong>not</strong> considered parsable.
      * See {@link #isCreatable(String)} on those cases.</p>
      *
-     * <p>{@code Null} and empty String will return {@code false}.</p>
+     * <p>{@code null} and empty String will return {@code false}.</p>
      *
      * @param str the String to check.
      * @return {@code true} if the string is a parsable number.
@@ -1775,17 +742,1067 @@ public class NumberUtils {
         return withDecimalsParsing(str, 0);
     }
 
+    /**
+     * Utility method for {@link #createNumber(java.lang.String)}.
+     *
+     * <p>This will check if the magnitude of the number is zero by checking if there
+     * are only zeros before and after the decimal place.</p>
+     *
+     * <p>Note: It is <strong>assumed</strong> that the input string has been converted
+     * to either a Float or Double with a value of zero when this method is called.
+     * This eliminates invalid input for example {@code ".", ".D", ".e0"}.</p>
+     *
+     * <p>Thus the method only requires checking if both arguments are null, empty or
+     * contain only zeros.</p>
+     *
+     * <p>Given {@code s = mant + "." + dec}:</p>
+     * <ul>
+     * <li>{@code true} if s is {@code "0.0"}
+     * <li>{@code true} if s is {@code "0."}
+     * <li>{@code true} if s is {@code ".0"}
+     * <li>{@code false} otherwise (this assumes {@code "."} is not possible)
+     * </ul>
+     *
+     * @param mant the mantissa decimal digits before the decimal point (sign must be removed; never null)
+     * @param dec the decimal digits after the decimal point (exponent and type specifier removed;
+     *            can be null)
+     * @return true if the magnitude is zero
+     */
+    private static boolean isZero(final String mant, final String dec) {
+        return isAllZeros(mant) && isAllZeros(dec);
+    }
+
+    /**
+     * Returns the maximum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the maximum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from max(byte[]) to max(byte...)
+     */
+    public static byte max(final byte... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns max
+        byte max = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+            }
+        }
+        return max;
+    }
+
+    /**
+     * Gets the maximum of three {@code byte} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the largest of the values
+     */
+    public static byte max(byte a, final byte b, final byte c) {
+        if (b > a) {
+            a = b;
+        }
+        if (c > a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the maximum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the maximum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @see IEEE754rUtils#max(double[]) IEEE754rUtils for a version of this method that handles NaN differently
+     * @since 3.4 Changed signature from max(double[]) to max(double...)
+     */
+    public static double max(final double... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns max
+        double max = array[0];
+        for (int j = 1; j < array.length; j++) {
+            if (Double.isNaN(array[j])) {
+                return Double.NaN;
+            }
+            if (array[j] > max) {
+                max = array[j];
+            }
+        }
+        return max;
+    }
+
+    /**
+     * Gets the maximum of three {@code double} values.
+     *
+     * <p>If any value is {@code NaN}, {@code NaN} is
+     * returned. Infinity is handled.</p>
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the largest of the values
+     * @see IEEE754rUtils#max(double, double, double) for a version of this method that handles NaN differently
+     */
+    public static double max(final double a, final double b, final double c) {
+        return Math.max(Math.max(a, b), c);
+    }
+
+    /**
+     * Returns the maximum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the maximum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @see IEEE754rUtils#max(float[]) IEEE754rUtils for a version of this method that handles NaN differently
+     * @since 3.4 Changed signature from max(float[]) to max(float...)
+     */
+    public static float max(final float... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns max
+        float max = array[0];
+        for (int j = 1; j < array.length; j++) {
+            if (Float.isNaN(array[j])) {
+                return Float.NaN;
+            }
+            if (array[j] > max) {
+                max = array[j];
+            }
+        }
+        return max;
+    }
+
+    // must handle Long, Float, Integer, Float, Short,
+    //                  BigDecimal, BigInteger and Byte
+    // useful methods:
+    // Byte.decode(String)
+    // Byte.valueOf(String, int radix)
+    // Byte.valueOf(String)
+    // Double.valueOf(String)
+    // Float.valueOf(String)
+    // Float.valueOf(String)
+    // Integer.valueOf(String, int radix)
+    // Integer.valueOf(String)
+    // Integer.decode(String)
+    // Integer.getInteger(String)
+    // Integer.getInteger(String, int val)
+    // Integer.getInteger(String, Integer val)
+    // Integer.valueOf(String)
+    // Double.valueOf(String)
+    // new Byte(String)
+    // Long.valueOf(String)
+    // Long.getLong(String)
+    // Long.getLong(String, int)
+    // Long.getLong(String, Integer)
+    // Long.valueOf(String, int)
+    // Long.valueOf(String)
+    // Short.valueOf(String)
+    // Short.decode(String)
+    // Short.valueOf(String, int)
+    // Short.valueOf(String)
+    // new BigDecimal(String)
+    // new BigInteger(String)
+    // new BigInteger(String, int radix)
+    // Possible inputs:
+    // 45 45.5 45E7 4.5E7 Hex Oct Binary xxxF xxxD xxxf xxxd
+    // plus minus everything. Prolly more. A lot are not separable.
+
+    /**
+     * Gets the maximum of three {@code float} values.
+     *
+     * <p>If any value is {@code NaN}, {@code NaN} is
+     * returned. Infinity is handled.</p>
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the largest of the values
+     * @see IEEE754rUtils#max(float, float, float) for a version of this method that handles NaN differently
+     */
+    public static float max(final float a, final float b, final float c) {
+        return Math.max(Math.max(a, b), c);
+    }
+
+    /**
+     * Returns the maximum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the maximum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from max(int[]) to max(int...)
+     */
+    public static int max(final int... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns max
+        int max = array[0];
+        for (int j = 1; j < array.length; j++) {
+            if (array[j] > max) {
+                max = array[j];
+            }
+        }
+        return max;
+    }
+
+    /**
+     * Gets the maximum of three {@code int} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the largest of the values
+     */
+    public static int max(int a, final int b, final int c) {
+        if (b > a) {
+            a = b;
+        }
+        if (c > a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the maximum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the maximum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from max(long[]) to max(long...)
+     */
+    public static long max(final long... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns max
+        long max = array[0];
+        for (int j = 1; j < array.length; j++) {
+            if (array[j] > max) {
+                max = array[j];
+            }
+        }
+        return max;
+    }
+
+    // 3 param max
+    /**
+     * Gets the maximum of three {@code long} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the largest of the values
+     */
+    public static long max(long a, final long b, final long c) {
+        if (b > a) {
+            a = b;
+        }
+        if (c > a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the maximum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the maximum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from max(short[]) to max(short...)
+     */
+    public static short max(final short... array) {
+        // Validates input
+        validateArray(array);
+
+        // Finds and returns max
+        short max = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+            }
+        }
+        return max;
+    }
+
+    /**
+     * Gets the maximum of three {@code short} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the largest of the values
+     */
+    public static short max(short a, final short b, final short c) {
+        if (b > a) {
+            a = b;
+        }
+        if (c > a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the minimum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the minimum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from min(byte[]) to min(byte...)
+     */
+    public static byte min(final byte... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns min
+        byte min = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+
+    /**
+     * Gets the minimum of three {@code byte} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the smallest of the values
+     */
+    public static byte min(byte a, final byte b, final byte c) {
+        if (b < a) {
+            a = b;
+        }
+        if (c < a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the minimum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the minimum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @see IEEE754rUtils#min(double[]) IEEE754rUtils for a version of this method that handles NaN differently
+     * @since 3.4 Changed signature from min(double[]) to min(double...)
+     */
+    public static double min(final double... array) {
+        // Validates input
+        validateArray(array);
+
+        // Finds and returns min
+        double min = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (Double.isNaN(array[i])) {
+                return Double.NaN;
+            }
+            if (array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+
+    /**
+     * Gets the minimum of three {@code double} values.
+     *
+     * <p>If any value is {@code NaN}, {@code NaN} is
+     * returned. Infinity is handled.</p>
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the smallest of the values
+     * @see IEEE754rUtils#min(double, double, double) for a version of this method that handles NaN differently
+     */
+    public static double min(final double a, final double b, final double c) {
+        return Math.min(Math.min(a, b), c);
+    }
+
+    /**
+     * Returns the minimum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the minimum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @see IEEE754rUtils#min(float[]) IEEE754rUtils for a version of this method that handles NaN differently
+     * @since 3.4 Changed signature from min(float[]) to min(float...)
+     */
+    public static float min(final float... array) {
+        // Validates input
+        validateArray(array);
+
+        // Finds and returns min
+        float min = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (Float.isNaN(array[i])) {
+                return Float.NaN;
+            }
+            if (array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+
+    /**
+     * Gets the minimum of three {@code float} values.
+     *
+     * <p>If any value is {@code NaN}, {@code NaN} is
+     * returned. Infinity is handled.</p>
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the smallest of the values
+     * @see IEEE754rUtils#min(float, float, float) for a version of this method that handles NaN differently
+     */
+    public static float min(final float a, final float b, final float c) {
+        return Math.min(Math.min(a, b), c);
+    }
+
+    /**
+     * Returns the minimum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the minimum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from min(int[]) to min(int...)
+     */
+    public static int min(final int... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns min
+        int min = array[0];
+        for (int j = 1; j < array.length; j++) {
+            if (array[j] < min) {
+                min = array[j];
+            }
+        }
+        return min;
+    }
+
+     /**
+     * Gets the minimum of three {@code int} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the smallest of the values
+     */
+    public static int min(int a, final int b, final int c) {
+        if (b < a) {
+            a = b;
+        }
+        if (c < a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the minimum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the minimum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from min(long[]) to min(long...)
+     */
+    public static long min(final long... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns min
+        long min = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+
+    // 3 param min
+    /**
+     * Gets the minimum of three {@code long} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the smallest of the values
+     */
+    public static long min(long a, final long b, final long c) {
+        if (b < a) {
+            a = b;
+        }
+        if (c < a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Returns the minimum value in an array.
+     *
+     * @param array  an array, must not be null or empty
+     * @return the minimum value in the array
+     * @throws NullPointerException if {@code array} is {@code null}
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @since 3.4 Changed signature from min(short[]) to min(short...)
+     */
+    public static short min(final short... array) {
+        // Validates input
+        validateArray(array);
+        // Finds and returns min
+        short min = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
+            }
+        }
+
+        return min;
+    }
+
+    /**
+     * Gets the minimum of three {@code short} values.
+     *
+     * @param a  value 1
+     * @param b  value 2
+     * @param c  value 3
+     * @return  the smallest of the values
+     */
+    public static short min(short a, final short b, final short c) {
+        if (b < a) {
+            a = b;
+        }
+        if (c < a) {
+            a = c;
+        }
+        return a;
+    }
+
+    /**
+     * Converts a {@link String} to a {@code byte}, returning
+     * {@code zero} if the conversion fails.
+     *
+     * <p>If the string is {@code null}, {@code zero} is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toByte(null) = 0
+     *   NumberUtils.toByte("")   = 0
+     *   NumberUtils.toByte("1")  = 1
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @return the byte represented by the string, or {@code zero} if
+     *  conversion fails
+     * @since 2.5
+     */
+    public static byte toByte(final String str) {
+        return toByte(str, (byte) 0);
+    }
+
+    /**
+     * Converts a {@link String} to a {@code byte}, returning a
+     * default value if the conversion fails.
+     *
+     * <p>If the string is {@code null}, the default value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toByte(null, 1) = 1
+     *   NumberUtils.toByte("", 1)   = 1
+     *   NumberUtils.toByte("1", 0)  = 1
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @param defaultValue  the default value
+     * @return the byte represented by the string, or the default if conversion fails
+     * @since 2.5
+     */
+    public static byte toByte(final String str, final byte defaultValue) {
+        try {
+            return Byte.parseByte(str);
+        } catch (final RuntimeException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Converts a {@link BigDecimal} to a {@code double}.
+     *
+     * <p>If the {@link BigDecimal} {@code value} is
+     * {@code null}, then the specified default value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toDouble(null)                     = 0.0d
+     *   NumberUtils.toDouble(BigDecimal.valueOf(8.5d)) = 8.5d
+     * </pre>
+     *
+     * @param value the {@link BigDecimal} to convert, may be {@code null}.
+     * @return the double represented by the {@link BigDecimal} or
+     *  {@code 0.0d} if the {@link BigDecimal} is {@code null}.
+     * @since 3.8
+     */
+    public static double toDouble(final BigDecimal value) {
+        return toDouble(value, 0.0d);
+    }
+
+    /**
+     * Converts a {@link BigDecimal} to a {@code double}.
+     *
+     * <p>If the {@link BigDecimal} {@code value} is
+     * {@code null}, then the specified default value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toDouble(null, 1.1d)                     = 1.1d
+     *   NumberUtils.toDouble(BigDecimal.valueOf(8.5d), 1.1d) = 8.5d
+     * </pre>
+     *
+     * @param value the {@link BigDecimal} to convert, may be {@code null}.
+     * @param defaultValue the default value
+     * @return the double represented by the {@link BigDecimal} or the
+     *  defaultValue if the {@link BigDecimal} is {@code null}.
+     * @since 3.8
+     */
+    public static double toDouble(final BigDecimal value, final double defaultValue) {
+        return value == null ? defaultValue : value.doubleValue();
+    }
+
+    /**
+     * Converts a {@link String} to a {@code double}, returning
+     * {@code 0.0d} if the conversion fails.
+     *
+     * <p>If the string {@code str} is {@code null},
+     * {@code 0.0d} is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toDouble(null)   = 0.0d
+     *   NumberUtils.toDouble("")     = 0.0d
+     *   NumberUtils.toDouble("1.5")  = 1.5d
+     * </pre>
+     *
+     * @param str the string to convert, may be {@code null}
+     * @return the double represented by the string, or {@code 0.0d}
+     *  if conversion fails
+     * @since 2.1
+     */
+    public static double toDouble(final String str) {
+        return toDouble(str, 0.0d);
+    }
+
+    /**
+     * Converts a {@link String} to a {@code double}, returning a
+     * default value if the conversion fails.
+     *
+     * <p>If the string {@code str} is {@code null}, the default
+     * value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toDouble(null, 1.1d)   = 1.1d
+     *   NumberUtils.toDouble("", 1.1d)     = 1.1d
+     *   NumberUtils.toDouble("1.5", 0.0d)  = 1.5d
+     * </pre>
+     *
+     * @param str the string to convert, may be {@code null}
+     * @param defaultValue the default value
+     * @return the double represented by the string, or defaultValue
+     *  if conversion fails
+     * @since 2.1
+     */
+    public static double toDouble(final String str, final double defaultValue) {
+      try {
+          return Double.parseDouble(str);
+      } catch (final RuntimeException e) {
+          return defaultValue;
+      }
+    }
+
+    /**
+     * Converts a {@link String} to a {@code float}, returning
+     * {@code 0.0f} if the conversion fails.
+     *
+     * <p>If the string {@code str} is {@code null},
+     * {@code 0.0f} is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toFloat(null)   = 0.0f
+     *   NumberUtils.toFloat("")     = 0.0f
+     *   NumberUtils.toFloat("1.5")  = 1.5f
+     * </pre>
+     *
+     * @param str the string to convert, may be {@code null}
+     * @return the float represented by the string, or {@code 0.0f}
+     *  if conversion fails
+     * @since 2.1
+     */
+    public static float toFloat(final String str) {
+        return toFloat(str, 0.0f);
+    }
+
+    /**
+     * Converts a {@link String} to a {@code float}, returning a
+     * default value if the conversion fails.
+     *
+     * <p>If the string {@code str} is {@code null}, the default
+     * value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toFloat(null, 1.1f)   = 1.1f
+     *   NumberUtils.toFloat("", 1.1f)     = 1.1f
+     *   NumberUtils.toFloat("1.5", 0.0f)  = 1.5f
+     * </pre>
+     *
+     * @param str the string to convert, may be {@code null}
+     * @param defaultValue the default value
+     * @return the float represented by the string, or defaultValue
+     *  if conversion fails
+     * @since 2.1
+     */
+    public static float toFloat(final String str, final float defaultValue) {
+      try {
+          return Float.parseFloat(str);
+      } catch (final RuntimeException e) {
+          return defaultValue;
+      }
+    }
+
+    /**
+     * Converts a {@link String} to an {@code int}, returning
+     * {@code zero} if the conversion fails.
+     *
+     * <p>If the string is {@code null}, {@code zero} is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toInt(null) = 0
+     *   NumberUtils.toInt("")   = 0
+     *   NumberUtils.toInt("1")  = 1
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @return the int represented by the string, or {@code zero} if
+     *  conversion fails
+     * @since 2.1
+     */
+    public static int toInt(final String str) {
+        return toInt(str, 0);
+    }
+
+    /**
+     * Converts a {@link String} to an {@code int}, returning a
+     * default value if the conversion fails.
+     *
+     * <p>If the string is {@code null}, the default value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toInt(null, 1) = 1
+     *   NumberUtils.toInt("", 1)   = 1
+     *   NumberUtils.toInt("1", 0)  = 1
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @param defaultValue  the default value
+     * @return the int represented by the string, or the default if conversion fails
+     * @since 2.1
+     */
+    public static int toInt(final String str, final int defaultValue) {
+        try {
+            return Integer.parseInt(str);
+        } catch (final RuntimeException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Converts a {@link String} to a {@code long}, returning
+     * {@code zero} if the conversion fails.
+     *
+     * <p>If the string is {@code null}, {@code zero} is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toLong(null) = 0L
+     *   NumberUtils.toLong("")   = 0L
+     *   NumberUtils.toLong("1")  = 1L
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @return the long represented by the string, or {@code 0} if
+     *  conversion fails
+     * @since 2.1
+     */
+    public static long toLong(final String str) {
+        return toLong(str, 0L);
+    }
+
+    /**
+     * Converts a {@link String} to a {@code long}, returning a
+     * default value if the conversion fails.
+     *
+     * <p>If the string is {@code null}, the default value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toLong(null, 1L) = 1L
+     *   NumberUtils.toLong("", 1L)   = 1L
+     *   NumberUtils.toLong("1", 0L)  = 1L
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @param defaultValue  the default value
+     * @return the long represented by the string, or the default if conversion fails
+     * @since 2.1
+     */
+    public static long toLong(final String str, final long defaultValue) {
+        try {
+            return Long.parseLong(str);
+        } catch (final RuntimeException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Converts a {@link BigDecimal} to a {@link BigDecimal} with a scale of
+     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
+     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
+     *
+     * <p>Note, the scale of a {@link BigDecimal} is the number of digits to the right of the
+     * decimal point.</p>
+     *
+     * @param value the {@link BigDecimal} to convert, may be null.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final BigDecimal value) {
+        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
+    }
+
+    /**
+     * Converts a {@link BigDecimal} to a {@link BigDecimal} whose scale is the
+     * specified value with a {@link RoundingMode} applied. If the input {@code value}
+     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
+     *
+     * @param value the {@link BigDecimal} to convert, may be null.
+     * @param scale the number of digits to the right of the decimal point.
+     * @param roundingMode a rounding behavior for numerical operations capable of
+     *  discarding precision.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final BigDecimal value, final int scale, final RoundingMode roundingMode) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return value.setScale(
+            scale,
+            roundingMode == null ? RoundingMode.HALF_EVEN : roundingMode
+        );
+    }
+
+    /**
+     * Converts a {@link Double} to a {@link BigDecimal} with a scale of
+     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
+     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
+     *
+     * <p>Note, the scale of a {@link BigDecimal} is the number of digits to the right of the
+     * decimal point.</p>
+     *
+     * @param value the {@link Double} to convert, may be null.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final Double value) {
+        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
+    }
+
+    /**
+     * Converts a {@link Double} to a {@link BigDecimal} whose scale is the
+     * specified value with a {@link RoundingMode} applied. If the input {@code value}
+     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
+     *
+     * @param value the {@link Double} to convert, may be null.
+     * @param scale the number of digits to the right of the decimal point.
+     * @param roundingMode a rounding behavior for numerical operations capable of
+     *  discarding precision.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final Double value, final int scale, final RoundingMode roundingMode) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return toScaledBigDecimal(
+            BigDecimal.valueOf(value),
+            scale,
+            roundingMode
+        );
+    }
+
+    /**
+     * Converts a {@link Float} to a {@link BigDecimal} with a scale of
+     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
+     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
+     *
+     * <p>Note, the scale of a {@link BigDecimal} is the number of digits to the right of the
+     * decimal point.</p>
+     *
+     * @param value the {@link Float} to convert, may be null.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final Float value) {
+        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
+    }
+
+    /**
+     * Converts a {@link Float} to a {@link BigDecimal} whose scale is the
+     * specified value with a {@link RoundingMode} applied. If the input {@code value}
+     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
+     *
+     * @param value the {@link Float} to convert, may be null.
+     * @param scale the number of digits to the right of the decimal point.
+     * @param roundingMode a rounding behavior for numerical operations capable of
+     *  discarding precision.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final Float value, final int scale, final RoundingMode roundingMode) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return toScaledBigDecimal(
+            BigDecimal.valueOf(value),
+            scale,
+            roundingMode
+        );
+    }
+
+    /**
+     * Converts a {@link String} to a {@link BigDecimal} with a scale of
+     * two that has been rounded using {@code RoundingMode.HALF_EVEN}. If the supplied
+     * {@code value} is null, then {@code BigDecimal.ZERO} is returned.
+     *
+     * <p>Note, the scale of a {@link BigDecimal} is the number of digits to the right of the
+     * decimal point.</p>
+     *
+     * @param value the {@link String} to convert, may be null.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final String value) {
+        return toScaledBigDecimal(value, INTEGER_TWO, RoundingMode.HALF_EVEN);
+    }
+
+    /**
+     * Converts a {@link String} to a {@link BigDecimal} whose scale is the
+     * specified value with a {@link RoundingMode} applied. If the input {@code value}
+     * is {@code null}, we simply return {@code BigDecimal.ZERO}.
+     *
+     * @param value the {@link String} to convert, may be null.
+     * @param scale the number of digits to the right of the decimal point.
+     * @param roundingMode a rounding behavior for numerical operations capable of
+     *  discarding precision.
+     * @return the scaled, with appropriate rounding, {@link BigDecimal}.
+     * @since 3.8
+     */
+    public static BigDecimal toScaledBigDecimal(final String value, final int scale, final RoundingMode roundingMode) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return toScaledBigDecimal(
+            createBigDecimal(value),
+            scale,
+            roundingMode
+        );
+    }
+
+    /**
+     * Converts a {@link String} to a {@code short}, returning
+     * {@code zero} if the conversion fails.
+     *
+     * <p>If the string is {@code null}, {@code zero} is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toShort(null) = 0
+     *   NumberUtils.toShort("")   = 0
+     *   NumberUtils.toShort("1")  = 1
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @return the short represented by the string, or {@code zero} if
+     *  conversion fails
+     * @since 2.5
+     */
+    public static short toShort(final String str) {
+        return toShort(str, (short) 0);
+    }
+
+    /**
+     * Converts a {@link String} to an {@code short}, returning a
+     * default value if the conversion fails.
+     *
+     * <p>If the string is {@code null}, the default value is returned.</p>
+     *
+     * <pre>
+     *   NumberUtils.toShort(null, 1) = 1
+     *   NumberUtils.toShort("", 1)   = 1
+     *   NumberUtils.toShort("1", 0)  = 1
+     * </pre>
+     *
+     * @param str  the string to convert, may be null
+     * @param defaultValue  the default value
+     * @return the short represented by the string, or the default if conversion fails
+     * @since 2.5
+     */
+    public static short toShort(final String str, final short defaultValue) {
+        try {
+            return Short.parseShort(str);
+        } catch (final RuntimeException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Checks if the specified array is neither null nor empty.
+     *
+     * @param array  the array to check
+     * @throws IllegalArgumentException if {@code array} is empty
+     * @throws NullPointerException if {@code array} is {@code null}
+     */
+    private static void validateArray(final Object array) {
+        Objects.requireNonNull(array, "array");
+        Validate.isTrue(Array.getLength(array) != 0, "Array cannot be empty.");
+    }
+
     private static boolean withDecimalsParsing(final String str, final int beginIdx) {
         int decimalPoints = 0;
         for (int i = beginIdx; i < str.length(); i++) {
-            final boolean isDecimalPoint = str.charAt(i) == '.';
+            final char ch = str.charAt(i);
+            final boolean isDecimalPoint = ch == '.';
             if (isDecimalPoint) {
                 decimalPoints++;
             }
             if (decimalPoints > 1) {
                 return false;
             }
-            if (!isDecimalPoint && !Character.isDigit(str.charAt(i))) {
+            if (!isDecimalPoint && !Character.isDigit(ch)) {
                 return false;
             }
         }
@@ -1793,67 +1810,16 @@ public class NumberUtils {
     }
 
     /**
-     * <p>Compares two {@code int} values numerically. This is the same functionality as provided in Java 7.</p>
+     * {@link NumberUtils} instances should NOT be constructed in standard programming.
+     * Instead, the class should be used as {@code NumberUtils.toInt("6");}.
      *
-     * @param x the first {@code int} to compare
-     * @param y the second {@code int} to compare
-     * @return the value {@code 0} if {@code x == y};
-     *         a value less than {@code 0} if {@code x < y}; and
-     *         a value greater than {@code 0} if {@code x > y}
-     * @since 3.4
-     */
-    public static int compare(final int x, final int y) {
-        if (x == y) {
-            return 0;
-        }
-        return x < y ? -1 : 1;
-    }
-
-    /**
-     * <p>Compares to {@code long} values numerically. This is the same functionality as provided in Java 7.</p>
+     * <p>This constructor is public to permit tools that require a JavaBean instance
+     * to operate.</p>
      *
-     * @param x the first {@code long} to compare
-     * @param y the second {@code long} to compare
-     * @return the value {@code 0} if {@code x == y};
-     *         a value less than {@code 0} if {@code x < y}; and
-     *         a value greater than {@code 0} if {@code x > y}
-     * @since 3.4
+     * @deprecated TODO Make private in 4.0.
      */
-    public static int compare(final long x, final long y) {
-        if (x == y) {
-            return 0;
-        }
-        return x < y ? -1 : 1;
-    }
-
-    /**
-     * <p>Compares to {@code short} values numerically. This is the same functionality as provided in Java 7.</p>
-     *
-     * @param x the first {@code short} to compare
-     * @param y the second {@code short} to compare
-     * @return the value {@code 0} if {@code x == y};
-     *         a value less than {@code 0} if {@code x < y}; and
-     *         a value greater than {@code 0} if {@code x > y}
-     * @since 3.4
-     */
-    public static int compare(final short x, final short y) {
-        if (x == y) {
-            return 0;
-        }
-        return x < y ? -1 : 1;
-    }
-
-    /**
-     * <p>Compares two {@code byte} values numerically. This is the same functionality as provided in Java 7.</p>
-     *
-     * @param x the first {@code byte} to compare
-     * @param y the second {@code byte} to compare
-     * @return the value {@code 0} if {@code x == y};
-     *         a value less than {@code 0} if {@code x < y}; and
-     *         a value greater than {@code 0} if {@code x > y}
-     * @since 3.4
-     */
-    public static int compare(final byte x, final byte y) {
-        return x - y;
+    @Deprecated
+    public NumberUtils() {
+        // empty
     }
 }

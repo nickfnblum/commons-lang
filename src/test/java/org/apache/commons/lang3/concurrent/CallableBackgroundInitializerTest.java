@@ -24,23 +24,33 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.junit.jupiter.api.Test;
 
 /**
  * Test class for {@code CallableBackgroundInitializer}
  */
-public class CallableBackgroundInitializerTest  {
+public class CallableBackgroundInitializerTest extends AbstractLangTest {
+    /**
+     * A test Callable implementation for checking the initializer's
+     * implementation of the initialize() method.
+     */
+    private static final class TestCallable implements Callable<Integer> {
+        /** A counter for the number of call() invocations. */
+        int callCount;
+
+        /**
+         * Records this invocation and returns the test result.
+         */
+        @Override
+        public Integer call() {
+            callCount++;
+            return RESULT;
+        }
+    }
+
     /** Constant for the result of the call() invocation. */
     private static final Integer RESULT = Integer.valueOf(42);
-
-    /**
-     * Tries to create an instance without a Callable. This should cause an
-     * exception.
-     */
-    @Test()
-    public void testInitNullCallable() {
-        assertThrows(NullPointerException.class, () -> new CallableBackgroundInitializer<>(null));
-    }
 
     /**
      * Tests whether the executor service is correctly passed to the super
@@ -75,7 +85,7 @@ public class CallableBackgroundInitializerTest  {
     /**
      * Tests the implementation of initialize().
      *
-     * @throws java.lang.Exception so we don't have to catch it
+     * @throws Exception so we don't have to catch it
      */
     @Test
     public void testInitialize() throws Exception {
@@ -87,20 +97,11 @@ public class CallableBackgroundInitializerTest  {
     }
 
     /**
-     * A test Callable implementation for checking the initializer's
-     * implementation of the initialize() method.
+     * Tries to create an instance without a Callable. This should cause an
+     * exception.
      */
-    private static class TestCallable implements Callable<Integer> {
-        /** A counter for the number of call() invocations. */
-        int callCount;
-
-        /**
-         * Records this invocation and returns the test result.
-         */
-        @Override
-        public Integer call() {
-            callCount++;
-            return RESULT;
-        }
+    @Test()
+    public void testInitNullCallable() {
+        assertThrows(NullPointerException.class, () -> new CallableBackgroundInitializer<>(null));
     }
 }

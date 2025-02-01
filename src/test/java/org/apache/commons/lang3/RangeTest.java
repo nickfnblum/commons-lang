@@ -31,17 +31,27 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * <p>
- * Tests the methods in the {@link org.apache.commons.lang3.Range} class.
- * </p>
+ * Tests {@link Range}.
  */
 @SuppressWarnings("boxing")
-public class RangeTest {
+public class RangeTest extends AbstractLangTest {
+
+    abstract static class AbstractComparable implements Comparable<AbstractComparable> {
+        @Override
+        public int compareTo(final AbstractComparable o) {
+            return 0;
+        }
+    }
+    static final class DerivedComparableA extends AbstractComparable {
+        // empty
+    }
+    static final class DerivedComparableB extends AbstractComparable {
+        // empty
+    }
 
     private Range<Byte> byteRange;
     private Range<Byte> byteRange2;
     private Range<Byte> byteRange3;
-
     private Range<Double> doubleRange;
     private Range<Float> floatRange;
     private Range<Integer> intRange;
@@ -49,14 +59,14 @@ public class RangeTest {
 
     @BeforeEach
     public void setUp() {
-        byteRange = Range.between((byte) 0, (byte) 5);
-        byteRange2 = Range.between((byte) 0, (byte) 5);
-        byteRange3 = Range.between((byte) 0, (byte) 10);
+        byteRange = Range.of((byte) 0, (byte) 5);
+        byteRange2 = Range.of((byte) 0, (byte) 5);
+        byteRange3 = Range.of((byte) 0, (byte) 10);
 
-        intRange = Range.between(10, 20);
-        longRange = Range.between(10L, 20L);
-        floatRange = Range.between((float) 10, (float) 20);
-        doubleRange = Range.between((double) 10, (double) 20);
+        intRange = Range.of(10, 20);
+        longRange = Range.of(10L, 20L);
+        floatRange = Range.of((float) 10, (float) 20);
+        doubleRange = Range.of((double) 10, (double) 20);
     }
 
     @Test
@@ -88,9 +98,10 @@ public class RangeTest {
         assertTrue(rbstr.contains("i"), "should contain i");
         assertFalse(rbstr.contains("houses"), "should not contain houses");
         assertFalse(rbstr.contains(""), "should not contain ''");
+
+        assertThrows(NullPointerException.class, () -> Range.between(null, null, lengthComp));
     }
 
-    // -----------------------------------------------------------------------
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void testComparableConstructors() {
@@ -99,6 +110,24 @@ public class RangeTest {
         final Range r2 = Range.between(c, c);
         assertTrue(r1.isNaturalOrdering());
         assertTrue(r2.isNaturalOrdering());
+    }
+
+    @Test
+    public void testConstructorSignatureWithAbstractComparableClasses() {
+        final DerivedComparableA derivedComparableA = new DerivedComparableA();
+        final DerivedComparableB derivedComparableB = new DerivedComparableB();
+
+        final Range<AbstractComparable> mixed = Range.between(derivedComparableA, derivedComparableB, null);
+        assertTrue(mixed.contains(derivedComparableA));
+
+        final Range<AbstractComparable> same = Range.between(derivedComparableA, derivedComparableA, null);
+        assertTrue(same.contains(derivedComparableA));
+
+        final Range<DerivedComparableA> rangeA = Range.between(derivedComparableA, derivedComparableA, null);
+        assertTrue(rangeA.contains(derivedComparableA));
+
+        final Range<DerivedComparableB> rangeB = Range.is(derivedComparableB, null);
+        assertTrue(rangeB.contains(derivedComparableB));
     }
 
     @Test
@@ -112,7 +141,6 @@ public class RangeTest {
         assertFalse(intRange.contains(25));
     }
 
-    // -----------------------------------------------------------------------
     @Test
     public void testContainsRange() {
 
@@ -156,7 +184,6 @@ public class RangeTest {
         assertEquals(1, intRange.elementCompareTo(25));
     }
 
-    // -----------------------------------------------------------------------
     @Test
     public void testEqualsObject() {
         assertEquals(byteRange, byteRange);
@@ -194,7 +221,6 @@ public class RangeTest {
         assertEquals(20d, doubleRange.getMaximum(), 0.00001d);
     }
 
-    // -----------------------------------------------------------------------
     @Test
     public void testGetMinimum() {
         assertEquals(10, (int) intRange.getMinimum());
@@ -328,7 +354,10 @@ public class RangeTest {
 
         // negative
         assertFalse(intRange.isOverlappedBy(Range.between(-11, -18)));
-    }
+
+        // outside range whole range
+        assertTrue(intRange.isOverlappedBy(Range.between(9, 21)));
+}
 
     @Test
     public void testIsStartedBy() {
@@ -355,7 +384,39 @@ public class RangeTest {
         assertTrue(ri.contains(11), "should contain 11");
     }
 
-    // -----------------------------------------------------------------------
+    @Test
+    public void testOfWithCompare() {
+        // all integers are equal
+        final Comparator<Integer> c = (o1, o2) -> 0;
+        final Comparator<String> lengthComp = Comparator.comparingInt(String::length);
+        Range<Integer> rb = Range.of(-10, 20);
+        assertFalse(rb.contains(null), "should not contain null");
+        assertTrue(rb.contains(10), "should contain 10");
+        assertTrue(rb.contains(-10), "should contain -10");
+        assertFalse(rb.contains(21), "should not contain 21");
+        assertFalse(rb.contains(-11), "should not contain -11");
+        rb = Range.of(-10, 20, c);
+        assertFalse(rb.contains(null), "should not contain null");
+        assertTrue(rb.contains(10), "should contain 10");
+        assertTrue(rb.contains(-10), "should contain -10");
+        assertTrue(rb.contains(21), "should contain 21");
+        assertTrue(rb.contains(-11), "should contain -11");
+        Range<String> rbstr = Range.of("house", "i");
+        assertFalse(rbstr.contains(null), "should not contain null");
+        assertTrue(rbstr.contains("house"), "should contain house");
+        assertTrue(rbstr.contains("i"), "should contain i");
+        assertFalse(rbstr.contains("hose"), "should not contain hose");
+        assertFalse(rbstr.contains("ice"), "should not contain ice");
+        rbstr = Range.of("house", "i", lengthComp);
+        assertFalse(rbstr.contains(null), "should not contain null");
+        assertTrue(rbstr.contains("house"), "should contain house");
+        assertTrue(rbstr.contains("i"), "should contain i");
+        assertFalse(rbstr.contains("houses"), "should not contain houses");
+        assertFalse(rbstr.contains(""), "should not contain ''");
+
+        assertThrows(NullPointerException.class, () -> Range.of(null, null, lengthComp));
+    }
+
     @Test
     public void testRangeOfChars() {
         final Range<Character> chars = Range.between('a', 'z');
@@ -363,7 +424,6 @@ public class RangeTest {
         assertFalse(chars.contains('B'));
     }
 
-    // -----------------------------------------------------------------------
     @Test
     public void testSerializing() {
         SerializationUtils.clone(intRange);

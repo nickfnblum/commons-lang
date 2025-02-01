@@ -25,7 +25,7 @@ import java.text.ParsePosition;
  * Formats using one formatter and parses using a different formatter. An
  * example of use for this would be a webapp where data is taken in one way and
  * stored in a database another way.
- * @deprecated as of 3.6, use commons-text
+ * @deprecated As of 3.6, use Apache Commons Text
  * <a href="https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/CompositeFormat.html">
  * CompositeFormat</a> instead
  */
@@ -72,18 +72,12 @@ public class CompositeFormat extends Format {
     }
 
     /**
-     * Uses the parser Format instance.
+     * Provides access to the parser Format implementation.
      *
-     * @param source the String source
-     * @param pos the ParsePosition containing the position to parse from, will
-     *            be updated according to parsing success (index) or failure
-     *            (error index)
-     * @return the parsed Object
-     * @see Format#parseObject(String, ParsePosition)
+     * @return formatter Format implementation
      */
-    @Override
-    public Object parseObject(final String source, final ParsePosition pos) {
-        return parser.parseObject(source, pos);
+    public Format getFormatter() {
+        return this.formatter;
     }
 
     /**
@@ -96,12 +90,18 @@ public class CompositeFormat extends Format {
     }
 
     /**
-     * Provides access to the parser Format implementation.
+     * Uses the parser Format instance.
      *
-     * @return formatter Format implementation
+     * @param source the String source
+     * @param pos the ParsePosition containing the position to parse from, will
+     *            be updated according to parsing success (index) or failure
+     *            (error index)
+     * @return the parsed Object
+     * @see Format#parseObject(String, ParsePosition)
      */
-    public Format getFormatter() {
-        return this.formatter;
+    @Override
+    public Object parseObject(final String source, final ParsePosition pos) {
+        return parser.parseObject(source, pos);
     }
 
     /**

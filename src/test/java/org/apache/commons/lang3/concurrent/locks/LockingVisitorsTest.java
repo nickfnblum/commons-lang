@@ -16,13 +16,18 @@
  */
 package org.apache.commons.lang3.concurrent.locks;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.LongConsumer;
 
+import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ThreadUtils;
 import org.apache.commons.lang3.concurrent.locks.LockingVisitors.LockVisitor;
@@ -30,7 +35,7 @@ import org.apache.commons.lang3.concurrent.locks.LockingVisitors.StampedLockVisi
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Test;
 
-public class LockingVisitorsTest {
+public class LockingVisitorsTest extends AbstractLangTest {
 
     private static final Duration SHORT_DELAY = Duration.ofMillis(100);
     private static final Duration DELAY = Duration.ofMillis(1500);
@@ -81,6 +86,18 @@ public class LockingVisitorsTest {
         synchronized (booleanArray) {
             booleanArray[offset] = value;
         }
+    }
+
+    @Test
+    public void testCreate() {
+        final AtomicInteger res = new AtomicInteger();
+        final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+        LockingVisitors.create(res, rwLock).acceptReadLocked(AtomicInteger::incrementAndGet);
+        LockingVisitors.create(res, rwLock).acceptReadLocked(null);
+        assertEquals(1, res.get());
+        LockingVisitors.create(res, rwLock).acceptWriteLocked(AtomicInteger::incrementAndGet);
+        LockingVisitors.create(res, rwLock).acceptWriteLocked(null);
+        assertEquals(2, res.get());
     }
 
     @Test

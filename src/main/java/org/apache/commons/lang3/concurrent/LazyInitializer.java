@@ -16,45 +16,40 @@
  */
 package org.apache.commons.lang3.concurrent;
 
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.function.FailableSupplier;
+
 /**
+ * This class provides a generic implementation of the lazy initialization pattern.
+ *
  * <p>
- * This class provides a generic implementation of the lazy initialization
- * pattern.
+ * Sometimes an application has to deal with an object only under certain circumstances, e.g. when the user selects a specific menu item or if a special event
+ * is received. If the creation of the object is costly or the consumption of memory or other system resources is significant, it may make sense to defer the
+ * creation of this object until it is really needed. This is a use case for the lazy initialization pattern.
  * </p>
  * <p>
- * Sometimes an application has to deal with an object only under certain
- * circumstances, e.g. when the user selects a specific menu item or if a
- * special event is received. If the creation of the object is costly or the
- * consumption of memory or other system resources is significant, it may make
- * sense to defer the creation of this object until it is really needed. This is
- * a use case for the lazy initialization pattern.
- * </p>
- * <p>
- * This abstract base class provides an implementation of the double-check idiom
- * for an instance field as discussed in Joshua Bloch's "Effective Java", 2nd
- * edition, item 71. The class already implements all necessary synchronization.
- * A concrete subclass has to implement the {@code initialize()} method, which
+ * This abstract base class provides an implementation of the double-check idiom for an instance field as discussed in Joshua Bloch's "Effective Java", 2nd
+ * edition, item 71. The class already implements all necessary synchronization. A concrete subclass has to implement the {@code initialize()} method, which
  * actually creates the wrapped data object.
  * </p>
  * <p>
- * As an usage example consider that we have a class {@code ComplexObject} whose
- * instantiation is a complex operation. In order to apply lazy initialization
- * to this class, a subclass of {@code LazyInitializer} has to be created:
+ * As an usage example consider that we have a class {@code ComplexObject} whose instantiation is a complex operation. In order to apply lazy initialization to
+ * this class, a subclass of {@link LazyInitializer} has to be created:
  * </p>
  *
- * <pre>
- * public class ComplexObjectInitializer extends LazyInitializer&lt;ComplexObject&gt; {
+ * <pre>{@code
+ * public class ComplexObjectInitializer extends LazyInitializer<ComplexObject> {
  *     &#064;Override
  *     protected ComplexObject initialize() {
  *         return new ComplexObject();
  *     }
  * }
+ * }
  * </pre>
  *
  * <p>
- * Access to the data object is provided through the {@code get()} method. So,
- * code that wants to obtain the {@code ComplexObject} instance would simply
- * look like this:
+ * Access to the data object is provided through the {@code get()} method. So, code that wants to obtain the {@code ComplexObject} instance would simply look
+ * like this:
  * </p>
  *
  * <pre>
@@ -66,32 +61,82 @@ package org.apache.commons.lang3.concurrent;
  * </pre>
  *
  * <p>
- * If multiple threads call the {@code get()} method when the object has not yet
- * been created, they are blocked until initialization completes. The algorithm
- * guarantees that only a single instance of the wrapped object class is
- * created, which is passed to all callers. Once initialized, calls to the
- * {@code get()} method are pretty fast because no synchronization is needed
- * (only an access to a <b>volatile</b> member field).
+ * If multiple threads call the {@code get()} method when the object has not yet been created, they are blocked until initialization completes. The algorithm
+ * guarantees that only a single instance of the wrapped object class is created, which is passed to all callers. Once initialized, calls to the {@code get()}
+ * method are pretty fast because no synchronization is needed (only an access to a <strong>volatile</strong> member field).
  * </p>
  *
  * @since 3.0
- * @param <T> the type of the object managed by this initializer class
+ * @param <T> the type of the object managed by the initializer.
  */
-public abstract class LazyInitializer<T> implements ConcurrentInitializer<T> {
+public class LazyInitializer<T> extends AbstractConcurrentInitializer<T, ConcurrentException> {
 
+    /**
+     * Builds a new instance.
+     *
+     * @param <T> The type of results supplied by this builder.
+     * @param <I> The type of the initializer managed by this builder.
+     * @since 3.14.0
+     */
+    public static class Builder<I extends LazyInitializer<T>, T> extends AbstractBuilder<I, T, Builder<I, T>, ConcurrentException> {
+
+        /**
+         * Constructs a new instance.
+         */
+        public Builder() {
+            // empty
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public I get() {
+            return (I) new LazyInitializer(getInitializer(), getCloser());
+        }
+
+    }
+
+    /**
+     * A unique value indicating an un-initialized instance.
+     */
     private static final Object NO_INIT = new Object();
 
+    /**
+     * Creates a new builder.
+     *
+     * @param <T> the type of object to build.
+     * @return a new builder.
+     * @since 3.14.0
+     */
+    public static <T> Builder<LazyInitializer<T>, T> builder() {
+        return new Builder<>();
+    }
+
+    /** Stores the managed object. */
     @SuppressWarnings("unchecked")
-    // Stores the managed object.
     private volatile T object = (T) NO_INIT;
 
     /**
-     * Returns the object wrapped by this instance. On first access the object
-     * is created. After that it is cached and can be accessed pretty fast.
+     * Constructs a new instance.
+     */
+    public LazyInitializer() {
+        // empty
+    }
+
+    /**
+     * Constructs a new instance.
      *
-     * @return the object initialized by this {@code LazyInitializer}
-     * @throws ConcurrentException if an error occurred during initialization of
-     * the object
+     * @param initializer the initializer supplier called by {@link #initialize()}.
+     * @param closer the closer consumer called by {@link #close()}.
+     */
+    private LazyInitializer(final FailableSupplier<T, ConcurrentException> initializer, final FailableConsumer<T, ConcurrentException> closer) {
+        super(initializer, closer);
+    }
+
+    /**
+     * Returns the object wrapped by this instance. On first access the object is created. After that it is cached and can be accessed pretty fast.
+     *
+     * @return the object initialized by this {@link LazyInitializer}
+     * @throws ConcurrentException if an error occurred during initialization of the object
      */
     @Override
     public T get() throws ConcurrentException {
@@ -112,14 +157,22 @@ public abstract class LazyInitializer<T> implements ConcurrentInitializer<T> {
     }
 
     /**
-     * Creates and initializes the object managed by this {@code
-     * LazyInitializer}. This method is called by {@link #get()} when the object
-     * is accessed for the first time. An implementation can focus on the
-     * creation of the object. No synchronization is needed, as this is already
-     * handled by {@code get()}.
-     *
-     * @return the managed data object
-     * @throws ConcurrentException if an error occurs during object creation
+     * {@inheritDoc}
      */
-    protected abstract T initialize() throws ConcurrentException;
+    @Override
+    protected ConcurrentException getTypedException(final Exception e) {
+        return new ConcurrentException(e);
+    }
+
+    /**
+     * Tests whether this instance is initialized. Once initialized, always returns true.
+     *
+     * @return whether this instance is initialized. Once initialized, always returns true.
+     * @since 3.14.0
+     */
+    @Override
+    public boolean isInitialized() {
+        return object != NO_INIT;
+    }
+
 }

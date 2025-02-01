@@ -31,9 +31,9 @@ import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests {@link org.apache.commons.lang3.CharUtils}.
+ * Tests {@link CharUtils}.
  */
-public class CharUtilsTest {
+public class CharUtilsTest extends AbstractLangTest {
 
     private static final char CHAR_COPY = '\u00a9';
     private static final Character CHARACTER_A = Character.valueOf('A');
@@ -80,7 +80,7 @@ public class CharUtilsTest {
         assertFalse(CharUtils.isAsciiAlpha(CHAR_COPY));
 
         for (int i = 0; i < 196; i++) {
-            if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z')) {
+            if (i >= 'A' && i <= 'Z' || i >= 'a' && i <= 'z') {
                 assertTrue(CharUtils.isAsciiAlpha((char) i));
             } else {
                 assertFalse(CharUtils.isAsciiAlpha((char) i));
@@ -116,7 +116,7 @@ public class CharUtilsTest {
         assertFalse(CharUtils.isAsciiAlphanumeric(CHAR_COPY));
 
         for (int i = 0; i < 196; i++) {
-            if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || (i >= '0' && i <= '9')) {
+            if (i >= 'A' && i <= 'Z' || i >= 'a' && i <= 'z' || i >= '0' && i <= '9') {
                 assertTrue(CharUtils.isAsciiAlphanumeric((char) i));
             } else {
                 assertFalse(CharUtils.isAsciiAlphanumeric((char) i));
