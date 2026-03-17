@@ -258,7 +258,7 @@ public class RandomStringUtils {
             return StringUtils.EMPTY;
         }
         if (count < 0) {
-            throw new IllegalArgumentException("Requested random string length " + count + " is less than 0.");
+            throw new IllegalArgumentException(String.format("Requested random string length %,d is less than 0.", end));
         }
         if (chars != null && chars.length == 0) {
             throw new IllegalArgumentException("The chars array must not be empty");
@@ -273,7 +273,7 @@ public class RandomStringUtils {
                 start = ' ';
             }
         } else if (end <= start) {
-            throw new IllegalArgumentException("Parameter end (" + end + ") must be greater than start (" + start + ")");
+            throw new IllegalArgumentException(String.format("Parameter end (%,d) must be greater than start (%,d)", end, start));
         } else if (start < 0 || end < 0) {
             throw new IllegalArgumentException("Character positions MUST be >= 0");
         }
@@ -293,8 +293,9 @@ public class RandomStringUtils {
                 return random(count, 0, 0, false, false, ALPHANUMERICAL_CHARS, random);
             }
             if (digits && end <= ASCII_0 || letters && end <= ASCII_A) {
-                throw new IllegalArgumentException("Parameter end (" + end + ") must be greater than (" + ASCII_0 + ") for generating digits "
-                        + "or greater than (" + ASCII_A + ") for generating letters.");
+                throw new IllegalArgumentException(
+                        String.format("Parameter end (%,d) must be greater than (%,d) for generating digits or greater than (%,d) for generating letters.",
+                                end, ASCII_0, ASCII_A));
             }
             // Optimize start and end when filtering by letters and/or numbers:
             // The range provided may be too large since we filter anyway afterward.
