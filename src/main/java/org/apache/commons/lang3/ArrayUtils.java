@@ -2183,13 +2183,14 @@ public class ArrayUtils {
     }
 
     /**
-     * Gets a hash code for an array handling multidimensional arrays correctly.
+     * Gets a hash code for an array handling multidimensional arrays.
      * <p>
-     * Multi-dimensional primitive arrays are also handled correctly by this method.
+     * Multi-dimensional primitive arrays are also handled by this method.
      * </p>
      *
-     * @param array  the array to get a hash code for, {@code null} returns zero.
+     * @param array  the array to get a hash code for, may be {@code null}.
      * @return a hash code for the array.
+     * @see HashCodeBuilder
      */
     public static int hashCode(final Object array) {
         return new HashCodeBuilder().append(array).toHashCode();
