@@ -1274,7 +1274,10 @@ public class Validate {
 
     /**
      * Constructs a new instance. This class should not normally be instantiated.
+     *
+     * @deprecated Will be made private in 4.0. Use static methods.
      */
+    @Deprecated
     public Validate() {
     }
 }
