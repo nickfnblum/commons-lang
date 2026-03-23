@@ -114,7 +114,7 @@ public class DateUtils {
     }
 
     /**
-     * Calendar modification types.
+     * Enumerates calendar modification types.
      */
     private enum ModifyType {
 

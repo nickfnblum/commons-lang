@@ -29,10 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class AbstractCircuitBreaker<T> implements CircuitBreaker<T> {
 
     /**
-     * An internal enumeration representing the different states of a circuit
-     * breaker. This class also contains some logic for performing state
-     * transitions. This is done to avoid complex if-conditions in the code of
-     * {@link CircuitBreaker}.
+     * Enumerates the different states of a circuit breaker. This class also contains some logic for performing state transitions. This is done to avoid complex
+     * if-conditions in the code of {@link CircuitBreaker}.
      */
     protected enum State {
 

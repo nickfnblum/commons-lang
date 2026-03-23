@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 public class ClassUtils {
 
     /**
-     * Inclusivity literals for {@link #hierarchy(Class, Interfaces)}.
+     * Enumerates inclusivity literals for {@link #hierarchy(Class, Interfaces)}.
      *
      * @since 3.2
      */

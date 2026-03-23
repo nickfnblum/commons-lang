@@ -120,14 +120,14 @@ public class StopWatch {
     }
 
     /**
-     * Enumeration type which indicates the split status of a StopWatch.
+     * Enumerates the split states of a StopWatch.
      */
     private enum SplitState {
         SPLIT, UNSPLIT
     }
 
     /**
-     * Enumeration type which indicates the status of a StopWatch.
+     * Enumerates type status of a StopWatch.
      */
     private enum State {
 

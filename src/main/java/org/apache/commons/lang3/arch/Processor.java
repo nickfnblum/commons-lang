@@ -17,22 +17,21 @@
 package org.apache.commons.lang3.arch;
 
 /**
- * The {@link Processor} represents a microprocessor and defines
- * some properties like architecture and type of the microprocessor.
+ * Represents a microprocessor and defines some properties like architecture and type.
  *
  * @since 3.6
  */
 public class Processor {
 
     /**
-     * The {@link Arch} enum defines the architecture of
-     * a microprocessor. The architecture represents the bit value
-     * of the microprocessor.
-     * The following architectures are defined:
+     * Enumerates the architecture of a microprocessor.
+     * <p>
+     * The architecture represents the bit value of the microprocessor. The following architectures are defined:
+     * </p>
      * <ul>
-     *     <li>32-bit</li>
-     *     <li>64-bit</li>
-     *     <li>Unknown</li>
+     * <li>32-bit</li>
+     * <li>64-bit</li>
+     * <li>Unknown</li>
      * </ul>
      */
     public enum Arch {
@@ -72,15 +71,17 @@ public class Processor {
     }
 
     /**
-     * The {@link Type} enum defines types of a microprocessor.
+     * Enumerates types of a microprocessor.
+     * <p>
      * The following types are defined:
+     * </p>
      * <ul>
-     *     <li>AArch64</li>
-     *     <li>x86</li>
-     *     <li>ia64</li>
-     *     <li>PPC</li>
-     *     <li>RISCV</li>
-     *     <li>Unknown</li>
+     * <li>AArch64</li>
+     * <li>x86</li>
+     * <li>ia64</li>
+     * <li>PPC</li>
+     * <li>RISCV</li>
+     * <li>Unknown</li>
      * </ul>
      */
     public enum Type {
