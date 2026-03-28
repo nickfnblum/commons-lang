@@ -123,6 +123,7 @@ The <action> type attribute can be add,update,fix,remove.
     <action issue="LANG-1819" type="fix" dev="ggregory" due-to="Partha Protim Paul, Gary Gregory">[LANG-] Javadoc ArrayUtils.removeAll() null input behavior #1614.</action>
     <action issue="LANG-1813" type="fix" dev="ggregory" due-to="Ivan Ponomarev, Gary Gregory">ArrayUtils#hashCode() Javadoc incorrectly states “null returns zero” (actual result is 629).</action>
     <action                   type="fix" dev="ggregory" due-to="Gary Gregory">Deprecate Validate.Validate().</action>
+    <action                   type="fix" dev="ggregory" due-to="Partha Paul, Gary Gregory" issue="LANG-1820">[javadoc] Fix ObjectUtils.anyNull(Object) for empty arrays.</action>
     <!-- ADD -->
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add JavaVersion.JAVA_27.</action>
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add SystemUtils.IS_JAVA_27.</action>
