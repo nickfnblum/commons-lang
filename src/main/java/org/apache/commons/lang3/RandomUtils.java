@@ -129,7 +129,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random double between 0 (inclusive) and Double.MAX_VALUE (exclusive).
+     * Generates a random double between 0 (inclusive) and {@link Double#MAX_VALUE} ({@value Double#MAX_VALUE} exclusive).
      *
      * @return the random double.
      * @see #nextDouble(double, double)
@@ -156,7 +156,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random float between 0 (inclusive) and Float.MAX_VALUE (exclusive).
+     * Generates a random float between 0 (inclusive) and {@link Float#MAX_VALUE} ({@value Float#MAX_VALUE} exclusive).
      *
      * @return the random float.
      * @see #nextFloat(float, float)
@@ -183,7 +183,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random int between 0 (inclusive) and Integer.MAX_VALUE (exclusive).
+     * Generates a random int between 0 (inclusive) and {@link Integer#MAX_VALUE} ({@value Integer#MAX_VALUE} exclusive).
      *
      * @return the random integer.
      * @see #nextInt(int, int)
@@ -210,7 +210,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random long between 0 (inclusive) and Long.MAX_VALUE (exclusive).
+     * Generates a random long between 0 (inclusive) and {@link Long#MAX_VALUE} ({@value Long#MAX_VALUE} exclusive).
      *
      * @return the random long.
      * @see #nextLong(long, long)
@@ -320,7 +320,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random double between 0 (inclusive) and Double.MAX_VALUE (exclusive).
+     * Generates a random double between 0 (inclusive) and {@link Double#MAX_VALUE} ({@value Double#MAX_VALUE} exclusive).
      *
      * @return the random double.
      * @see #randomDouble(double, double)
@@ -378,7 +378,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random int between 0 (inclusive) and Integer.MAX_VALUE (exclusive).
+     * Generates a random int between 0 (inclusive) and {@link Integer#MAX_VALUE} ({@value Integer#MAX_VALUE} exclusive).
      *
      * @return the random integer.
      * @see #randomInt(int, int)
@@ -407,7 +407,7 @@ public class RandomUtils {
     }
 
     /**
-     * Generates a random long between 0 (inclusive) and Long.MAX_VALUE (exclusive).
+     * Generates a random long between 0 (inclusive) and {@link Long#MAX_VALUE} ({@value Long#MAX_VALUE}, exclusive).
      *
      * @return the random long.
      * @see #randomLong(long, long)
