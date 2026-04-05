@@ -18,6 +18,7 @@
 package org.apache.commons.lang3.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -26,7 +27,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.AbstractLangTest;
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class ReflectionToStringBuilderIncludeTest extends AbstractLangTest {
@@ -157,7 +157,7 @@ class ReflectionToStringBuilderIncludeTest extends AbstractLangTest {
         final ReflectionToStringBuilder builder = new ReflectionToStringBuilder(new TestFeature());
         builder.setExcludeFieldNames(FIELDS[1], FIELDS[4]);
         builder.setIncludeFieldNames(FIELDS[0], FIELDS[1]);
-        Assertions.assertThrows(IllegalStateException.class, () -> builder.toString());
+        assertThrows(IllegalStateException.class, () -> builder.toString());
     }
 
     @Test
@@ -174,7 +174,7 @@ class ReflectionToStringBuilderIncludeTest extends AbstractLangTest {
         final ReflectionToStringBuilder builder = new ReflectionToStringBuilder(new TestFeature());
         builder.setExcludeFieldNames(FIELDS[1], "random1");
         builder.setIncludeFieldNames("random1");
-        Assertions.assertThrows(IllegalStateException.class, () -> builder.toString());
+        assertThrows(IllegalStateException.class, () -> builder.toString());
     }
 
     @Test

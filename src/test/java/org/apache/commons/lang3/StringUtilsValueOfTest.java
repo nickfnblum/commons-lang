@@ -16,7 +16,9 @@
  */
 package org.apache.commons.lang3;
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.junit.jupiter.api.Test;
 
 /**
@@ -26,16 +28,16 @@ class StringUtilsValueOfTest extends AbstractLangTest {
 
     @Test
     void testValueOfChar() {
-        Assertions.assertEquals("ABC", StringUtils.valueOf(new char[] {'A', 'B', 'C' }));
+        assertEquals("ABC", StringUtils.valueOf(new char[] {'A', 'B', 'C' }));
     }
 
     @Test
     void testValueOfCharEmpty() {
-        Assertions.assertEquals(StringUtils.EMPTY, StringUtils.valueOf(ArrayUtils.EMPTY_CHAR_ARRAY));
+        assertEquals(StringUtils.EMPTY, StringUtils.valueOf(ArrayUtils.EMPTY_CHAR_ARRAY));
     }
 
     @Test
     void testValueOfCharNull() {
-        Assertions.assertNull(StringUtils.valueOf(null));
+        assertNull(StringUtils.valueOf(null));
     }
 }

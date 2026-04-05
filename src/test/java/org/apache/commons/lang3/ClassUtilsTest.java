@@ -47,7 +47,6 @@ import org.apache.commons.lang3.ClassUtils.Interfaces;
 import org.apache.commons.lang3.reflect.testbed.GenericConsumer;
 import org.apache.commons.lang3.reflect.testbed.GenericParent;
 import org.apache.commons.lang3.reflect.testbed.StringParameterizedChild;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junitpioneer.jupiter.params.IntRangeSource;
@@ -236,8 +235,8 @@ class ClassUtilsTest extends AbstractLangTest {
     /** When the length hint is longer than the actual length then the same String object is returned */
     void test_getAbbreviatedName_TooLongHint() {
         final String className = "java.lang.String";
-        Assertions.assertSame(className, ClassUtils.getAbbreviatedName(className, className.length() + 1));
-        Assertions.assertSame(className, ClassUtils.getAbbreviatedName(className, className.length()));
+        assertSame(className, ClassUtils.getAbbreviatedName(className, className.length() + 1));
+        assertSame(className, ClassUtils.getAbbreviatedName(className, className.length()));
     }
 
     @Test

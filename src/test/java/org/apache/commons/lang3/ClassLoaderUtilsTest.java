@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -50,7 +49,7 @@ class ClassLoaderUtilsTest extends AbstractLangTest {
         try (URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { url })) {
             @SuppressWarnings("resource")
             final ClassLoader classLoader = urlClassLoader;
-            Assertions.assertEquals(String.format("%s[%s]", classLoader, url), ClassLoaderUtils.toString(classLoader));
+            assertEquals(String.format("%s[%s]", classLoader, url), ClassLoaderUtils.toString(classLoader));
         }
         assertEquals("null", ClassLoaderUtils.toString((ClassLoader) null));
     }
@@ -59,7 +58,7 @@ class ClassLoaderUtilsTest extends AbstractLangTest {
     void testToString_URLClassLoader() throws IOException {
         final URL url = new URL("http://localhost");
         try (URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { url })) {
-            Assertions.assertEquals(String.format("%s[%s]", urlClassLoader, url), ClassLoaderUtils.toString(urlClassLoader));
+            assertEquals(String.format("%s[%s]", urlClassLoader, url), ClassLoaderUtils.toString(urlClassLoader));
         }
         assertEquals("null", ClassLoaderUtils.toString((URLClassLoader) null));
     }

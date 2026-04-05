@@ -19,11 +19,11 @@ package org.apache.commons.lang3.function;
 
 import static org.apache.commons.lang3.LangAssertions.assertNullPointerException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.AbstractLangTest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -75,7 +75,7 @@ class ByteConsumerTest extends AbstractLangTest {
         };
         final ByteConsumer badComposite = bad.andThen(ref2::lazySet);
 
-        Assertions.assertThrows(IllegalStateException.class, () -> badComposite.accept(B1));
+        assertThrows(IllegalStateException.class, () -> badComposite.accept(B1));
         assertEquals(0, ref2.get(), "Second consumer should not be invoked");
     }
 

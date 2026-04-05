@@ -19,12 +19,12 @@ package org.apache.commons.lang3.function;
 
 import static org.apache.commons.lang3.LangAssertions.assertNullPointerException;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.AbstractLangTest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -73,7 +73,7 @@ class BooleanConsumerTest extends AbstractLangTest {
         };
         final BooleanConsumer badComposite = bad.andThen(aBool2::lazySet);
 
-        Assertions.assertThrows(IllegalStateException.class, () -> badComposite.accept(true));
+        assertThrows(IllegalStateException.class, () -> badComposite.accept(true));
         assertFalse(aBool2.get(), "Second consumer should not be invoked");
     }
 

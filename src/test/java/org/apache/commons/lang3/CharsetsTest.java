@@ -17,10 +17,11 @@
 
 package org.apache.commons.lang3;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -30,22 +31,22 @@ class CharsetsTest extends AbstractLangTest {
 
     @Test
     void testToCharset_Charset() {
-        Assertions.assertEquals(Charset.defaultCharset(), Charsets.toCharset((Charset) null));
-        Assertions.assertEquals(Charset.defaultCharset(), Charsets.toCharset(Charset.defaultCharset()));
-        Assertions.assertEquals(StandardCharsets.UTF_8, Charsets.toCharset(StandardCharsets.UTF_8));
+        assertEquals(Charset.defaultCharset(), Charsets.toCharset((Charset) null));
+        assertEquals(Charset.defaultCharset(), Charsets.toCharset(Charset.defaultCharset()));
+        assertEquals(StandardCharsets.UTF_8, Charsets.toCharset(StandardCharsets.UTF_8));
     }
 
     @Test
     void testToCharset_String() {
-        Assertions.assertEquals(Charset.defaultCharset(), Charsets.toCharset((String) null));
-        Assertions.assertEquals(Charset.defaultCharset(), Charsets.toCharset(Charset.defaultCharset().name()));
-        Assertions.assertEquals(StandardCharsets.UTF_8, Charsets.toCharset(StandardCharsets.UTF_8.name()));
+        assertEquals(Charset.defaultCharset(), Charsets.toCharset((String) null));
+        assertEquals(Charset.defaultCharset(), Charsets.toCharset(Charset.defaultCharset().name()));
+        assertEquals(StandardCharsets.UTF_8, Charsets.toCharset(StandardCharsets.UTF_8.name()));
     }
 
     @Test
     void testToCharsetName() {
-        Assertions.assertEquals(Charset.defaultCharset().name(), Charsets.toCharsetName((String) null));
-        Assertions.assertEquals("UTF-8", Charsets.toCharsetName(StandardCharsets.UTF_8.name()));
+        assertEquals(Charset.defaultCharset().name(), Charsets.toCharsetName((String) null));
+        assertEquals("UTF-8", Charsets.toCharsetName(StandardCharsets.UTF_8.name()));
     }
 
 }
