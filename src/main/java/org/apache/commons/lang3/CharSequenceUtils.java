@@ -215,12 +215,10 @@ public class CharSequenceUtils {
     /**
      * Returns the index within {@code cs} of the last occurrence of the specified character, searching backward starting at the specified index. For values of
      * {@code searchChar} in the range from 0 to 0xFFFF (inclusive), the index returned is the largest value <em>k</em> such that:
-     * </p>
      *
      * <pre>
      * (this.charAt(<em>k</em>) == searchChar) &amp;&amp; (<em>k</em> &lt;= start)
      * </pre>
-     *
      * <p>
      * is true. For other values of {@code searchChar}, it is the largest value <em>k</em> such that:
      * <p>
@@ -228,7 +226,6 @@ public class CharSequenceUtils {
      * <pre>
      * (this.codePointAt(<em>k</em>) == searchChar) &amp;&amp; (<em>k</em> &lt;= start)
      * </pre>
-     *
      * <p>
      * is true. In either case, if no such character occurs in {@code cs} at or before position {@code start}, then {@code -1} is returned.
      * </p>
