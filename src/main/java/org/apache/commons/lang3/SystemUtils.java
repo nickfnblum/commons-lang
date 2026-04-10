@@ -2055,7 +2055,7 @@ public class SystemUtils {
     /**
      * The System property key for the user home directory.
      */
-    public static final String USER_HOME_KEY = "user.home";
+    public static final String USER_HOME_KEY = SystemProperties.USER_HOME;
 
     /**
      * The System property key for the user name.
@@ -2063,7 +2063,7 @@ public class SystemUtils {
      * @deprecated Use {@link SystemProperties#USER_NAME}.
      */
     @Deprecated
-    public static final String USER_NAME_KEY = "user.name";
+    public static final String USER_NAME_KEY = SystemProperties.USER_NAME;
 
     /**
      * The System property key for the user directory.
@@ -2071,7 +2071,7 @@ public class SystemUtils {
      * @deprecated Use {@link SystemProperties#USER_DIR}.
      */
     @Deprecated
-    public static final String USER_DIR_KEY = "user.dir";
+    public static final String USER_DIR_KEY = SystemProperties.USER_DIR;
 
     /**
      * The System property key for the Java IO temporary directory.
@@ -2079,7 +2079,7 @@ public class SystemUtils {
      * @deprecated Use {@link SystemProperties#JAVA_IO_TMPDIR}.
      */
     @Deprecated
-    public static final String JAVA_IO_TMPDIR_KEY = "java.io.tmpdir";
+    public static final String JAVA_IO_TMPDIR_KEY = SystemProperties.JAVA_IO_TMPDIR;
 
     /**
      * The System property key for the Java home directory.
@@ -2087,7 +2087,7 @@ public class SystemUtils {
      * @deprecated Use {@link SystemProperties#JAVA_HOME}.
      */
     @Deprecated
-    public static final String JAVA_HOME_KEY = "java.home";
+    public static final String JAVA_HOME_KEY = SystemProperties.JAVA_HOME;
 
     /**
      * A constant for the System Property {@code awt.toolkit}.
