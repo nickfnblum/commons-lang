@@ -126,6 +126,10 @@ The <action> type attribute can be add,update,fix,remove.
     <action                   type="fix" dev="ggregory" due-to="Partha Paul, Gary Gregory" issue="LANG-1820">[javadoc] Fix ObjectUtils.anyNull(Object) for empty arrays.</action>
     <action                   type="fix" dev="ggregory" due-to="Lars Helge Øverland, Gary Gregory">Fix StopWatch's stopInstant match stopTimeNanos when split is called #1610.</action>
     <action                   type="fix" dev="ggregory" due-to="Gary Gregory">Fix NullPointerException in StopWatch.getStopTime().</action>
+    <action                   type="fix" dev="ggregory" due-to="Volkmar W. Pogatzki, Gary Gregory">Add "ppc64le" to ArchUtils #1625. See https://bugs.gentoo.org/972590
+Bug 972590 - dev-java/commons-lang-3.20.0:
+java.lang.NullPointerException: Cannot invoke
+"org.apache.commons.lang3.arch.Processor.toString()" because "&lt;local1&gt;"</action>
     <!-- ADD -->
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add JavaVersion.JAVA_27.</action>
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add SystemUtils.IS_JAVA_27.</action>
