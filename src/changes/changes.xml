@@ -124,6 +124,8 @@ The <action> type attribute can be add,update,fix,remove.
     <action issue="LANG-1813" type="fix" dev="ggregory" due-to="Ivan Ponomarev, Gary Gregory">ArrayUtils#hashCode() Javadoc incorrectly states “null returns zero” (actual result is 629).</action>
     <action                   type="fix" dev="ggregory" due-to="Gary Gregory">Deprecate Validate.Validate().</action>
     <action                   type="fix" dev="ggregory" due-to="Partha Paul, Gary Gregory" issue="LANG-1820">[javadoc] Fix ObjectUtils.anyNull(Object) for empty arrays.</action>
+    <action                   type="fix" dev="ggregory" due-to="Lars Helge Øverland, Gary Gregory">Fix StopWatch's stopInstant match stopTimeNanos when split is called #1610.</action>
+    <action                   type="fix" dev="ggregory" due-to="Gary Gregory">Fix NullPointerException in StopWatch.getStopTime().</action>
     <!-- ADD -->
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add JavaVersion.JAVA_27.</action>
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add SystemUtils.IS_JAVA_27.</action>
@@ -132,8 +134,6 @@ The <action> type attribute can be add,update,fix,remove.
     <action                   type="add" dev="ggregory" due-to="Gary Gregory, Theodora Anastasia Lazaridou">Add long support to BitField #1561.</action>
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add ArrayUtils.getDimensions(Object).</action>
     <action issue="LANG-1707" type="add" dev="ggregory" due-to="Ivan Malutin, Gilles Sadowski, Gary Gregory">Add ArrayUtils.concat() methods for concatenating multiple arrays #1519.</action>
-    <action                   type="add" dev="ggregory" due-to="Lars Helge Øverland, Gary Gregory">Fix StopWatch's stopInstant match stopTimeNanos when split is called #1610.</action>
-    <action                   type="add" dev="ggregory" due-to="Gary Gregory">Fix NullPointerException in StopWatch.getStopTime().</action>
     <!-- UPDATE -->
     <action                   type="update" dev="ggregory" due-to="Gary Gregory, Dependabot">Bump org.apache.commons:commons-parent from 92 to 98 #1498.</action>
     <action                   type="update" dev="ggregory" due-to="Gary Gregory">[test] Bump org.apache.commons:commons-text from 1.14.0 to 1.15.0.</action>
