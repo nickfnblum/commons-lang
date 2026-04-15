@@ -140,7 +140,7 @@ class StringUtilsAbbreviateTest {
         assertEquals("cde", StringUtils.abbreviate("abcdefg", "", 2, 3));
         assertIllegalArgumentException(() -> StringUtils.abbreviate("abcdefghij", "::", 0, 2),
                 "StringUtils.abbreviate expecting IllegalArgumentException");
-        assertIllegalArgumentException(() -> StringUtils.abbreviate("abcdefghij", "!!!", 5, 6),
+        assertIllegalArgumentException(() -> StringUtils.abbreviate("abcdefghij", "!!.", 5, 6),
                 "StringUtils.abbreviate expecting IllegalArgumentException");
         final String raspberry = "raspberry peach";
         assertEquals("raspberry peach", StringUtils.abbreviate(raspberry, "--", 12, 15));

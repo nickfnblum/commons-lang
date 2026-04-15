@@ -421,7 +421,7 @@ public class TimedSemaphore {
      */
     private void prepareAcquire() {
         if (isShutdown()) {
-            throw new IllegalStateException("TimedSemaphore is shut down!");
+            throw new IllegalStateException("TimedSemaphore is shut down.");
         }
         if (task == null) {
             task = startTimer();

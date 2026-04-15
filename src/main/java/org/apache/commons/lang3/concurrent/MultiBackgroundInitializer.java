@@ -255,7 +255,7 @@ public class MultiBackgroundInitializer extends BackgroundInitializer<MultiBackg
         Objects.requireNonNull(backgroundInitializer, "backgroundInitializer");
         synchronized (this) {
             if (isStarted()) {
-                throw new IllegalStateException("addInitializer() must not be called after start()!");
+                throw new IllegalStateException("addInitializer() must not be called after start().");
             }
             childInitializers.put(name, backgroundInitializer);
         }

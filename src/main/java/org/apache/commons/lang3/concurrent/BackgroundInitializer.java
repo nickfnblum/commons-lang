@@ -300,7 +300,7 @@ public class BackgroundInitializer<T> extends AbstractConcurrentInitializer<T, E
      */
     public synchronized Future<T> getFuture() {
         if (future == null) {
-            throw new IllegalStateException("start() must be called first!");
+            throw new IllegalStateException("start() must be called first.");
         }
         return future;
     }
@@ -377,7 +377,7 @@ public class BackgroundInitializer<T> extends AbstractConcurrentInitializer<T, E
      */
     public final synchronized void setExternalExecutor(final ExecutorService externalExecutor) {
         if (isStarted()) {
-            throw new IllegalStateException("Cannot set ExecutorService after start()!");
+            throw new IllegalStateException("Cannot set ExecutorService after start().");
         }
         this.externalExecutor = externalExecutor;
     }
