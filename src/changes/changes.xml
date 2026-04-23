@@ -167,6 +167,7 @@ java.lang.NullPointerException: Cannot invoke
     <action issue="LANG-1504" type="add" dev="ggregory" due-to="Edwin Delgado H, Gary Gregory">Adding labels and history to split StopWatch #1473.</action>
     <!-- UPDATE -->
     <action                   type="update" dev="ggregory" due-to="Gary Gregory, Dependabot">Bump org.apache.commons:commons-parent from 88 to 92 #1472, #1484.</action>
+    <action                   type="update" dev="ggregory" due-to="Gary Gregory">[test] Bump commons-io:commons-io from 2.21.0 to 2.22.0.</action>
   </release>
   <release version="3.19.0" date="2025-09-19" description="This is a feature and maintenance release. Java 8 or later is required.">
     <!-- FIX -->
