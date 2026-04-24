@@ -221,7 +221,7 @@ public enum JavaVersion {
      * Transforms the given string with a Java version number to the corresponding constant of this enumeration class. This method is used internally.
      *
      * @param versionStr the Java version as string.
-     * @return the corresponding enumeration constant or <strong>null</strong> if the version is unknown.
+     * @return the corresponding enumeration constant or {@code null} if the version is unknown.
      */
     static JavaVersion get(final String versionStr) {
         if (versionStr == null) {
@@ -303,7 +303,7 @@ public enum JavaVersion {
      * Transforms the given string with a Java version number to the corresponding constant of this enumeration class. This method is used internally.
      *
      * @param versionStr the Java version as string.
-     * @return the corresponding enumeration constant or <strong>null</strong> if the version is unknown.
+     * @return the corresponding enumeration constant or {@code null} if the version is unknown.
      */
     static JavaVersion getJavaVersion(final String versionStr) {
         return get(versionStr);

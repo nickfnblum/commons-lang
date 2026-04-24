@@ -268,7 +268,7 @@ public class TimedSemaphore {
 
     /**
      * Constructs a new instance of {@link TimedSemaphore} and initializes it with an executor service, the given time period, and the limit. The executor service
-     * will be used for creating a periodic task for monitoring the time period. It can be <strong>null</strong>, then a default service will be created.
+     * will be used for creating a periodic task for monitoring the time period. It can be {@code null}, then a default service will be created.
      *
      * @param service    the executor service.
      * @param timePeriod the time period.

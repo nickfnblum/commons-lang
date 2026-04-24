@@ -48,8 +48,8 @@ public class ConstantInitializer<T> implements ConcurrentInitializer<T> {
      * Creates a new instance of {@link ConstantInitializer} and initializes it
      * with the object to be managed. The {@code get()} method will always
      * return the object passed here. This class does not place any restrictions
-     * on the object. It may be <strong>null</strong>, then {@code get()} will return
-     * <strong>null</strong>, too.
+     * on the object. It may be {@code null}, then {@code get()} will return
+     * {@code null}, too.
      *
      * @param obj the object to be managed by this initializer
      */

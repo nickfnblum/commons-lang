@@ -152,7 +152,7 @@ public class MultiBackgroundInitializer extends BackgroundInitializer<MultiBackg
          * Gets the {@link ConcurrentException} object that was thrown by the
          * {@link BackgroundInitializer} with the given name. If this
          * initializer did not throw an exception, the return value is
-         * <strong>null</strong>. If the name cannot be resolved, an exception is thrown.
+         * {@code null}. If the name cannot be resolved, an exception is thrown.
          *
          * @param name the name of the {@link BackgroundInitializer}.
          * @return the exception thrown by this initializer.
@@ -178,7 +178,7 @@ public class MultiBackgroundInitializer extends BackgroundInitializer<MultiBackg
         /**
          * Gets the result object produced by the {@code
          * BackgroundInitializer} with the given name. This is the object returned by the initializer's {@code initialize()} method. If this
-         * {@link BackgroundInitializer} caused an exception, <strong>null</strong> is returned. If the name cannot be resolved, an exception is thrown.
+         * {@link BackgroundInitializer} caused an exception, {@code null} is returned. If the name cannot be resolved, an exception is thrown.
          *
          * @param name the name of the {@link BackgroundInitializer}.
          * @return the result object produced by this {@code BackgroundInitializer}.
@@ -245,8 +245,8 @@ public class MultiBackgroundInitializer extends BackgroundInitializer<MultiBackg
      * Adds a new {@link BackgroundInitializer} to this object. When this {@link MultiBackgroundInitializer} is started, the given initializer will be
      * processed. This method must not be called after {@link #start()} has been invoked.
      *
-     * @param name                  the name of the initializer (must not be <strong>null</strong>).
-     * @param backgroundInitializer the {@link BackgroundInitializer} to add (must not be <strong>null</strong>).
+     * @param name                  the name of the initializer (must not be {@code null}).
+     * @param backgroundInitializer the {@link BackgroundInitializer} to add (must not be {@code null}).
      * @throws NullPointerException  if either {@code name} or {@code backgroundInitializer} is {@code null}.
      * @throws IllegalStateException if {@code start()} has already been called.
      */

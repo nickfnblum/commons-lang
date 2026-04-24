@@ -46,7 +46,7 @@ public class ConcurrentUtils {
          * Creates a new instance of {@link ConstantFuture} and initializes it
          * with the constant value.
          *
-         * @param value the value (may be <strong>null</strong>)
+         * @param value the value (may be {@code null})
          */
         ConstantFuture(final T value) {
             this.value = value;
@@ -138,8 +138,8 @@ public class ConcurrentUtils {
      * is called. With the resulting object
      * {@link #putIfAbsent(ConcurrentMap, Object, Object)} is called. This
      * handles the case that in the meantime another thread has added the key to
-     * the map. Both the map and the initializer can be <strong>null</strong>; in this
-     * case this method simply returns <strong>null</strong>.
+     * the map. Both the map and the initializer can be {@code null}; in this
+     * case this method simply returns {@code null}.
      *
      * @param <K> the type of the keys of the map
      * @param <V> the type of the values of the map
@@ -193,8 +193,8 @@ public class ConcurrentUtils {
      * necessary. This method performs the following checks on the cause of the
      * passed in exception:
      * <ul>
-     * <li>If the passed in exception is <strong>null</strong> or the cause is
-     * <strong>null</strong>, this method returns <strong>null</strong>.</li>
+     * <li>If the passed in exception is {@code null} or the cause is
+     * {@code null}, this method returns {@code null}.</li>
      * <li>If the cause is a runtime exception, it is directly thrown.</li>
      * <li>If the cause is an error, it is directly thrown, too.</li>
      * <li>In any other case the cause is a checked exception. The method then
@@ -239,7 +239,7 @@ public class ConcurrentUtils {
      * exception - which might already cause an unchecked exception or an error
      * being thrown. If the cause is a checked exception however, it is wrapped
      * in a {@link ConcurrentException}, which is thrown. If the passed in
-     * exception is <strong>null</strong> or has no cause, the method simply returns
+     * exception is {@code null} or has no cause, the method simply returns
      * without throwing an exception.
      *
      * @param ex the exception to be handled
@@ -277,8 +277,8 @@ public class ConcurrentUtils {
      * Invokes the specified {@link ConcurrentInitializer} and returns the
      * object produced by the initializer. This method just invokes the {@code
      * get()} method of the given {@link ConcurrentInitializer}. It is
-     * <strong>null</strong>-safe: if the argument is <strong>null</strong>, result is also
-     * <strong>null</strong>.
+     * {@code null}-safe: if the argument is {@code null}, result is also
+     * {@code null}.
      *
      * @param <T> the type of the object produced by the initializer
      * @param initializer the {@link ConcurrentInitializer} to be invoked
@@ -332,9 +332,9 @@ public class ConcurrentUtils {
      * returns the value which is stored in the map.
      * </p>
      * <p>
-     * This method is <strong>null</strong>-safe: It accepts a <strong>null</strong> map as input
+     * This method is {@code null}-safe: It accepts a {@code null} map as input
      * without throwing an exception. In this case the return value is
-     * <strong>null</strong>, too.
+     * {@code null}, too.
      * </p>
      *
      * @param <K> the type of the keys of the map

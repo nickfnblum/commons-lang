@@ -99,7 +99,7 @@ public abstract class AbstractCircuitBreaker<T> implements CircuitBreaker<T> {
     /**
      * Adds a change listener to this circuit breaker. This listener is notified whenever
      * the state of this circuit breaker changes. If the listener is
-     * <strong>null</strong>, it is silently ignored.
+     * {@code null}, it is silently ignored.
      *
      * @param listener the listener to be added
      */
