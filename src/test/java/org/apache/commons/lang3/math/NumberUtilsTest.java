@@ -1262,7 +1262,7 @@ class NumberUtilsTest extends AbstractLangTest {
     }
 
     @Test
-    public void TestLang747() {
+    void testLang747() {
         assertEquals(Integer.valueOf(0x8000), NumberUtils.createNumber("0x8000"));
         assertEquals(Integer.valueOf(0x80000), NumberUtils.createNumber("0x80000"));
         assertEquals(Integer.valueOf(0x800000), NumberUtils.createNumber("0x800000"));
