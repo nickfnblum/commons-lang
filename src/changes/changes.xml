@@ -130,7 +130,8 @@ The <action> type attribute can be add,update,fix,remove.
 Bug 972590 - dev-java/commons-lang-3.20.0:
 java.lang.NullPointerException: Cannot invoke
 "org.apache.commons.lang3.arch.Processor.toString()" because "&lt;local1&gt;"</action>
-    <action                   type="fix" dev="ggregory" due-to="FloydDsilva, Gary Gregory, Rob Tompkins">NumberUtils.isCreatable(String) should match NumberUtils.createNumber(String), exactly #1626.</action>
+    <action issue="LANG-1821" type="fix" dev="ggregory" due-to="FloydDsilva, Gary Gregory, Rob Tompkins">NumberUtils.isCreatable(String) should match NumberUtils.createNumber(String), exactly #1626.</action>
+    <action                   type="fix" dev="ggregory" due-to="尹茂椿萱, Gary Gregory">NumberUtils.isCreatable fails for hexadecimal numbers with long type qualifier.</action>
     <!-- ADD -->
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add JavaVersion.JAVA_27.</action>
     <action                   type="add" dev="ggregory" due-to="Gary Gregory">Add SystemUtils.IS_JAVA_27.</action>
