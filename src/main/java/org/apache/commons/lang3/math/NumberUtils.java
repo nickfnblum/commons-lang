@@ -519,11 +519,7 @@ public class NumberUtils {
     }
 
     /**
-     * Utility method for {@link #createNumber(String)}.
-     *
-     * <p>
-     * Returns mantissa of the given number.
-     * </p>
+     * Gets the mantissa of the given number.
      *
      * @param str     the string representation of the number.
      * @param stopPos the position of the exponent or decimal point.
@@ -541,11 +537,7 @@ public class NumberUtils {
     }
 
     /**
-     * Utility method for {@link #createNumber(java.lang.String)}.
-     *
-     * <p>
-     * Returns {@code true} if s is {@code null} or empty.
-     * </p>
+     * Tests whether the given string only contains {@code '0'} characters.
      *
      * @param str the String to check.
      * @return if it is all zeros or {@code null}.
