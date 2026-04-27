@@ -60,7 +60,7 @@ import org.junitpioneer.jupiter.ReadsDefaultLocale;
 import org.junitpioneer.jupiter.WritesDefaultLocale;
 
 /**
- * Tests {@link org.apache.commons.lang3.time.DateUtils}.
+ * Tests {@link DateUtils}.
  */
 @ReadsDefaultLocale
 @WritesDefaultLocale

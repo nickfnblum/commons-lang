@@ -60,7 +60,7 @@ import org.junitpioneer.jupiter.cartesian.CartesianTest;
 import org.opentest4j.AssertionFailedError;
 
 /**
- * Tests {@link org.apache.commons.lang3.time.FastDateParser}.
+ * Tests {@link FastDateParser}.
  */
 /* Make test reproducible */ @DefaultLocale(language = "en")
 /* Make test reproducible */ @DefaultTimeZone(TimeZones.GMT_ID)

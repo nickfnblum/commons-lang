@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests {@link org.apache.commons.lang3.builder.ToStringStyle#SHORT_PREFIX_STYLE}.
+ * Tests {@link ToStringStyle#SHORT_PREFIX_STYLE}.
  */
 class ShortPrefixToStringStyleTest extends AbstractLangTest {
 

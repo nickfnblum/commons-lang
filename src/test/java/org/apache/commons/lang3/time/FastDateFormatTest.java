@@ -48,7 +48,7 @@ import org.junitpioneer.jupiter.DefaultLocale;
 import org.junitpioneer.jupiter.DefaultTimeZone;
 
 /**
- * Tests {@link org.apache.commons.lang3.time.FastDateFormat}.
+ * Tests {@link FastDateFormat}.
  */
 class FastDateFormatTest extends AbstractLangTest {
 
